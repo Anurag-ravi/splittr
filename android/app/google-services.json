@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "617220506462",
+    "project_id": "splittr-bee91",
+    "storage_bucket": "splittr-bee91.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:617220506462:android:383f9b071e2daea9c285cf",
+        "android_client_info": {
+          "package_name": "com.example.splittr"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "617220506462-1h1v0npafj9iebqtrgdbi17b31ufh7je.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_EdDVCM9Igiv9wLU_2LeH8H4USLJwFHA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "617220506462-1h1v0npafj9iebqtrgdbi17b31ufh7je.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
