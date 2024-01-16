@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/firebase_options.dart';
+import 'package:splittr/pages/completeSignup.dart';
+import 'package:splittr/pages/homePage.dart';
 import 'package:splittr/pages/login.dart';
 
 late SharedPreferences prefs;
@@ -34,13 +36,16 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    theme = widget.prefs.getBool("theme")?? false;
+    theme = false;
   }
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    if(!widget.prefs.containsKey("theme")){
-      widget.prefs.setBool("theme", true);
+    if(!widget.prefs.containsKey("url")){
+      widget.prefs.setString("url", "http://10.0.2.2:5000");
+    }
+    if(!widget.prefs.containsKey("registered_now")){
+      widget.prefs.setBool("registered_now", true);
     }
     return MaterialApp(
       title: 'Splittr',
@@ -56,7 +61,7 @@ class _MyAppState extends State<MyApp> {
         textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme)
       ),
       themeMode: theme ? ThemeMode.light : ThemeMode.dark,
-      home: LoginPage(),
+      home: widget.prefs.getString('token') != null ? HomePage() : widget.prefs.getBool('registered_now')! ? CompleteSignUp() : LoginPage(),
       debugShowCheckedModeBanner: false,
     );
   }

@@ -1,6 +1,13 @@
+import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:splittr/pages/completeSignup.dart';
+import 'package:splittr/pages/homePage.dart';
+import 'package:splittr/utilities/jwt.dart';
+import 'package:http/http.dart' as http;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -25,10 +32,19 @@ class _LoginPageState extends State<LoginPage> {
     // TODO: implement initState
     super.initState();
     auth.authStateChanges().listen((event) {
-      print(event);
       setState(() {
         _user = event;
       });
+      if (event!= null) {
+        // print("================================");
+        // print(event);
+        // print("================================");
+        String token = generateToken(event.email!);
+        print("================================");
+        print(token);
+        print("================================");
+        loginToServer(token);
+      }
     });
   }
 
@@ -204,25 +220,29 @@ class _LoginPageState extends State<LoginPage> {
                         height: deviceWidth * 0.17,
                       ))),
                 ),
-                Container(
-                    width: deviceWidth * 0.25,
-                    height: deviceWidth * 0.25,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius:
-                          BorderRadius.all(Radius.circular(deviceWidth * 0.05)),
-                    ),
-                    child: Center(
-                        child: SvgPicture.asset(
-                      'assets/icons/facebook.svg',
-                      height: deviceWidth * 0.17,
-                    ))),
+                GestureDetector(
+                  onTap: (){
+                    auth.signOut();
+                  },
+                  child: Container(
+                      width: deviceWidth * 0.25,
+                      height: deviceWidth * 0.25,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius:
+                            BorderRadius.all(Radius.circular(deviceWidth * 0.05)),
+                      ),
+                      child: Center(
+                          child: SvgPicture.asset(
+                        'assets/icons/facebook.svg',
+                        height: deviceWidth * 0.17,
+                      ))),
+                ),
               ],
             ),
             SizedBox(
               height: deviceWidth * .1,
             ),
-            _user != null ? Text(_user!.displayName!) : Container(),
             _user != null ? Text(_user!.email!) : Container(),
             Container(
               width: deviceWidth,
@@ -276,5 +296,50 @@ class _LoginPageState extends State<LoginPage> {
     } catch(err){
       print(err);
     }
+  }
+
+  void loginToServer(String token) async {
+    setState(() {
+      loading = true;
+    });
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? url = prefs.getString('url');
+    final response = await http.post(
+      Uri.parse("${url!}/auth/oauth-login"),
+      headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+      },
+      body: jsonEncode({
+        "token": token
+      })
+    );
+    var data = jsonDecode(response.body);
+    if(response.statusCode == 200){
+      if(data['status'] == 200){
+        String token = data['token'];
+        bool registeredNow = data['registered_now'];
+        prefs.setBool('registered_now', registeredNow);
+        prefs.setString("token", token);
+        if(registeredNow) Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (builder) => CompleteSignUp()));
+        else Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (builder) => HomePage()));
+        const snackBar = SnackBar(
+        content: Text('Succcessfully Logged in'),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        setState(() {
+          loading = false;
+        });
+        return;
+      }
+      
+    }
+    var snackBar = SnackBar(
+    content: Text(data['message']),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    setState(() {
+      loading = false;
+    });
   }
 }
