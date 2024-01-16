@@ -47,6 +47,10 @@ class _MyAppState extends State<MyApp> {
     if(!widget.prefs.containsKey("registered_now")){
       widget.prefs.setBool("registered_now", true);
     }
+    String email = '';
+    if(widget.prefs.containsKey('email')){
+      email = widget.prefs.getString('email')!;
+    }
     return MaterialApp(
       title: 'Splittr',
       theme: ThemeData(
@@ -61,7 +65,7 @@ class _MyAppState extends State<MyApp> {
         textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme)
       ),
       themeMode: theme ? ThemeMode.light : ThemeMode.dark,
-      home: widget.prefs.getString('token') != null ? HomePage() : widget.prefs.getBool('registered_now')! ? CompleteSignUp() : LoginPage(),
+      home: widget.prefs.getString('token') != null ? HomePage() : widget.prefs.getBool('registered_now')! && email != '' ? CompleteSignUp(email: email,) : LoginPage(),
       debugShowCheckedModeBanner: false,
     );
   }

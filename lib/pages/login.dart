@@ -36,14 +36,9 @@ class _LoginPageState extends State<LoginPage> {
         _user = event;
       });
       if (event!= null) {
-        // print("================================");
-        // print(event);
-        // print("================================");
         String token = generateToken(event.email!);
-        print("================================");
-        print(token);
-        print("================================");
-        loginToServer(token);
+        
+        loginToServer(token,event.email!);
       }
     });
   }
@@ -298,12 +293,13 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  void loginToServer(String token) async {
+  void loginToServer(String token,String email) async {
     setState(() {
       loading = true;
     });
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? url = prefs.getString('url');
+    prefs.setString('email', email);
     final response = await http.post(
       Uri.parse("${url!}/auth/oauth-login"),
       headers: {
@@ -321,8 +317,11 @@ class _LoginPageState extends State<LoginPage> {
         bool registeredNow = data['registered_now'];
         prefs.setBool('registered_now', registeredNow);
         prefs.setString("token", token);
-        if(registeredNow) Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (builder) => CompleteSignUp()));
-        else Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (builder) => HomePage()));
+        if(registeredNow) {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (builder) => CompleteSignUp(email: email,)));
+        } else {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (builder) => HomePage()));
+        }
         const snackBar = SnackBar(
         content: Text('Succcessfully Logged in'),
         );
