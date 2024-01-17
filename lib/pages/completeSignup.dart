@@ -1,6 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:splittr/pages/homePage.dart';
+import 'package:splittr/utilities/request.dart';
 
 class CompleteSignUp extends StatefulWidget {
   const CompleteSignUp({super.key,required this.email});
@@ -125,19 +130,7 @@ class _CompleteSignUpState extends State<CompleteSignUp> {
             SizedBox(height: deviceWidth * 0.05,),
             GestureDetector(
               onTap: () async {
-                FocusManager.instance.primaryFocus?.unfocus();
-                print(upiController.text);
-                bool res = isValidUpiId(upiController.text);
-                bool res2 = nameController.text.length > 0;
-                setState(() {
-                  upiValid = res;
-                  nameValid = res2;
-                  loading = true;
-                });
-                await Future.delayed(Duration(seconds: 2));
-                setState(() {
-                  loading = false;
-                });
+                register();
               },
               child: Container(
                 width: deviceWidth * .90,
@@ -176,5 +169,59 @@ class _CompleteSignUpState extends State<CompleteSignUp> {
   }
   bool isValidUpiId(String upiId) {
     return RegExp(r'^[a-z0-9.-]{2,256}@[a-z]{2,64}$').hasMatch(upiId);
+  }
+  void register() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    bool res = isValidUpiId(upiController.text);
+    bool res2 = nameController.text.length > 0;
+    setState(() {
+      upiValid = res;
+      nameValid = res2;
+      loading = true;
+    });
+    if(!res || !res2) {
+      setState(() {
+        loading = false;
+      });
+      return;
+    }
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? url = prefs.getString('url');
+    String? token = prefs.getString('token');
+    var data = await postRequest(
+      "${url!}/auth/oauth-register",
+      {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': token!
+      },
+      jsonEncode({
+        "name": nameController.text,
+        "country_code": countryCode,
+        "number": number,
+        "upi_id": upiController.text
+      }),
+      prefs);
+    if(data!=null){
+      if(data['status'] == 200){
+        prefs.setBool('registered_now', false);
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (builder) => HomePage()));
+        const snackBar = SnackBar(
+        content: Text('Succcessfully Registered'),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        setState(() {
+          loading = false;
+        });
+        return;
+      }
+    }
+    var snackBar = SnackBar(
+    content: Text(data['message']),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    setState(() {
+      loading = false;
+    });
   }
 }
