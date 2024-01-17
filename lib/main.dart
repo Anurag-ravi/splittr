@@ -65,7 +65,7 @@ class _MyAppState extends State<MyApp> {
         textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme)
       ),
       themeMode: theme ? ThemeMode.light : ThemeMode.dark,
-      home: widget.prefs.getString('token') != null ? HomePage() : widget.prefs.getBool('registered_now')! && email != '' ? CompleteSignUp(email: email,) : LoginPage(),
+      home: widget.prefs.getString('token') != null ? widget.prefs.getBool('registered_now')! ? CompleteSignUp(email: email,) : HomePage() : LoginPage(),
       debugShowCheckedModeBanner: false,
     );
   }
