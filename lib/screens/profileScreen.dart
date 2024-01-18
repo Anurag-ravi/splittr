@@ -20,12 +20,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
             decoration: const BoxDecoration(
               border: Border.symmetric(horizontal: BorderSide(color: Colors.grey,width: 0.5))
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
+            child: const Padding(
+              padding: EdgeInsets.all(8.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Account',style: TextStyle(color: Colors.white,fontSize: 20),)
+                  Text('Account',style: TextStyle(color: Colors.white,fontSize: 20),),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      
+                    ],
+                  )
                 ],
               ),
             ),
