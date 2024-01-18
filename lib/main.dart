@@ -60,11 +60,12 @@ class _MyAppState extends State<MyApp> {
         
       ),
       darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+        brightness: Brightness.dark,
+        // colorScheme: ColorScheme.fromSeed(seedColor: Colors.black),
+        // useMaterial3: true,
         textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme)
       ),
-      themeMode: theme ? ThemeMode.light : ThemeMode.dark,
+      themeMode: ThemeMode.dark,
       home: widget.prefs.getString('token') != null ? widget.prefs.getBool('registered_now')! ? CompleteSignUp(email: email,) : HomePage() : LoginPage(),
       debugShowCheckedModeBanner: false,
     );
