@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:splittr/models/user.dart';
 import 'package:splittr/pages/completeSignup.dart';
 import 'package:splittr/pages/homePage.dart';
 import 'package:splittr/utilities/jwt.dart';
@@ -320,6 +321,7 @@ class _LoginPageState extends State<LoginPage> {
         if(registeredNow) {
           Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (builder) => CompleteSignUp(email: email,)));
         } else {
+          prefs.setString('user', jsonEncode(UserModel.fromJson(data['user'])));
           Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (builder) => HomePage()));
         }
         const snackBar = SnackBar(

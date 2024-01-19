@@ -17,7 +17,6 @@ class _HomePageState extends State<HomePage> {
   int currIndex = 0;
   @override
   Widget build(BuildContext context) {
-    double deviceWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.grey[900],

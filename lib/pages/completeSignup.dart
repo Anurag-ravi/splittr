@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:splittr/models/user.dart';
 import 'package:splittr/pages/homePage.dart';
 import 'package:splittr/utilities/request.dart';
 
@@ -205,6 +206,7 @@ class _CompleteSignUpState extends State<CompleteSignUp> {
     if(data!=null){
       if(data['status'] == 200){
         prefs.setBool('registered_now', false);
+        prefs.setString('user', jsonEncode(UserModel.fromJson(data['user'])));
         Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (builder) => HomePage()));
         const snackBar = SnackBar(
         content: Text('Succcessfully Registered'),

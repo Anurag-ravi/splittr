@@ -41,9 +41,8 @@ class _MyAppState extends State<MyApp> {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    if(!widget.prefs.containsKey("url")){
-      widget.prefs.setString("url", "http://10.0.2.2:5000");
-    }
+    // widget.prefs.setString("url", "http://10.0.2.2:5000");
+    widget.prefs.setString("url", "https://splittr-backend.onrender.com");
     if(!widget.prefs.containsKey("registered_now")){
       widget.prefs.setBool("registered_now", true);
     }
