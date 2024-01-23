@@ -23,6 +23,7 @@ class _LoginPageState extends State<LoginPage> {
   bool emailValid = true;
   String _email = '';
   bool loading = false;
+  bool responseLoading = false;
 
   final FirebaseAuth auth = FirebaseAuth.instance;
 
@@ -47,7 +48,11 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     double deviceWidth = MediaQuery.of(context).size.width;
-    return Scaffold(
+    return responseLoading ? const Scaffold(
+      backgroundColor: Color(0xFFDCDADD),
+      body: Center(child: CircularProgressIndicator())
+    )
+    : Scaffold(
       backgroundColor: const Color(0xFFDCDADD),
       body: SingleChildScrollView(
         child: Column(
@@ -296,7 +301,7 @@ class _LoginPageState extends State<LoginPage> {
 
   void loginToServer(String token,String email) async {
     setState(() {
-      loading = true;
+      responseLoading = true;
     });
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? url = prefs.getString('url');
@@ -329,7 +334,7 @@ class _LoginPageState extends State<LoginPage> {
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         setState(() {
-          loading = false;
+          responseLoading = false;
         });
         return;
       }
@@ -340,7 +345,7 @@ class _LoginPageState extends State<LoginPage> {
     );
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
     setState(() {
-      loading = false;
+      responseLoading = false;
     });
   }
 }

@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:splittr/models/user.dart';
 import 'package:splittr/screens/activityScreen.dart';
 import 'package:splittr/screens/friendsScreen.dart';
 import 'package:splittr/screens/groupScreen.dart';
@@ -15,6 +19,25 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
 
   int currIndex = 0;
+  late UserModel user;
+  bool loading = false;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    init();
+  }
+
+  void init() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      user = UserModel.fromJson(jsonDecode(prefs.getString('user')!));
+      loading = false;
+    });
+  }
+
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -113,7 +136,14 @@ class _HomePageState extends State<HomePage> {
                 },
                 child: Column(
                   children: [
-                    Icon(Icons.account_circle_outlined,color: currIndex == 3 ? mainGreen : Colors.white,),
+                    loading ? Icon(Icons.person_outline,color: currIndex == 2 ? mainGreen : Colors.white,)
+                    : ClipOval(
+                      child: CircleAvatar(
+                        backgroundColor: Colors.grey[900],
+                        radius: 13,
+                        backgroundImage: AssetImage("assets/profile/${user.dp}.png"),
+                      ),
+                    ),
                     Text('Account',style: TextStyle(color: currIndex == 3 ? mainGreen : Colors.white),)
                   ],
                 ),

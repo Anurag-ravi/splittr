@@ -42,7 +42,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     // widget.prefs.setString("url", "http://10.0.2.2:5000");
-    widget.prefs.setString("url", "https://splittr-backend.onrender.com");
+    widget.prefs.setString("url", "http://13.232.40.84");
     if(!widget.prefs.containsKey("registered_now")){
       widget.prefs.setBool("registered_now", true);
     }
@@ -59,9 +59,9 @@ class _MyAppState extends State<MyApp> {
         
       ),
       darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        // colorScheme: ColorScheme.fromSeed(seedColor: Colors.black),
-        // useMaterial3: true,
+        // brightness: Brightness.dark,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.black),
+        useMaterial3: true,
         textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme)
       ),
       themeMode: ThemeMode.dark,
