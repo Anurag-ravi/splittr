@@ -6,13 +6,16 @@ import 'package:splittr/firebase_options.dart';
 import 'package:splittr/pages/completeSignup.dart';
 import 'package:splittr/pages/homePage.dart';
 import 'package:splittr/pages/login.dart';
+import 'package:splittr/utilities/constants.dart';
 
 late SharedPreferences prefs;
-Future<void> main() async{
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   prefs = await SharedPreferences.getInstance();
-  runApp(MyApp(prefs: prefs,));
+  runApp(MyApp(
+    prefs: prefs,
+  ));
 }
 
 class MyApp extends StatefulWidget {
@@ -25,12 +28,12 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   bool theme = false;
-  void updateTheme(bool val){
+  void updateTheme(bool val) {
     setState(() {
       theme = val;
     });
     prefs.setBool("theme", val);
-  } 
+  }
 
   @override
   void initState() {
@@ -38,34 +41,40 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     theme = false;
   }
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     // widget.prefs.setString("url", "http://10.0.2.2:5000");
     widget.prefs.setString("url", "http://13.232.40.84");
-    if(!widget.prefs.containsKey("registered_now")){
+    if (!widget.prefs.containsKey("registered_now")) {
       widget.prefs.setBool("registered_now", true);
     }
     String email = '';
-    if(widget.prefs.containsKey('email')){
+    if (widget.prefs.containsKey('email')) {
       email = widget.prefs.getString('email')!;
     }
     return MaterialApp(
       title: 'Splittr',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.brown),
-        useMaterial3: true,
-        textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme)
-        
-      ),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.brown),
+          useMaterial3: true,
+          textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme)),
       darkTheme: ThemeData(
-        // brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.black),
-        useMaterial3: true,
-        textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme)
-      ),
+          // brightness: Brightness.dark,
+          colorScheme: ColorScheme.fromSeed(seedColor: mainGreen),
+          useMaterial3: true,
+          textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme)),
       themeMode: ThemeMode.dark,
-      home: widget.prefs.getString('token') != null ? widget.prefs.getBool('registered_now')! ? CompleteSignUp(email: email,) : HomePage() : LoginPage(),
+      home: widget.prefs.getString('token') != null
+          ? widget.prefs.getBool('registered_now')!
+              ? CompleteSignUp(
+                  email: email,
+                )
+              : HomePage(
+                  curridx: 0,
+                )
+          : LoginPage(),
       debugShowCheckedModeBanner: false,
     );
   }
