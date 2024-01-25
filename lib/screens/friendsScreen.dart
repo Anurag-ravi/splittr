@@ -80,7 +80,9 @@ class _FriendScreenState extends State<FriendScreen> {
   @override
   Widget build(BuildContext context) {
     return loading
-        ? const CircularProgressIndicator()
+        ? const Center(
+            child: CircularProgressIndicator(),
+          )
         : ListView.builder(
             itemCount: friends.length,
             itemBuilder: ((context, index) {
