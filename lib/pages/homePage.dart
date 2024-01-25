@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/models/user.dart';
 import 'package:splittr/pages/createGroup.dart';
+import 'package:splittr/pages/joinGroup.dart';
 import 'package:splittr/screens/activityScreen.dart';
 import 'package:splittr/screens/friendsScreen.dart';
 import 'package:splittr/screens/groupScreen.dart';
@@ -53,11 +54,21 @@ class _HomePageState extends State<HomePage> {
             ),
             currIndex == 0
                 ? IconButton(
-                    icon: Icon(Icons.group_add_outlined),
+                    icon: Icon(Icons.add_box_outlined),
                     color: Colors.white,
                     onPressed: () {
                       Navigator.of(context).push(MaterialPageRoute(
                           builder: (builder) => CreateGroup()));
+                    },
+                  )
+                : Container(),
+            currIndex == 0
+                ? IconButton(
+                    icon: Icon(Icons.group_add_outlined),
+                    color: Colors.white,
+                    onPressed: () {
+                      Navigator.of(context).push(
+                          MaterialPageRoute(builder: (builder) => JoinGroup()));
                     },
                   )
                 : Container(),

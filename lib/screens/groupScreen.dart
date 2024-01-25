@@ -46,7 +46,6 @@ class _GroupScreenState extends State<GroupScreen> {
           loading = false;
           this.trips = temp;
         });
-        print(this.trips);
         return;
       }
     }
