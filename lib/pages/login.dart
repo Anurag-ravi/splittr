@@ -39,7 +39,7 @@ class _LoginPageState extends State<LoginPage> {
       });
       if (event != null) {
         String token = generateToken(event.email!);
-
+        
         loginToServer(token, event.email!);
       }
     });
@@ -298,6 +298,10 @@ class _LoginPageState extends State<LoginPage> {
       auth.signInWithProvider(provider);
     } catch (err) {
       print(err);
+      var snackBar = SnackBar(
+        content: Text(err.toString()),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
   }
 
