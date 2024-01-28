@@ -294,6 +294,10 @@ class _LoginPageState extends State<LoginPage> {
 
   void googleSignin() {
     try {
+      var snackBar = SnackBar(
+        content: Text('Redirectibg to Google'),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
       GoogleAuthProvider provider = GoogleAuthProvider();
       auth.signInWithProvider(provider);
     } catch (err) {
