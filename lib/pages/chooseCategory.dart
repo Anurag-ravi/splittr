@@ -43,26 +43,31 @@ class _ChooseCategoryState extends State<ChooseCategory> {
       body: ListView.builder(
           itemCount: categories.length,
           itemBuilder: (context, index) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4.0),
-                    child: Image.asset(
-                      'assets/categories/${categories[index]}.png',
-                      height: 45.0,
-                      width: 45.0,
+            return GestureDetector(
+              onTap: () {
+                Navigator.pop(context, categories[index]);
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4.0),
+                      child: Image.asset(
+                        'assets/categories/${categories[index]}.png',
+                        height: 45.0,
+                        width: 45.0,
+                      ),
                     ),
-                  ),
-                  SizedBox(
-                    width: 10,
-                  ),
-                  Text(
-                    catMap[categories[index]]!,
-                    style: TextStyle(color: Colors.white),
-                  )
-                ],
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Text(
+                      catMap[categories[index]]!,
+                      style: TextStyle(color: Colors.white),
+                    )
+                  ],
+                ),
               ),
             );
           }),
