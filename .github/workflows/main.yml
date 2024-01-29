@@ -21,9 +21,28 @@ jobs:
         with:
           channel: 'stable'
           cache: true
-      - run: flutter pub get
-      - run: android/.gradlew signingReport
-      - run: flutter build apk
+
+      - name: Getting the dependencies
+        run: flutter pub get
+
+      - name: Download keystore file
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | openssl base64 -d > android/app/key.jks
+
+      - name: Create key.properties file
+        run: |
+          echo "storeFile=android/app/key.jks" > android/key.properties
+          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
+      
+      - name: Get the signing report
+        run: |
+          cd android
+          ./android/gradlew signingReport
+          cd ..
+
+      - name: Build the apk
+        run: flutter build apk
 
       - name: Push to Releases
         uses: ncipollo/release-action@v1
