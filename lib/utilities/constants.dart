@@ -2,9 +2,44 @@ import 'package:flutter/material.dart';
 
 String url = "http://localhost:5000";
 const Color mainGreen = Color(0xff1dc29f);
+const Color mainOrange = Color.fromARGB(255, 238, 100, 49);
 const Color sideGreen = Color(0xff4fc3b2);
-
-const Map<String, String> categories = {
+const categories = [
+  "general",
+  "games",
+  "movies",
+  "music",
+  "sports",
+  "groceries",
+  "dining",
+  "liquor",
+  "mortgage",
+  "household-supplies",
+  "pets",
+  "services",
+  "electronics",
+  "furniture",
+  "maintenance",
+  "clothing",
+  "gifts",
+  "medical",
+  "education",
+  "parking",
+  "car",
+  "bus-train",
+  "fuel",
+  "plane",
+  "taxi",
+  "bicycle",
+  "hotel",
+  "cleaning",
+  "electricity",
+  "gas",
+  "internet",
+  "trash",
+  "water",
+];
+const Map<String, String> catMap = {
   "bicycle": "Bicycle",
   "bus-train": "Bus/Train",
   "car": "Car",

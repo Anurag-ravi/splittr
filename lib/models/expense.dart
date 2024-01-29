@@ -24,8 +24,15 @@ class ExpenseModel {
         paid_for.add(By.fromJson(paid_for_json));
       });
     }
-    return ExpenseModel(json['_id'], json['trip'], json['name'], json['amount'],
-        json['category'], json['created'], paid_by, paid_for);
+    return ExpenseModel(
+        json['_id'],
+        json['trip'],
+        json['name'],
+        json['amount'] + 0.0,
+        json['category'],
+        json['created'],
+        paid_by,
+        paid_for);
   }
   Map<String, dynamic> toJson() {
     List<Map<String, dynamic>> paid_by_json = [];
@@ -56,7 +63,7 @@ class By {
   By(this.user, this.amount);
 
   factory By.fromJson(Map<String, dynamic> json) {
-    return By(json['user'], json['amount']);
+    return By(json['user'], json['amount'] + 0.0);
   }
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = {'user': user, 'amount': amount};
