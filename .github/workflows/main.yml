@@ -36,10 +36,7 @@ jobs:
           echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
       
       - name: Get the signing report
-        run: |
-          cd android
-          ./gradlew signingReport
-          cd ..
+        run: ls android/
 
       - name: Build the apk
         run: flutter build apk
