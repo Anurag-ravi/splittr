@@ -15,8 +15,8 @@ class PaymentModel {
       json['trip'],
       json['amount'],
       json['created'],
-      json['by'],
-      json['to'],
+      json['by'] + 0.0,
+      json['to'] + 0.0,
     );
   }
 

@@ -1,5 +1,5 @@
 class TripUser {
-  String _id;
+  String id;
   String trip;
   String user;
   String name;
@@ -7,17 +7,17 @@ class TripUser {
   double owed;
   bool is_involved;
 
-  TripUser(this._id, this.trip, this.user, this.name, this.paid, this.owed,
+  TripUser(this.id, this.trip, this.user, this.name, this.paid, this.owed,
       this.is_involved);
 
   factory TripUser.fromJson(Map<String, dynamic> json) {
     return TripUser(json['_id'], json['trip'], json['user'], json['name'],
-        json['paid'], json['owed'], json['is_involved']);
+        json['paid'] + 0.0, json['owed'] + 0.0, json['is_involved']);
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    data['_id'] = _id;
+    data['_id'] = id;
     data['trip'] = trip;
     data['user'] = user;
     data['name'] = name;
