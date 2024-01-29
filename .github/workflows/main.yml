@@ -38,7 +38,7 @@ jobs:
       - name: Get the signing report
         run: |
           cd android
-          ./android/gradlew signingReport
+          ./gradlew signingReport
           cd ..
 
       - name: Build the apk
