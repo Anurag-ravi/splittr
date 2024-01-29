@@ -30,13 +30,16 @@ jobs:
 
       - name: Create key.properties file
         run: |
-          echo "storeFile=android/app/key.jks" > android/key.properties
+          echo "storeFile=key.jks" > android/key.properties
           echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> android/key.properties
           echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
           echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
       
-      - name: Get the signing report
-        run: ls android/
+      - name: just some logs
+        run: |
+          pwd
+          ls android/
+          ls android/app
 
       - name: Build the apk
         run: flutter build apk
