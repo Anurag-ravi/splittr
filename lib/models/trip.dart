@@ -17,7 +17,7 @@ class ShortTripModel {
 }
 
 class TripModel {
-  String _id;
+  String id;
   String code;
   String name;
   DateTime created;
@@ -27,7 +27,7 @@ class TripModel {
   List<ExpenseModel> expenses;
   List<PaymentModel> payments;
 
-  TripModel(this._id, this.code, this.name, this.created, this.currency,
+  TripModel(this.id, this.code, this.name, this.created, this.currency,
       this.created_by, this.users, this.expenses, this.payments);
 
   factory TripModel.fromJson(Map<String, dynamic> json) {
@@ -49,7 +49,7 @@ class TripModel {
 
   Map<String, dynamic> toJson() {
     return {
-      '_id': _id,
+      '_id': id,
       'code': code,
       'name': name,
       'created': created.toIso8601String(),
