@@ -1,15 +1,18 @@
+enum splitTypeEnum { equal, unequal, percent, shares }
+
 class ExpenseModel {
   String _id;
   String trip;
   String name;
   double amount;
   String category;
+  splitTypeEnum splitType;
   DateTime created;
   List<By> paid_by;
   List<By> paid_for;
 
   ExpenseModel(this._id, this.trip, this.name, this.amount, this.category,
-      this.created, this.paid_by, this.paid_for);
+      this.splitType, this.created, this.paid_by, this.paid_for);
 
   factory ExpenseModel.fromJson(Map<String, dynamic> json) {
     List<By> paid_by = [];
@@ -24,12 +27,17 @@ class ExpenseModel {
         paid_for.add(By.fromJson(paid_for_json));
       });
     }
+    splitTypeEnum x = splitTypeEnum.equal;
+    if (json['split_type'] == "unequal") x = splitTypeEnum.unequal;
+    if (json['split_type'] == "percent") x = splitTypeEnum.percent;
+    if (json['split_type'] == "shares") x = splitTypeEnum.shares;
     return ExpenseModel(
         json['_id'],
         json['trip'],
         json['name'],
         json['amount'] + 0.0,
         json['category'],
+        x,
         json['created'],
         paid_by,
         paid_for);
@@ -49,6 +57,7 @@ class ExpenseModel {
     json['name'] = this.name;
     json['amount'] = this.amount;
     json['category'] = this.category;
+    json['split_type'] = this.splitType.name;
     json['created'] = this.created;
     json['paid_by'] = paid_by_json;
     json['paid_for'] = paid_for_json;

@@ -9,8 +9,7 @@ import 'package:splittr/models/tripuser.dart';
 import 'package:splittr/models/user.dart';
 import 'package:splittr/pages/chooseCategory.dart';
 import 'package:splittr/utilities/constants.dart';
-
-enum splitTypeEnum { equal, unequal, percent, shares }
+import 'package:splittr/utilities/request.dart';
 
 class AddExpense extends StatefulWidget {
   AddExpense({super.key, required this.trip});
@@ -27,6 +26,8 @@ class _AddExpenseState extends State<AddExpense> {
   String currentTripUser = "";
   late UserModel user;
   bool loading = true;
+  bool responseLoading = false;
+  bool nameValid = true;
   splitTypeEnum splitType = splitTypeEnum.equal;
   List<By> paid_by = [];
   List<By> paid_for = [];
@@ -89,12 +90,16 @@ class _AddExpenseState extends State<AddExpense> {
               ),
               actions: [
                 IconButton(
-                  icon: const Icon(
-                    Icons.done,
-                    color: Colors.white,
-                  ),
+                  icon: responseLoading
+                      ? CircularProgressIndicator(
+                          strokeWidth: 3,
+                        )
+                      : Icon(
+                          Icons.done,
+                          color: Colors.white,
+                        ),
                   onPressed: () {
-                    Navigator.pop(context);
+                    createExpense();
                   },
                 )
               ],
@@ -184,23 +189,30 @@ class _AddExpenseState extends State<AddExpense> {
                           child: TextField(
                             cursorColor: mainGreen,
                             style: TextStyle(color: Colors.white),
-                            onChanged: (text) {},
+                            onChanged: (text) {
+                              setState(() {
+                                nameValid = true;
+                              });
+                            },
                             controller: nameController,
-                            decoration: InputDecoration(
-                              border: UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Colors.white,
-                                ),
-                              ),
-                              focusedBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: mainGreen,
-                                ),
-                              ),
-                              labelText: 'Expense Name',
-                              fillColor: Colors.grey[900],
-                              filled: true,
-                            ),
+                            decoration: nameValid
+                                ? InputDecoration(
+                                    border: UnderlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    focusedBorder: UnderlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: mainGreen,
+                                      ),
+                                    ),
+                                    labelText: 'Expense Name',
+                                    fillColor: Colors.grey[900],
+                                    filled: true,
+                                  )
+                                : const InputDecoration(
+                                    errorText: 'Please Enter a valid Name'),
                           ),
                         ),
                       ),
@@ -265,9 +277,15 @@ class _AddExpenseState extends State<AddExpense> {
                             cursorColor: mainGreen,
                             style: TextStyle(color: Colors.white),
                             onChanged: (input) {
-                              setState(() {
-                                amount = input;
-                              });
+                              if (input.isNotEmpty) {
+                                setState(() {
+                                  amount = input;
+                                });
+                              } else {
+                                setState(() {
+                                  amount = "0.00";
+                                });
+                              }
                             },
                             decoration: InputDecoration(
                               border: UnderlineInputBorder(
@@ -378,7 +396,101 @@ class _AddExpenseState extends State<AddExpense> {
       category = result;
     });
   }
-  // void validate(){
-  //   amountController.text.
-  // }
+
+  void createExpense() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      loading = true;
+    });
+    bool res2 = nameController.text.isNotEmpty;
+    if (!res2) {
+      setState(() {
+        loading = false;
+        nameValid = false;
+      });
+      return;
+    }
+
+    adjustBalanceIfSplitEqually();
+    adjustPaidIfIndividual();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? url = prefs.getString('url');
+    String? token = prefs.getString('token');
+    List<Map<String, dynamic>> paid_by_json = [];
+    List<Map<String, dynamic>> paid_for_json = [];
+    paid_by.forEach((paid_by_item) {
+      paid_by_json.add(paid_by_item.toJson());
+    });
+    paid_for.forEach((paid_for_item) {
+      paid_for_json.add(paid_for_item.toJson());
+    });
+    var data = await postRequest(
+        "${url!}/expense/new",
+        {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': token!
+        },
+        jsonEncode({
+          "trip": widget.trip.id,
+          "name": nameController.text,
+          "amount": double.parse(amount),
+          "category": category,
+          "split_type": splitType.name,
+          "paid_by": paid_by_json,
+          "paid_for": paid_for_json,
+        }),
+        prefs,
+        context);
+    if (data != null) {
+      if (data['status'] == 200) {
+        const snackBar = SnackBar(
+          content: Text('Api not connected'),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        setState(() {
+          loading = false;
+        });
+        return;
+      }
+    }
+    var snackBar = SnackBar(
+      content: Text(data['message']),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    setState(() {
+      loading = false;
+    });
+  }
+
+  void adjustBalanceIfSplitEqually() {
+    if (splitType != splitTypeEnum.equal) return;
+    List<By> temp = paid_for;
+    double amnt = double.parse(amount);
+    int participants = widget.trip.users.length;
+    String x = (amnt / participants).toStringAsFixed(20);
+    double perAmnt = double.parse(x.substring(0, x.length - 18));
+    for (int i = 0; i < temp.length; i++) {
+      temp[i].amount = perAmnt;
+    }
+    double diff = amnt - (perAmnt * participants);
+    int i = 0;
+    while (diff >= 0.01) {
+      temp[i % temp.length].amount += 0.01;
+      i++;
+      diff -= 0.01;
+    }
+    setState(() {
+      paid_for = temp;
+    });
+  }
+
+  void adjustPaidIfIndividual() {
+    List<By> temp = paid_by;
+    if (temp.length != 1) return;
+    temp[0].amount = double.parse(amount);
+    setState(() {
+      paid_by = temp;
+    });
+  }
 }
