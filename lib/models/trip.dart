@@ -66,7 +66,7 @@ class Transaction {
   bool isExpense;
   DateTime date;
   ExpenseModel? expense;
-  PaymentModel? paymentModel;
+  PaymentModel? payment;
 
-  Transaction(this.isExpense, this.date, this.expense, this.paymentModel);
+  Transaction(this.isExpense, this.date, this.expense, this.payment);
 }

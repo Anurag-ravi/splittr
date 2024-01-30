@@ -110,8 +110,7 @@ class _TripPageState extends State<TripPage> {
               ),
               floatingActionButton: GestureDetector(
                 onTap: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (builder) => AddExpense(trip: trip!)));
+                  addExpense();
                 },
                 child: Container(
                   width: 160,
@@ -143,7 +142,7 @@ class _TripPageState extends State<TripPage> {
               body: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: ListView.builder(
-                    itemCount: 10,
+                    itemCount: transactions.length + 3,
                     itemBuilder: (context, index) {
                       if (index == 0)
                         return Padding(
@@ -196,10 +195,48 @@ class _TripPageState extends State<TripPage> {
                             ),
                           ),
                         );
+                      int idx = index-3;
+                      DateTime date = transactions[idx].date;
+                      String name = transactions[idx].isExpense ? transactions[idx].expense!.name : "Payment";
+                      String category = transactions[idx].isExpense ? transactions[idx].expense!.category : "general";
+                      List months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                      return Padding(
+                        padding: EdgeInsets.all(10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                Text(date.day.toString(),style: TextStyle(color: Colors.white,fontSize: 20),),
+                                Text(months[date.month-1],style: TextStyle(color: Colors.white,fontSize: 12),),
+                              ],
+                            ),
+                            SizedBox(width: 10,),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4.0),
+                              child: Image.asset(
+                                'assets/categories/${category}.png',
+                                height: 45.0,
+                                width: 45.0,
+                              ),
+                            ),
+                            SizedBox(width: 10,),
+                            Text(name,style: TextStyle(color: Colors.white,fontSize: 16),),
+                          ],
+                        ),
+                      );
                     }),
               ),
             ),
     );
+  }
+
+  Future<void> addExpense () async {
+    await Navigator.of(context).push(MaterialPageRoute(
+                      builder: (builder) => AddExpense(trip: trip!)));
+    if (!mounted) return;
+    await refresh();
   }
 }
 

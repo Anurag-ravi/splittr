@@ -445,12 +445,13 @@ class _AddExpenseState extends State<AddExpense> {
     if (data != null) {
       if (data['status'] == 200) {
         const snackBar = SnackBar(
-          content: Text('Api not connected'),
+          content: Text('Expense added'),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         setState(() {
           loading = false;
         });
+        Navigator.pop(context);
         return;
       }
     }
