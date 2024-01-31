@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/models/trip.dart';
+import 'package:splittr/models/user.dart';
 import 'package:splittr/pages/addExpense.dart';
+import 'package:splittr/pages/tripSettings.dart';
 import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/request.dart';
 
@@ -14,9 +18,12 @@ class TripPage extends StatefulWidget {
 }
 
 class _TripPageState extends State<TripPage> {
-  bool loading = true;
+  bool loading = true, g_free = false;
   TripModel? trip;
   List<Transaction> transactions = [];
+  String currentTripUser = "";
+  String g_involved = "You are all settled up in this group";
+  Color g_textColor = Color(0xfff5f5f5);
 
   @override
   void initState() {
@@ -44,20 +51,57 @@ class _TripPageState extends State<TripPage> {
     if (data != null) {
       if (data['status'] == 200) {
         var temp = TripModel.fromJson(data['data']);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        var user = UserModel.fromJson(jsonDecode(prefs.getString('user')!));
+        for (var tu in temp.users) {
+          if (tu.user == user.id) {
+            setState(() {
+              currentTripUser = tu.id;
+            });
+          }
+        }
         List<Transaction> t_temp = [];
+        double paid_by_me = 0.00, paid_for_me = 0.00;
         for (var x in temp.expenses) {
           t_temp.add(Transaction(true, x.created, x, null));
+          for (var y in x.paid_by) {
+            if (y.user == currentTripUser) paid_by_me += y.amount;
+          }
+          for (var y in x.paid_for) {
+            if (y.user == currentTripUser) paid_for_me += y.amount;
+          }
         }
         for (var x in temp.payments) {
           t_temp.add(Transaction(false, x.created, null, x));
+          if (x.by == currentTripUser) paid_by_me += x.amount;
+          if (x.to == currentTripUser) paid_for_me += x.amount;
         }
         t_temp.sort((a, b) => b.date.compareTo(a.date));
-
+        if (paid_by_me == paid_for_me) {
+          setState(() {
+            g_involved = "You are all settled up in this group";
+            g_textColor = Color(0xfff5f5f5);
+            g_free = true;
+          });
+        } else if (paid_by_me >= paid_for_me) {
+          setState(() {
+            g_involved =
+                "You are owed ₹${roundAmountStr(paid_by_me - paid_for_me)} overall";
+            g_textColor = mainGreen;
+          });
+        } else {
+          setState(() {
+            g_involved =
+                "You owe ₹${roundAmountStr(paid_for_me - paid_by_me)} overall";
+            g_textColor = mainOrange;
+          });
+        }
         setState(() {
           loading = false;
           trip = temp;
           transactions = t_temp;
         });
+
         return;
       }
     }
@@ -103,7 +147,7 @@ class _TripPageState extends State<TripPage> {
                       color: Colors.white,
                     ),
                     onPressed: () {
-                      Navigator.pop(context);
+                      changeSetting();
                     },
                   )
                 ],
@@ -159,9 +203,9 @@ class _TripPageState extends State<TripPage> {
                         return Padding(
                           padding: const EdgeInsets.only(left: 30, top: 10),
                           child: Text(
-                            "You are owed ₹${2786.32} overall",
+                            g_involved,
                             style: TextStyle(
-                              color: mainGreen,
+                              color: g_textColor,
                               fontSize: 17,
                             ),
                           ),
@@ -195,34 +239,119 @@ class _TripPageState extends State<TripPage> {
                             ),
                           ),
                         );
-                      int idx = index-3;
+                      int idx = index - 3;
                       DateTime date = transactions[idx].date;
-                      String name = transactions[idx].isExpense ? transactions[idx].expense!.name : "Payment";
-                      String category = transactions[idx].isExpense ? transactions[idx].expense!.category : "general";
-                      List months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                      String name = transactions[idx].isExpense
+                          ? transactions[idx].expense!.name
+                          : "Payment";
+                      String category = transactions[idx].isExpense
+                          ? transactions[idx].expense!.category
+                          : "general";
+                      List months = [
+                        'Jan',
+                        'Feb',
+                        'Mar',
+                        'Apr',
+                        'May',
+                        'Jun',
+                        'Jul',
+                        'Aug',
+                        'Sep',
+                        'Oct',
+                        'Nov',
+                        'Dec'
+                      ];
+                      double paid_by_me = 0.00, paid_for_me = 0.00;
+                      if (transactions[idx].isExpense) {
+                        for (var x in transactions[idx].expense!.paid_by) {
+                          if (x.user == currentTripUser) paid_by_me += x.amount;
+                        }
+                        for (var x in transactions[idx].expense!.paid_for) {
+                          if (x.user == currentTripUser)
+                            paid_for_me += x.amount;
+                        }
+                      } else {}
+                      String involved = "";
+                      String amnt = "";
+                      Color textColor = Color(0xfff5f5f5);
+                      if (paid_by_me == 0.00 && paid_for_me == 0.00)
+                        involved = "not involved";
+                      if (paid_by_me >= paid_for_me) {
+                        involved = "you owed";
+                        textColor = mainGreen;
+                        amnt = roundAmountStr(paid_by_me - paid_for_me);
+                      } else {
+                        involved = "you borrowed";
+                        textColor = mainOrange;
+                        amnt = roundAmountStr(paid_for_me - paid_by_me);
+                      }
                       return Padding(
-                        padding: EdgeInsets.all(10),
+                        padding: EdgeInsets.only(bottom: 10),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                Text(date.day.toString(),style: TextStyle(color: Colors.white,fontSize: 20),),
-                                Text(months[date.month-1],style: TextStyle(color: Colors.white,fontSize: 12),),
-                              ],
-                            ),
-                            SizedBox(width: 10,),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(4.0),
-                              child: Image.asset(
-                                'assets/categories/${category}.png',
-                                height: 45.0,
-                                width: 45.0,
+                            Expanded(
+                              flex: 3,
+                              child: Column(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  Text(
+                                    date.day.toString(),
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 18),
+                                  ),
+                                  Text(
+                                    months[date.month - 1],
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 12),
+                                  ),
+                                ],
                               ),
                             ),
-                            SizedBox(width: 10,),
-                            Text(name,style: TextStyle(color: Colors.white,fontSize: 16),),
+                            Expanded(
+                              flex: 3,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(4.0),
+                                child: Image.asset(
+                                  'assets/categories/${category}.png',
+                                  height: 45.0,
+                                  width: 45.0,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 15,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  name,
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      overflow: TextOverflow.ellipsis),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 6,
+                              child: Column(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Text(
+                                    involved,
+                                    style: TextStyle(
+                                        color: textColor, fontSize: 10),
+                                  ),
+                                  Text(
+                                    amnt,
+                                    style: TextStyle(
+                                        color: textColor, fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       );
@@ -232,10 +361,21 @@ class _TripPageState extends State<TripPage> {
     );
   }
 
-  Future<void> addExpense () async {
-    await Navigator.of(context).push(MaterialPageRoute(
-                      builder: (builder) => AddExpense(trip: trip!)));
+  Future<void> addExpense() async {
+    await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (builder) => AddExpense(trip: trip!)));
     if (!mounted) return;
+    await refresh();
+  }
+
+  Future<void> changeSetting() async {
+    bool updated = await Navigator.of(context).push(MaterialPageRoute(
+        builder: (builder) => TripSetting(
+              trip: trip!,
+              free: g_free,
+            )));
+    if (!mounted) return;
+    if (!updated) return;
     await refresh();
   }
 }

@@ -74,3 +74,13 @@ const Map<String, String> catMap = {
   "trash": "Trash",
   "water": "Water"
 };
+
+double roundAmount(double amount) {
+  String x = (amount).toStringAsFixed(20);
+  return double.parse(x.substring(0, x.length - 18));
+}
+
+String roundAmountStr(double amount) {
+  String x = (amount).toStringAsFixed(20);
+  return x.substring(0, x.length - 18);
+}
