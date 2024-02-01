@@ -155,7 +155,7 @@ class _TripSettingState extends State<TripSetting> {
             );
           if (index == 3)
             return const Padding(
-              padding: EdgeInsets.all(8.0),
+              padding: EdgeInsets.all(15),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -179,7 +179,7 @@ class _TripSettingState extends State<TripSetting> {
                         "Use this code: ${widget.trip.code} to join my Splittr Group: ${widget.trip.name}");
               },
               child: const Padding(
-                padding: EdgeInsets.all(8.0),
+                padding: EdgeInsets.all(15),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
@@ -197,7 +197,7 @@ class _TripSettingState extends State<TripSetting> {
             );
           if (index == widget.trip.users.length + 5)
             return const Padding(
-              padding: EdgeInsets.all(8.0),
+              padding: EdgeInsets.all(15),
               child: Row(
                 children: [
                   Text(
@@ -209,7 +209,7 @@ class _TripSettingState extends State<TripSetting> {
             );
           if (index == widget.trip.users.length + 6)
             return Padding(
-              padding: EdgeInsets.all(8.0),
+              padding: EdgeInsets.all(15),
               child: Opacity(
                 opacity: widget.free ? 1 : 0.2,
                 child: Row(
@@ -246,7 +246,7 @@ class _TripSettingState extends State<TripSetting> {
             );
           if (index == widget.trip.users.length + 7)
             return const Padding(
-              padding: EdgeInsets.all(8.0),
+              padding: EdgeInsets.all(15),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -263,7 +263,7 @@ class _TripSettingState extends State<TripSetting> {
             );
 
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 5),
+            padding: const EdgeInsets.symmetric(vertical: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [

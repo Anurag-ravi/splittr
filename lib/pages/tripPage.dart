@@ -276,7 +276,7 @@ class _TripPageState extends State<TripPage> {
                       Color textColor = Color(0xfff5f5f5);
                       if (paid_by_me == 0.00 && paid_for_me == 0.00)
                         involved = "not involved";
-                      if (paid_by_me >= paid_for_me) {
+                      else if (paid_by_me >= paid_for_me) {
                         involved = "you owed";
                         textColor = mainGreen;
                         amnt = roundAmountStr(paid_by_me - paid_for_me);

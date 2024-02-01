@@ -1,4 +1,4 @@
-enum splitTypeEnum { equal, unequal, percent, shares }
+enum splitTypeEnum { equal, unequal, shares, percent }
 
 class ExpenseModel {
   String _id;
@@ -68,14 +68,48 @@ class ExpenseModel {
 class By {
   String user;
   double amount;
+  double share_or_percent;
 
-  By(this.user, this.amount);
+  By(this.user, this.amount, this.share_or_percent);
 
   factory By.fromJson(Map<String, dynamic> json) {
-    return By(json['user'], json['amount'] + 0.0);
+    if (json['share_or_percent'] != null)
+      return By(
+          json['user'], json['amount'] + 0.0, json['share_or_percent'] + 0.0);
+    return By(json['user'], json['amount'] + 0.0, 0.0);
   }
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> json = {'user': user, 'amount': amount};
+    if (share_or_percent > 0.0) json['share_or_percent'] = share_or_percent;
     return json;
+  }
+
+  @override
+  String toString() {
+    return 'By{user: $user, amount: $amount}';
+  }
+}
+
+class ByEqual {
+  String user;
+  bool involved;
+
+  ByEqual(this.user, this.involved);
+
+  @override
+  String toString() {
+    return 'By{user: $user, involved: $involved}';
+  }
+}
+
+class ByShare {
+  String user;
+  int share;
+
+  ByShare(this.user, this.share);
+
+  @override
+  String toString() {
+    return 'By{user: $user, share: $share}';
   }
 }

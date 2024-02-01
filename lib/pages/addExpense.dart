@@ -8,6 +8,8 @@ import 'package:splittr/models/trip.dart';
 import 'package:splittr/models/tripuser.dart';
 import 'package:splittr/models/user.dart';
 import 'package:splittr/pages/chooseCategory.dart';
+import 'package:splittr/pages/choosePaidBy.dart';
+import 'package:splittr/pages/choosePaidFor.dart';
 import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/request.dart';
 
@@ -48,12 +50,12 @@ class _AddExpenseState extends State<AddExpense> {
     List<By> temp = [], temp2 = [];
     for (var tu in widget.trip.users) {
       if (tu.user == user.id) {
-        temp.add(By(tu.id, 0.00));
+        temp.add(By(tu.id, 0.00, 0.00));
         setState(() {
           currentTripUser = tu.id;
         });
       }
-      temp2.add(By(tu.id, 0.00));
+      temp2.add(By(tu.id, 0.00, 0.00));
       setState(() {
         tripUserMap.putIfAbsent(tu.id, () => tu);
       });
@@ -152,6 +154,8 @@ class _AddExpenseState extends State<AddExpense> {
                         flex: 1,
                         child: GestureDetector(
                           onTap: () {
+                            HapticFeedback.mediumImpact();
+                            SystemSound.play(SystemSoundType.click);
                             getCategory(category);
                           },
                           child: Stack(
@@ -323,26 +327,38 @@ class _AddExpenseState extends State<AddExpense> {
                         "Paid by ",
                         style: TextStyle(color: Colors.white),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: Container(
-                          width: 60,
-                          height: 30,
-                          decoration: BoxDecoration(
-                              color: Colors.grey[900],
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(5),
-                              ),
-                              border: Border.all(
-                                color: Color(0xffa0a0a0),
-                                width: 0.5,
-                              )),
-                          child: Center(
-                            child: Text(
-                              'you',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.mediumImpact();
+                          SystemSound.play(SystemSoundType.click);
+                          changePaidBy();
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Container(
+                            width: 60,
+                            height: 30,
+                            decoration: BoxDecoration(
+                                color: Colors.grey[900],
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(5),
+                                ),
+                                border: Border.all(
+                                  color: Color(0xffa0a0a0),
+                                  width: 0.5,
+                                )),
+                            child: Center(
+                              child: Text(
+                                paid_by.length == 1
+                                    ? paid_by[0].user == currentTripUser
+                                        ? 'you'
+                                        : tripUserMap[paid_by[0].user]!.name
+                                    : '2+ people',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ),
@@ -352,26 +368,39 @@ class _AddExpenseState extends State<AddExpense> {
                         " and split  ",
                         style: TextStyle(color: Colors.white),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: Container(
-                          width: 80,
-                          height: 30,
-                          decoration: BoxDecoration(
-                              color: Colors.grey[900],
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(5),
-                              ),
-                              border: Border.all(
-                                color: Color(0xffa0a0a0),
-                                width: 0.5,
-                              )),
-                          child: Center(
-                            child: Text(
-                              'equally',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.mediumImpact();
+                          SystemSound.play(SystemSoundType.click);
+                          changePaidfor();
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Container(
+                            width: 80,
+                            height: 30,
+                            decoration: BoxDecoration(
+                                color: Colors.grey[900],
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(5),
+                                ),
+                                border: Border.all(
+                                  color: Color(0xffa0a0a0),
+                                  width: 0.5,
+                                )),
+                            child: Center(
+                              child: Text(
+                                splitType == splitTypeEnum.equal
+                                    ? 'equally'
+                                    : splitType == splitTypeEnum.unequal
+                                        ? 'unequally'
+                                        : splitType == splitTypeEnum.shares
+                                            ? 'shares'
+                                            : 'percent',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
                               ),
                             ),
                           ),
@@ -493,5 +522,44 @@ class _AddExpenseState extends State<AddExpense> {
     setState(() {
       paid_by = temp;
     });
+  }
+
+  Future<void> changePaidBy() async {
+    List<By> result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (context) => ChoosePaidBy(
+                tripUserMap: tripUserMap,
+                paid_by: paid_by,
+                amount: double.parse(amount),
+              )),
+    );
+    if (!mounted) return;
+    print(result);
+    setState(() {
+      paid_by = result;
+    });
+  }
+
+  Future<void> changePaidfor() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (context) => ChoosePaidFor(
+                tripUserMap: tripUserMap,
+                paid_for: paid_for,
+                amount: double.parse(amount),
+                splitType: splitType,
+              )),
+    );
+    if (!mounted) return;
+    print(result);
+    setState(() {
+      splitType = result['type'];
+      paid_for = result['paid_for'];
+    });
+    // setState(() {
+    //   paid_by = result;
+    // });
   }
 }

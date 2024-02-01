@@ -33,13 +33,12 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    auth.authStateChanges().listen((event) {
+    auth.authStateChanges().listen((event) async {
       setState(() {
         _user = event;
       });
       if (event != null) {
         String token = generateToken(event.email!);
-        
         loginToServer(token, event.email!);
       }
     });
@@ -295,7 +294,7 @@ class _LoginPageState extends State<LoginPage> {
   void googleSignin() {
     try {
       var snackBar = SnackBar(
-        content: Text('Redirectibg to Google'),
+        content: Text('Redirecting to Google'),
       );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
       GoogleAuthProvider provider = GoogleAuthProvider();
