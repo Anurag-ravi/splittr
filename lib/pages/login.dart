@@ -205,6 +205,9 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       GestureDetector(
                         onTap: () {
+                          setState(() {
+                            responseLoading = true;
+                          });
                           googleSignin();
                         },
                         child: Container(
@@ -305,57 +308,72 @@ class _LoginPageState extends State<LoginPage> {
         content: Text(err.toString()),
       );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      setState(() {
+        responseLoading = false;
+      });
     }
   }
 
   void loginToServer(String token, String email) async {
-    setState(() {
-      responseLoading = true;
-    });
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? url = prefs.getString('url');
-    prefs.setString('email', email);
-    final response = await http.post(Uri.parse("${url!}/auth/oauth-login"),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: jsonEncode({"token": token}));
-    var data = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      if (data['status'] == 200) {
-        String token = data['token'];
-        bool registeredNow = data['registered_now'];
-        prefs.setBool('registered_now', registeredNow);
-        prefs.setString("token", token);
-        if (registeredNow) {
-          Navigator.of(context).pushReplacement(MaterialPageRoute(
-              builder: (builder) => CompleteSignUp(
-                    email: email,
-                  )));
-        } else {
-          prefs.setString('user', jsonEncode(UserModel.fromJson(data['user'])));
-          Navigator.of(context).pushReplacement(MaterialPageRoute(
-              builder: (builder) => HomePage(
-                    curridx: 0,
-                  )));
+    try {
+      setState(() {
+        responseLoading = true;
+      });
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? url = prefs.getString('url');
+      prefs.setString('email', email);
+      final response = await http.post(Uri.parse("${url!}/auth/oauth-login"),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: jsonEncode({"token": token}));
+      var data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        if (data['status'] == 200) {
+          String token = data['token'];
+          bool registeredNow = data['registered_now'];
+          prefs.setBool('registered_now', registeredNow);
+          prefs.setString("token", token);
+          if (registeredNow) {
+            Navigator.of(context).pushReplacement(MaterialPageRoute(
+                builder: (builder) => CompleteSignUp(
+                      email: email,
+                    )));
+          } else {
+            prefs.setString(
+                'user', jsonEncode(UserModel.fromJson(data['user'])));
+            Navigator.of(context).pushReplacement(MaterialPageRoute(
+                builder: (builder) => HomePage(
+                      curridx: 0,
+                    )));
+          }
+          const snackBar = SnackBar(
+            content: Text('Succcessfully Logged in'),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          setState(() {
+            responseLoading = false;
+          });
+          return;
         }
-        const snackBar = SnackBar(
-          content: Text('Succcessfully Logged in'),
-        );
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        setState(() {
-          responseLoading = false;
-        });
-        return;
       }
+      var snackBar = SnackBar(
+        content: Text(data['message']),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      setState(() {
+        responseLoading = false;
+      });
+    } catch (e) {
+      print(e);
+      var snackBar = SnackBar(
+        content: Text(e.toString()),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      setState(() {
+        responseLoading = false;
+      });
     }
-    var snackBar = SnackBar(
-      content: Text(data['message']),
-    );
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
-    setState(() {
-      responseLoading = false;
-    });
   }
 }
