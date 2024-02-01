@@ -1,6 +1,10 @@
+import 'dart:convert';
+
+import 'package:contacts_service/contacts_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/firebase_options.dart';
 import 'package:splittr/pages/completeSignup.dart';
@@ -40,6 +44,35 @@ class _MyAppState extends State<MyApp> {
     // TODO: implement initState
     super.initState();
     theme = false;
+    FetchContacts();
+  }
+
+  void FetchContacts() async {
+    if (!await Permission.contacts.isGranted) {
+      await Permission.contacts.request();
+    }
+
+    var ccc = await ContactsService.getContacts();
+    List<String> cc = [];
+    for (var contact in ccc) {
+      if (contact.phones != null) {
+        for (var phone in contact.phones!) {
+          String num = "";
+          for (var i = 0; i < phone.value!.length; i++) {
+            if (phone.value![i] == ' ') {
+              continue;
+            }
+            num += phone.value![i];
+          }
+          if (num.length > 10) {
+            num = num.substring(num.length - 10);
+          }
+          cc.add(num);
+        }
+      }
+    }
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('numbers', jsonEncode(cc));
   }
 
   // This widget is the root of your application.
