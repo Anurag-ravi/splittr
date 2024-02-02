@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/models/user.dart';
@@ -26,23 +27,6 @@ class _LoginPageState extends State<LoginPage> {
   bool responseLoading = false;
 
   final FirebaseAuth auth = FirebaseAuth.instance;
-
-  User? _user;
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    auth.authStateChanges().listen((event) async {
-      setState(() {
-        _user = event;
-      });
-      if (event != null) {
-        String token = generateToken(event.email!);
-        loginToServer(token, event.email!);
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -205,9 +189,6 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       GestureDetector(
                         onTap: () {
-                          setState(() {
-                            responseLoading = true;
-                          });
                           googleSignin();
                         },
                         child: Container(
@@ -226,9 +207,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          setState(() {
-                            responseLoading = true;
-                          });
                           facebookSignin();
                         },
                         child: Container(
@@ -250,7 +228,7 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(
                     height: deviceWidth * .1,
                   ),
-                  _user != null ? Text(_user!.email!) : Container(),
+                  // _user != null ? Text(_user!.email!) : Container(),
                   Container(
                     width: deviceWidth,
                     child: Column(
@@ -297,14 +275,19 @@ class _LoginPageState extends State<LoginPage> {
         .hasMatch(email);
   }
 
-  void googleSignin() {
+  void googleSignin() async {
     try {
       var snackBar = SnackBar(
         content: Text('Redirecting to Google'),
       );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
       GoogleAuthProvider provider = GoogleAuthProvider();
-      auth.signInWithProvider(provider);
+      setState(() {
+        responseLoading = true;
+      });
+      final userCredential = await auth.signInWithProvider(provider);
+      String token = generateToken(userCredential.user!.email!);
+      loginToServer(token, userCredential.user!.email!);
     } catch (err) {
       print(err);
       var snackBar = SnackBar(
@@ -316,23 +299,56 @@ class _LoginPageState extends State<LoginPage> {
       });
     }
   }
+
   void facebookSignin() async {
     try {
       var snackBar = SnackBar(
         content: Text('Redirecting to Facebook'),
       );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      FacebookAuthProvider provider = FacebookAuthProvider();
-      auth.signInWithProvider(provider);
-    } catch (err) {
-      print(err);
-      var snackBar = SnackBar(
-        content: Text(err.toString()),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
       setState(() {
-        responseLoading = false;
+        responseLoading = true;
       });
+      final LoginResult result = await FacebookAuth.instance.login();
+      switch (result.status) {
+        case LoginStatus.success:
+          final AuthCredential facebookCredential =
+              FacebookAuthProvider.credential(result.accessToken!.token);
+          final userCredential =
+              await auth.signInWithCredential(facebookCredential);
+          String email = "";
+          if (userCredential.user!.email == null) {
+            for (var x in userCredential.user!.providerData) {
+              if (x.email != null) {
+                email = x.email!;
+              }
+            }
+          } else {
+            email = userCredential.user!.email!;
+          }
+          if (email == "") {
+            var snackBar = SnackBar(
+              content: Text(
+                  'No email found for this facebook account, try other method'),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+            setState(() {
+              responseLoading = false;
+            });
+            return;
+          }
+          String token = generateToken(email);
+          print(token);
+          loginToServer(token, email);
+          return;
+        default:
+          setState(() {
+            responseLoading = false;
+          });
+          return;
+      }
+    } on FirebaseAuthException catch (e) {
+      throw e;
     }
   }
 
@@ -353,10 +369,17 @@ class _LoginPageState extends State<LoginPage> {
       var data = jsonDecode(response.body);
       if (response.statusCode == 200) {
         if (data['status'] == 200) {
+          setState(() {
+            responseLoading = false;
+          });
           String token = data['token'];
           bool registeredNow = data['registered_now'];
           prefs.setBool('registered_now', registeredNow);
           prefs.setString("token", token);
+          const snackBar = SnackBar(
+            content: Text('Succcessfully Logged in'),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
           if (registeredNow) {
             Navigator.of(context).pushReplacement(MaterialPageRoute(
                 builder: (builder) => CompleteSignUp(
@@ -370,32 +393,25 @@ class _LoginPageState extends State<LoginPage> {
                       curridx: 0,
                     )));
           }
-          const snackBar = SnackBar(
-            content: Text('Succcessfully Logged in'),
-          );
-          ScaffoldMessenger.of(context).showSnackBar(snackBar);
-          setState(() {
-            responseLoading = false;
-          });
           return;
         }
       }
+      setState(() {
+        responseLoading = false;
+      });
       var snackBar = SnackBar(
         content: Text(data['message']),
       );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    } catch (e) {
       setState(() {
         responseLoading = false;
       });
-    } catch (e) {
       print(e);
       var snackBar = SnackBar(
         content: Text(e.toString()),
       );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      setState(() {
-        responseLoading = false;
-      });
     }
   }
 }

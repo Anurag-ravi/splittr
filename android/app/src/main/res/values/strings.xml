@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Splitr</string>
+    <string name="facebook_app_id">1059506808493175</string>
+    <string name="fb_login_protocol_scheme">fb1059506808493175</string>
+    <string name="facebook_client_token">a98fdd9769b2db59bc33e07474ca0b02</string>
+</resources>
