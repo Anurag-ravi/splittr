@@ -45,6 +45,7 @@ class _ChooseCategoryState extends State<ChooseCategory> {
           itemBuilder: (context, index) {
             return GestureDetector(
               onTap: () {
+                haptics();
                 Navigator.pop(context, categories[index]);
               },
               child: Padding(

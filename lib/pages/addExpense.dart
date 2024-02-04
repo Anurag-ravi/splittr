@@ -154,8 +154,7 @@ class _AddExpenseState extends State<AddExpense> {
                         flex: 1,
                         child: GestureDetector(
                           onTap: () {
-                            HapticFeedback.mediumImpact();
-                            SystemSound.play(SystemSoundType.click);
+                            haptics();
                             getCategory(category);
                           },
                           child: Stack(
@@ -329,8 +328,7 @@ class _AddExpenseState extends State<AddExpense> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          HapticFeedback.mediumImpact();
-                          SystemSound.play(SystemSoundType.click);
+                          haptics();
                           changePaidBy();
                         },
                         child: Padding(
@@ -370,8 +368,7 @@ class _AddExpenseState extends State<AddExpense> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          HapticFeedback.mediumImpact();
-                          SystemSound.play(SystemSoundType.click);
+                          haptics();
                           changePaidfor();
                         },
                         child: Padding(

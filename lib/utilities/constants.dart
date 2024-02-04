@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 String url = "http://localhost:5000";
 const Color mainGreen = Color(0xff1dc29f);
@@ -83,4 +84,10 @@ double roundAmount(double amount) {
 String roundAmountStr(double amount) {
   String x = (amount).toStringAsFixed(20);
   return x.substring(0, x.length - 18);
+}
+
+
+void haptics() {
+  HapticFeedback.mediumImpact();
+  SystemSound.play(SystemSoundType.click);
 }
