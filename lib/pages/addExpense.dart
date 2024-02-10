@@ -494,7 +494,7 @@ class _AddExpenseState extends State<AddExpense> {
     if (splitType != splitTypeEnum.equal) return;
     List<By> temp = paid_for;
     double amnt = double.parse(amount);
-    int participants = widget.trip.users.length;
+    int participants = paid_for.length;
     String x = (amnt / participants).toStringAsFixed(20);
     double perAmnt = double.parse(x.substring(0, x.length - 18));
     for (int i = 0; i < temp.length; i++) {
