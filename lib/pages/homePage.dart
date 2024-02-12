@@ -100,6 +100,7 @@ class _HomePageState extends State<HomePage> {
                 label: '',
                 icon: GestureDetector(
                   onTap: () {
+                    haptics();
                     setState(() {
                       currIndex = 0;
                     });
@@ -123,6 +124,7 @@ class _HomePageState extends State<HomePage> {
                 label: '',
                 icon: GestureDetector(
                   onTap: () {
+                    haptics();
                     setState(() {
                       currIndex = 1;
                     });
@@ -146,6 +148,7 @@ class _HomePageState extends State<HomePage> {
                 label: '',
                 icon: GestureDetector(
                   onTap: () {
+                    haptics();
                     setState(() {
                       currIndex = 2;
                     });
@@ -169,6 +172,7 @@ class _HomePageState extends State<HomePage> {
                 label: '',
                 icon: GestureDetector(
                   onTap: () {
+                    haptics();
                     setState(() {
                       currIndex = 3;
                     });

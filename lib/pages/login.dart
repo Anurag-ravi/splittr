@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/models/user.dart';
 import 'package:splittr/pages/completeSignup.dart';
 import 'package:splittr/pages/homePage.dart';
+import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/jwt.dart';
 import 'package:http/http.dart' as http;
 
@@ -189,6 +190,7 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       GestureDetector(
                         onTap: () {
+                          haptics();
                           googleSignin();
                         },
                         child: Container(
@@ -205,24 +207,24 @@ class _LoginPageState extends State<LoginPage> {
                               height: deviceWidth * 0.17,
                             ))),
                       ),
-                      GestureDetector(
-                        onTap: () {
-                          facebookSignin();
-                        },
-                        child: Container(
-                            width: deviceWidth * 0.25,
-                            height: deviceWidth * 0.25,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.all(
-                                  Radius.circular(deviceWidth * 0.05)),
-                            ),
-                            child: Center(
-                                child: SvgPicture.asset(
-                              'assets/icons/facebook.svg',
-                              height: deviceWidth * 0.17,
-                            ))),
-                      ),
+                      // GestureDetector(
+                      //   onTap: () {
+                      //     facebookSignin();
+                      //   },
+                      //   child: Container(
+                      //       width: deviceWidth * 0.25,
+                      //       height: deviceWidth * 0.25,
+                      //       decoration: BoxDecoration(
+                      //         color: Colors.white,
+                      //         borderRadius: BorderRadius.all(
+                      //             Radius.circular(deviceWidth * 0.05)),
+                      //       ),
+                      //       child: Center(
+                      //           child: SvgPicture.asset(
+                      //         'assets/icons/facebook.svg',
+                      //         height: deviceWidth * 0.17,
+                      //       ))),
+                      // ),
                     ],
                   ),
                   SizedBox(

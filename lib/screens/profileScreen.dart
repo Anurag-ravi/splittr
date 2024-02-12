@@ -261,6 +261,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         GestureDetector(
                           onTap: () async {
+                            haptics();
                             SharedPreferences prefs =
                                 await SharedPreferences.getInstance();
                             await prefs.setBool('registered_now', true);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/models/trip.dart';
 import 'package:splittr/pages/tripPage.dart';
+import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/request.dart';
 
 class GroupScreen extends StatefulWidget {
@@ -65,65 +66,74 @@ class _GroupScreenState extends State<GroupScreen> {
           ? Center(
               child: CircularProgressIndicator(),
             )
-          : ListView.builder(
-              itemCount: trips.length,
-              itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (builder) => TripPage(
-                              id: trips[index].id,
-                            )));
-                  },
-                  child: Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      child: Container(
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(10)),
-                            color: Colors.grey[800]),
-                        height: 90,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              width: 5,
-                            ),
-                            Container(
-                              width: 100,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(10)),
-                                  image: DecorationImage(
-                                      image: AssetImage(
-                                          'assets/images/trip.png'))),
-                            ),
-                            SizedBox(
-                              width: 20,
-                            ),
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
+          : trips.length == 0
+              ? Center(
+                  child: Text(
+                    "Join groups to participate",
+                    style: TextStyle(color: Colors.grey[100]),
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: trips.length,
+                  itemBuilder: (context, index) {
+                    return GestureDetector(
+                      onTap: () {
+                        haptics();
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (builder) => TripPage(
+                                  id: trips[index].id,
+                                )));
+                      },
+                      child: Padding(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          child: Container(
+                            decoration: BoxDecoration(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(10)),
+                                color: Colors.grey[800]),
+                            height: 90,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
                               children: [
-                                Text(
-                                  trips[index].name,
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 15),
+                                SizedBox(
+                                  width: 5,
                                 ),
-                                SizedBox(height: 5),
-                                Text(
-                                  '',
+                                Container(
+                                  width: 100,
+                                  height: 80,
+                                  decoration: BoxDecoration(
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(10)),
+                                      image: DecorationImage(
+                                          image: AssetImage(
+                                              'assets/images/trip.png'))),
                                 ),
+                                SizedBox(
+                                  width: 20,
+                                ),
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      trips[index].name,
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 15),
+                                    ),
+                                    SizedBox(height: 5),
+                                    Text(
+                                      '',
+                                    ),
+                                  ],
+                                )
                               ],
-                            )
-                          ],
-                        ),
-                      )),
-                );
-              },
-            ),
+                            ),
+                          )),
+                    );
+                  },
+                ),
     );
   }
 }

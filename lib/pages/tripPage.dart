@@ -3,8 +3,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/models/trip.dart';
+import 'package:splittr/models/tripuser.dart';
 import 'package:splittr/models/user.dart';
 import 'package:splittr/pages/addExpense.dart';
+import 'package:splittr/pages/expensePage.dart';
 import 'package:splittr/pages/tripSettings.dart';
 import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/request.dart';
@@ -24,6 +26,7 @@ class _TripPageState extends State<TripPage> {
   String currentTripUser = "";
   String g_involved = "You are all settled up in this group";
   Color g_textColor = Color(0xfff5f5f5);
+  Map<String, TripUser> tripUserMap = new Map<String, TripUser>();
 
   @override
   void initState() {
@@ -59,6 +62,9 @@ class _TripPageState extends State<TripPage> {
               currentTripUser = tu.id;
             });
           }
+          setState(() {
+            tripUserMap.putIfAbsent(tu.id, () => tu);
+          });
         }
         List<Transaction> t_temp = [];
         double paid_by_me = 0.00, paid_for_me = 0.00;
@@ -154,6 +160,7 @@ class _TripPageState extends State<TripPage> {
               ),
               floatingActionButton: GestureDetector(
                 onTap: () {
+                  haptics();
                   addExpense();
                 },
                 child: Container(
@@ -188,18 +195,19 @@ class _TripPageState extends State<TripPage> {
                 child: ListView.builder(
                     itemCount: transactions.length + 3,
                     itemBuilder: (context, index) {
-                      if (index == 0)
+                      if (index == 0) {
                         return Padding(
                           padding: const EdgeInsets.only(left: 30, top: 20),
                           child: Text(
                             trip!.name,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 20,
                             ),
                           ),
                         );
-                      if (index == 1)
+                      }
+                      if (index == 1) {
                         return Padding(
                           padding: const EdgeInsets.only(left: 30, top: 10),
                           child: Text(
@@ -210,7 +218,8 @@ class _TripPageState extends State<TripPage> {
                             ),
                           ),
                         );
-                      if (index == 2)
+                      }
+                      if (index == 2) {
                         return Padding(
                           padding: const EdgeInsets.only(
                               left: 8, top: 20, bottom: 30),
@@ -219,7 +228,7 @@ class _TripPageState extends State<TripPage> {
                             child: ListView(
                               scrollDirection: Axis.horizontal,
                               children: [
-                                HButton(
+                                const HButton(
                                   text: 'Settle up',
                                   color: mainOrange,
                                 ),
@@ -239,6 +248,7 @@ class _TripPageState extends State<TripPage> {
                             ),
                           ),
                         );
+                      }
                       int idx = index - 3;
                       DateTime date = transactions[idx].date;
                       String name = transactions[idx].isExpense
@@ -285,74 +295,91 @@ class _TripPageState extends State<TripPage> {
                         textColor = mainOrange;
                         amnt = roundAmountStr(paid_for_me - paid_by_me);
                       }
-                      return Padding(
-                        padding: EdgeInsets.only(bottom: 10),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
-                                children: [
-                                  Text(
-                                    date.day.toString(),
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 18),
-                                  ),
-                                  Text(
-                                    months[date.month - 1],
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              flex: 3,
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(4.0),
-                                child: Image.asset(
-                                  'assets/categories/${category}.png',
-                                  height: 45.0,
-                                  width: 45.0,
+                      return GestureDetector(
+                        onTap: () async {
+                          haptics();
+                          if (transactions[idx].isExpense) {
+                            final res = await Navigator.of(context)
+                                .push(MaterialPageRoute(
+                                    builder: (builder) => ExpensePage(
+                                          expense: transactions[idx].expense!,
+                                          tripUserMap: tripUserMap,
+                                        )));
+                            if (!mounted) return;
+                            if (res) {
+                              refresh();
+                            }
+                          }
+                        },
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: 10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                flex: 3,
+                                child: Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
+                                  children: [
+                                    Text(
+                                      date.day.toString(),
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 18),
+                                    ),
+                                    Text(
+                                      months[date.month - 1],
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 12),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
-                            Expanded(
-                              flex: 15,
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  name,
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      overflow: TextOverflow.ellipsis),
+                              Expanded(
+                                flex: 3,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(4.0),
+                                  child: Image.asset(
+                                    'assets/categories/${category}.png',
+                                    height: 45.0,
+                                    width: 45.0,
+                                  ),
                                 ),
                               ),
-                            ),
-                            Expanded(
-                              flex: 6,
-                              child: Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Text(
-                                    involved,
+                              Expanded(
+                                flex: 15,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    name,
                                     style: TextStyle(
-                                        color: textColor, fontSize: 10),
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        overflow: TextOverflow.ellipsis),
                                   ),
-                                  Text(
-                                    amnt,
-                                    style: TextStyle(
-                                        color: textColor, fontSize: 12),
-                                  ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ],
+                              Expanded(
+                                flex: 6,
+                                child: Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    Text(
+                                      involved,
+                                      style: TextStyle(
+                                          color: textColor, fontSize: 10),
+                                    ),
+                                    Text(
+                                      amnt,
+                                      style: TextStyle(
+                                          color: textColor, fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     }),

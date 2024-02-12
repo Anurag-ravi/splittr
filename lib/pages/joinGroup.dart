@@ -45,6 +45,7 @@ class _JoinGroupState extends State<JoinGroup> {
                   )
                 : GestureDetector(
                     onTap: () {
+                      haptics();
                       joinTrip();
                     },
                     child: const Text(

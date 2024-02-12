@@ -49,6 +49,7 @@ class _AddExpenseState extends State<AddExpense> {
     });
     List<By> temp = [], temp2 = [];
     for (var tu in widget.trip.users) {
+      if (!tu.involved) continue;
       if (tu.user == user.id) {
         temp.add(By(tu.id, 0.00, 0.00));
         setState(() {
@@ -236,6 +237,7 @@ class _AddExpenseState extends State<AddExpense> {
                         flex: 1,
                         child: GestureDetector(
                           onTap: () {
+                            haptics();
                             getCategory(category);
                           },
                           child: Stack(

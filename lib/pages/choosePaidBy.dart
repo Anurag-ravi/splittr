@@ -148,6 +148,7 @@ class _ChoosePaidByState extends State<ChoosePaidBy> {
                 if (index == users.length)
                   return GestureDetector(
                     onTap: () {
+                      haptics();
                       setState(() {
                         single_paid = false;
                       });
@@ -163,6 +164,7 @@ class _ChoosePaidByState extends State<ChoosePaidBy> {
                   );
                 return GestureDetector(
                   onTap: () {
+                    haptics();
                     List<By> temp = [];
                     temp.add(By(users[index].id, widget.amount, 0.00));
                     Navigator.pop(context, temp);

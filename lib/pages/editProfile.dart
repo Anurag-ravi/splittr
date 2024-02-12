@@ -5,6 +5,7 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/models/user.dart';
 import 'package:splittr/pages/homePage.dart';
+import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/request.dart';
 
 class EditProfile extends StatefulWidget {
@@ -134,6 +135,7 @@ class _EditProfileState extends State<EditProfile> {
             ),
             GestureDetector(
               onTap: () async {
+                haptics();
                 editProfile();
               },
               child: Container(

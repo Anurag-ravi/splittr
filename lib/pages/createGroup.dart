@@ -46,6 +46,7 @@ class _CreateGroupState extends State<CreateGroup> {
                   )
                 : GestureDetector(
                     onTap: () {
+                      haptics();
                       createTrip();
                     },
                     child: const Text(

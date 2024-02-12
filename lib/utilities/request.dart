@@ -60,3 +60,16 @@ dynamic getRequest(String url, Map<String, String> headers,
   }
   return null;
 }
+
+dynamic deleteRequest(
+    String url, Map<String, String> headers, BuildContext context) async {
+  final res = await http.delete(
+    Uri.parse(url),
+    headers: headers,
+  );
+  if (res.statusCode == 200) {
+    var data = jsonDecode(res.body);
+    return data;
+  }
+  return null;
+}

@@ -1,7 +1,7 @@
 enum splitTypeEnum { equal, unequal, shares, percent }
 
 class ExpenseModel {
-  String _id;
+  String id;
   String trip;
   String name;
   double amount;
@@ -11,7 +11,7 @@ class ExpenseModel {
   List<By> paid_by;
   List<By> paid_for;
 
-  ExpenseModel(this._id, this.trip, this.name, this.amount, this.category,
+  ExpenseModel(this.id, this.trip, this.name, this.amount, this.category,
       this.splitType, this.created, this.paid_by, this.paid_for);
 
   factory ExpenseModel.fromJson(Map<String, dynamic> json) {
@@ -52,7 +52,7 @@ class ExpenseModel {
       paid_for_json.add(paid_for_item.toJson());
     });
     Map<String, dynamic> json = new Map<String, dynamic>();
-    json['_id'] = this._id;
+    json['_id'] = this.id;
     json['trip'] = this.trip;
     json['name'] = this.name;
     json['amount'] = this.amount;
