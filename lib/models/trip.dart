@@ -36,7 +36,7 @@ class TripModel {
       json['_id'],
       json['code'],
       json['name'],
-      DateTime.parse(json['created']),
+      DateTime.parse(json['created']).toLocal(),
       json['currency'],
       json['created_by'],
       List<TripUser>.from(json['users'].map((x) => TripUser.fromJson(x))),

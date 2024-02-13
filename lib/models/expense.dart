@@ -38,7 +38,7 @@ class ExpenseModel {
         json['amount'] + 0.0,
         json['category'],
         x,
-        DateTime.parse(json['created']),
+        DateTime.parse(json['created']).toLocal(),
         paid_by,
         paid_for);
   }

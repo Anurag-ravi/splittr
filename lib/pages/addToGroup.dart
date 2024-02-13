@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/models/trip.dart';
 import 'package:splittr/models/user.dart';
+import 'package:splittr/pages/addNewContact.dart';
 import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/request.dart';
 
@@ -102,7 +103,7 @@ class _AddToGroupState extends State<AddToGroup> {
             color: Colors.white,
           ),
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pop(context, false);
           },
         ),
       ),
@@ -114,33 +115,51 @@ class _AddToGroupState extends State<AddToGroup> {
               itemCount: friends.length + 2,
               itemBuilder: ((context, idx) {
                 if (idx == 0) {
-                  return Row(
-                    children: [
-                      SizedBox(
-                        width: 20,
-                      ),
-                      ClipRRect(
-                        borderRadius: BorderRadius.all(Radius.circular(22.5)),
-                        child: Container(
-                          width: 45,
-                          height: 45,
-                          decoration: BoxDecoration(color: Colors.cyan[200]),
-                          child: Center(
-                            child: Icon(
-                              Icons.group_add,
-                              color: Colors.purple[400],
+                  return GestureDetector(
+                    onTap: () async {
+                      haptics();
+                      final res = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (builder) => AddNewContact(
+                                    id: widget.trip.id,
+                                  )));
+                      if (!mounted) {
+                        return;
+                      }
+                      if (res == null || !res) {
+                        return;
+                      }
+                      Navigator.pop(context, true);
+                    },
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 20,
+                        ),
+                        ClipRRect(
+                          borderRadius: BorderRadius.all(Radius.circular(22.5)),
+                          child: Container(
+                            width: 45,
+                            height: 45,
+                            decoration: BoxDecoration(color: Colors.cyan[200]),
+                            child: Center(
+                              child: Icon(
+                                Icons.group_add,
+                                color: Colors.purple[400],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      SizedBox(
-                        width: 10,
-                      ),
-                      Text(
-                        'Add a new contact to Splittr',
-                        style: TextStyle(color: Colors.white, fontSize: 13),
-                      )
-                    ],
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Text(
+                          'Add a new contact to Splittr',
+                          style: TextStyle(color: Colors.white, fontSize: 13),
+                        )
+                      ],
+                    ),
                   );
                 }
                 if (idx == 1) {

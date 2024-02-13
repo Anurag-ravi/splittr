@@ -59,7 +59,7 @@ class _TripSettingState extends State<TripSetting> {
             body: ListView.builder(
               itemCount: widget.trip.users.length + 8,
               itemBuilder: (context, index) {
-                if (index == 0)
+                if (index == 0) {
                   return Container(
                     height: 100,
                     width: deviceWidth,
@@ -72,11 +72,11 @@ class _TripSettingState extends State<TripSetting> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          const Text(
                             'Group Details',
                             style: TextStyle(color: Colors.white, fontSize: 12),
                           ),
-                          SizedBox(
+                          const SizedBox(
                             height: 5,
                           ),
                           Row(
@@ -85,7 +85,7 @@ class _TripSettingState extends State<TripSetting> {
                               Container(
                                 width: 75,
                                 height: 60,
-                                decoration: BoxDecoration(
+                                decoration: const BoxDecoration(
                                     borderRadius: BorderRadius.all(
                                       Radius.circular(5),
                                     ),
@@ -94,7 +94,7 @@ class _TripSettingState extends State<TripSetting> {
                                         image: AssetImage(
                                             'assets/images/trip.png'))),
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 width: 10,
                               ),
                               Column(
@@ -102,7 +102,7 @@ class _TripSettingState extends State<TripSetting> {
                                 children: [
                                   Text(
                                     name,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                         color: Colors.white, fontSize: 17),
                                   ),
                                 ],
@@ -138,7 +138,7 @@ class _TripSettingState extends State<TripSetting> {
                                     ),
                                   );
                                 },
-                                icon: Icon(
+                                icon: const Icon(
                                   Icons.edit_outlined,
                                   color: Colors.white,
                                 ),
@@ -149,11 +149,13 @@ class _TripSettingState extends State<TripSetting> {
                       ),
                     ),
                   );
-                if (index == 1)
+                }
+                if (index == 1) {
                   return const SizedBox(
                     height: 10,
                   );
-                if (index == 2)
+                }
+                if (index == 2) {
                   return const Padding(
                     padding: EdgeInsets.all(8.0),
                     child: Row(
@@ -165,7 +167,8 @@ class _TripSettingState extends State<TripSetting> {
                       ],
                     ),
                   );
-                if (index == 3)
+                }
+                if (index == 3) {
                   return GestureDetector(
                     onTap: () async {
                       haptics();
@@ -197,7 +200,8 @@ class _TripSettingState extends State<TripSetting> {
                       ),
                     ),
                   );
-                if (index == 4)
+                }
+                if (index == 4) {
                   return GestureDetector(
                     onTap: () {
                       haptics();
@@ -223,7 +227,8 @@ class _TripSettingState extends State<TripSetting> {
                       ),
                     ),
                   );
-                if (index == widget.trip.users.length + 5)
+                }
+                if (index == widget.trip.users.length + 5) {
                   return const Padding(
                     padding: EdgeInsets.all(15),
                     child: Row(
@@ -235,7 +240,8 @@ class _TripSettingState extends State<TripSetting> {
                       ],
                     ),
                   );
-                if (index == widget.trip.users.length + 6)
+                }
+                if (index == widget.trip.users.length + 6) {
                   return GestureDetector(
                     onTap: () {
                       haptics();
@@ -248,15 +254,15 @@ class _TripSettingState extends State<TripSetting> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            Icon(Icons.exit_to_app_outlined,
+                            const Icon(Icons.exit_to_app_outlined,
                                 color: Colors.white, size: 25),
-                            SizedBox(
+                            const SizedBox(
                               width: 20,
                             ),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
+                                const Text(
                                   'Leave Group',
                                   style: TextStyle(color: Colors.white),
                                 ),
@@ -264,7 +270,7 @@ class _TripSettingState extends State<TripSetting> {
                                     ? Container()
                                     : Container(
                                         width: deviceWidth - 80,
-                                        child: Text(
+                                        child: const Text(
                                           "You can't leave this group because you have outstanding debts with other group members. Please make sure all of your debts have been settled up, and try again.",
                                           softWrap: true,
                                           style: TextStyle(
@@ -279,7 +285,8 @@ class _TripSettingState extends State<TripSetting> {
                       ),
                     ),
                   );
-                if (index == widget.trip.users.length + 7)
+                }
+                if (index == widget.trip.users.length + 7) {
                   return const Padding(
                     padding: EdgeInsets.all(15),
                     child: Row(
@@ -296,6 +303,7 @@ class _TripSettingState extends State<TripSetting> {
                       ],
                     ),
                   );
+                }
 
                 if (!widget.trip.users[index - 5].involved) return Container();
                 return Padding(
@@ -303,7 +311,7 @@ class _TripSettingState extends State<TripSetting> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      SizedBox(
+                      const SizedBox(
                         width: 10,
                       ),
                       ClipOval(
@@ -314,7 +322,7 @@ class _TripSettingState extends State<TripSetting> {
                               "assets/profile/${widget.trip.users[index - 5].dp}.png"),
                         ),
                       ),
-                      SizedBox(
+                      const SizedBox(
                         width: 20,
                       ),
                       Column(

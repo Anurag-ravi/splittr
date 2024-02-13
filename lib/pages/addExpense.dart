@@ -189,7 +189,7 @@ class _AddExpenseState extends State<AddExpense> {
                       Expanded(
                         flex: 5,
                         child: Padding(
-                          padding: const EdgeInsets.only(left: 5),
+                          padding: const EdgeInsets.only(left: 10),
                           child: TextField(
                             cursorColor: mainGreen,
                             style: TextStyle(color: Colors.white),
@@ -214,6 +214,7 @@ class _AddExpenseState extends State<AddExpense> {
                                     labelText: 'Expense Name',
                                     fillColor: Colors.grey[900],
                                     filled: true,
+                                    contentPadding: EdgeInsets.only(),
                                   )
                                 : const InputDecoration(
                                     errorText: 'Please Enter a valid Name'),
@@ -225,6 +226,9 @@ class _AddExpenseState extends State<AddExpense> {
                         child: Container(),
                       ),
                     ],
+                  ),
+                  SizedBox(
+                    height: 20,
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -269,7 +273,7 @@ class _AddExpenseState extends State<AddExpense> {
                       Expanded(
                         flex: 5,
                         child: Padding(
-                          padding: const EdgeInsets.only(left: 5),
+                          padding: const EdgeInsets.only(left: 10),
                           child: TextField(
                             keyboardType: TextInputType.numberWithOptions(
                               decimal: true,
@@ -308,6 +312,7 @@ class _AddExpenseState extends State<AddExpense> {
                                   FloatingLabelBehavior.never,
                               fillColor: Colors.grey[900],
                               filled: true,
+                              contentPadding: EdgeInsets.only(),
                             ),
                           ),
                         ),
