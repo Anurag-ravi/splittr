@@ -260,14 +260,18 @@ class _TripPageState extends State<TripPage> {
                                   ),
                                 ),
                                 GestureDetector(
-                                  onTap: () {
+                                  onTap: () async {
                                     haptics();
-                                    Navigator.of(context)
+                                    final res = await Navigator.of(context)
                                         .push(MaterialPageRoute(
                                             builder: (builder) => BalancesPage(
                                                   trip: trip!,
                                                   tripUserMap: tripUserMap,
                                                 )));
+                                    if (!mounted) return;
+                                    if (res) {
+                                      refresh();
+                                    }
                                   },
                                   child: HButton(
                                     text: 'Balances',

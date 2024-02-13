@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:splittr/models/trip.dart';
 import 'package:splittr/models/tripuser.dart';
+import 'package:splittr/pages/payment.dart';
 import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/settleUp.dart';
 
@@ -78,7 +79,7 @@ class _BalancesPageState extends State<BalancesPage> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pop(context,false);
           },
         ),
       ),
@@ -262,14 +263,18 @@ class _BalancesPageState extends State<BalancesPage> {
                               width: 10,
                             ),
                             GestureDetector(
-                              onTap: () {
+                              onTap: () async {
                                 haptics();
-                                print(widget
-                                    .tripUserMap[transactions[index].from]!
-                                    .name);
-                                print(widget
-                                    .tripUserMap[transactions[index].to]!.name);
-                                print(transactions[index].amount);
+                                final res = await Navigator.push(context, MaterialPageRoute(builder: (context) => PaymentPage(
+                                  tripUserMap: widget.tripUserMap,
+                                  from: transactions[index].from,
+                                  to: transactions[index].to,
+                                  amount: transactions[index].amount,
+                                )));
+                                if(!mounted) return;
+                                if(res){
+                                  Navigator.pop(context,true);
+                                }
                               },
                               child: Container(
                                 padding: EdgeInsets.symmetric(

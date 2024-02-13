@@ -43,7 +43,16 @@ class _SettleUpBalanceState extends State<SettleUpBalance> {
           },
         ),
       ),
-      body: ListView.builder(
+      body: balances.length == 0 ? Center(
+        child: Text(
+          "No balances to settle",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+          ),
+        ),
+      )
+      : ListView.builder(
         itemCount: balances.length,
         itemBuilder: (context, index) {
           return GestureDetector(

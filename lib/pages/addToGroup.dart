@@ -35,7 +35,9 @@ class _AddToGroupState extends State<AddToGroup> {
   void getContacts() async {
     for (var tu in widget.trip.users) {
       setState(() {
-        involved_users.add(tu.user);
+        if(tu.involved) {
+          involved_users.add(tu.user);
+        }
       });
     }
     SharedPreferences prefs = await SharedPreferences.getInstance();
