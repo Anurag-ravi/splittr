@@ -94,7 +94,7 @@ class _TripPageState extends State<TripPage> {
           if (x.to == currentTripUser) paid_for_me += x.amount;
         }
         t_temp.sort((a, b) => b.date.compareTo(a.date));
-        if (paid_by_me == paid_for_me) {
+        if (paid_by_me.toStringAsFixed(2) == paid_for_me.toStringAsFixed(2)) {
           setState(() {
             g_involved = "You are all settled up in this group";
             g_textColor = Color(0xfff5f5f5);
