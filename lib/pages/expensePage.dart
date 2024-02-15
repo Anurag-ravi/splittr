@@ -51,12 +51,12 @@ class _ExpensePageState extends State<ExpensePage> {
       bool involved = false;
       if (paid.containsKey(tripuser)) {
         involved = true;
-        a += " paid ₹${paid[tripuser]}";
+        a += " paid ₹${paid[tripuser]!.toStringAsFixed(2)}";
       }
       if (owed.containsKey(tripuser)) {
         if (involved) a += " and";
         involved = true;
-        a += " owed ₹${owed[tripuser]}";
+        a += " owed ₹${owed[tripuser]!.toStringAsFixed(2)}";
       }
       if (involved) {
         setState(() {
@@ -131,7 +131,7 @@ class _ExpensePageState extends State<ExpensePage> {
                                   overflow: TextOverflow.ellipsis),
                             ),
                             Text(
-                              "₹ ${widget.expense.amount.toString()}",
+                              "₹ ${widget.expense.amount..toStringAsFixed(2)}",
                               style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 15,
@@ -174,7 +174,7 @@ class _ExpensePageState extends State<ExpensePage> {
                         Text(
                           widget.expense.paid_by.length == 1
                               ? "${widget.tripUserMap[widget.expense.paid_by[0].user]!.name} paid ₹${widget.expense.amount}"
-                              : "${widget.expense.paid_by.length} people paid ₹${widget.expense.amount}",
+                              : "${widget.expense.paid_by.length} people paid ₹${widget.expense.amount.toStringAsFixed(2)}",
                           style: TextStyle(
                               color: Colors.white,
                               fontSize: 14,
