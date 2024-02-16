@@ -298,7 +298,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     'Made with ❤️ by Anurag',
                     style: TextStyle(color: Colors.white, fontSize: 12),
                   ),
-                )
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    'Build number: ${const String.fromEnvironment('TAG')}',
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                ),
               ],
             ),
           );

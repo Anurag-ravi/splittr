@@ -65,7 +65,7 @@ class _HomePageState extends State<HomePage> {
             builder: (context) {
               return AlertDialog(
                 title: Text('New Update Available'),
-                content: Text('A new update is available. Please update the app'),
+                content: Text('A new update is available. Your app version is ${currentTag} and the latest version is ${data[0]['tag_name']}. Please update to the latest version to get the latest features and bug fixes.'),
                 actions: [
                   TextButton(
                       onPressed: () {
