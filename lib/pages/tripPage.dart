@@ -1,12 +1,14 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/models/trip.dart';
 import 'package:splittr/models/tripuser.dart';
 import 'package:splittr/models/user.dart';
 import 'package:splittr/pages/addExpense.dart';
 import 'package:splittr/pages/balances.dart';
+import 'package:splittr/pages/choosePaymentBy.dart';
 import 'package:splittr/pages/expensePage.dart';
 import 'package:splittr/pages/paymentPage.dart';
 import 'package:splittr/pages/settleUpPage.dart';
@@ -169,37 +171,33 @@ class _TripPageState extends State<TripPage> {
                   )
                 ],
               ),
-              floatingActionButton: GestureDetector(
-                onTap: () {
-                  haptics();
-                  addExpense();
-                },
-                child: Container(
-                  width: 160,
-                  height: 40,
-                  decoration: const BoxDecoration(
-                    color: mainGreen,
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(20),
-                    ),
+              floatingActionButton: SpeedDial(
+                animatedIcon: AnimatedIcons.view_list,
+                overlayColor: Colors.transparent,
+                animatedIconTheme: const IconThemeData(size: 22.0),
+                backgroundColor: mainGreen,
+                children: [
+                  SpeedDialChild(
+                    child: const Icon(Icons.payment),
+                    backgroundColor: mainGreen,
+                    label: 'Add Payment',
+                    labelStyle: const TextStyle(fontSize: 12),
+                    onTap: () {
+                      haptics();
+                      addPayment();
+                    },
                   ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.receipt_outlined,
-                        color: Colors.white,
-                      ),
-                      SizedBox(
-                        width: 10,
-                      ),
-                      Text(
-                        'Add expense',
-                        style: TextStyle(color: Colors.white),
-                      )
-                    ],
+                  SpeedDialChild(
+                    child: const Icon(Icons.receipt_outlined),
+                    backgroundColor: mainGreen,
+                    label: 'Add Expense ',
+                    labelStyle: const TextStyle(fontSize: 12),
+                    onTap: () {
+                      haptics();
+                      addExpense();
+                    },
                   ),
-                ),
+                ],
               ),
               body: Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -519,9 +517,18 @@ class _TripPageState extends State<TripPage> {
   }
 
   Future<void> addExpense() async {
-    await Navigator.of(context)
+    final res = await Navigator.of(context)
         .push(MaterialPageRoute(builder: (builder) => AddExpense(trip: trip!)));
     if (!mounted) return;
+    if (res == null || !res) return;
+    await refresh();
+  }
+
+  Future<void> addPayment() async {
+    final res = await Navigator.of(context).push(MaterialPageRoute(
+        builder: (builder) => ChoosePaymentBy(tripUserMap: tripUserMap)));
+    if (!mounted) return;
+    if (res == null || !res) return;
     await refresh();
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/models/payment.dart';
 import 'package:splittr/models/tripuser.dart';
+import 'package:splittr/pages/payment.dart';
 import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/request.dart';
 
@@ -64,7 +65,10 @@ class _PaymentViewState extends State<PaymentView> {
               Icons.edit_outlined,
               color: Colors.white,
             ),
-            onPressed: () {},
+            onPressed: () {
+              haptics();
+              handleUpdate();
+            },
           ),
         ],
       ),
@@ -174,5 +178,25 @@ class _PaymentViewState extends State<PaymentView> {
       content: Text(data['message'] ?? 'An error occurred'),
     );
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  Future<void> handleUpdate() async {
+    final res =
+        await Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return PaymentPage(
+        from: widget.payment.by,
+        to: widget.payment.to,
+        amount: widget.payment.amount,
+        payment_id: widget.payment.id,
+        updating: true,
+        tripUserMap: widget.tripUserMap,
+      );
+    }));
+    if (!mounted) {
+      return;
+    }
+    if (res != null && res) {
+      Navigator.pop(context, true);
+    }
   }
 }

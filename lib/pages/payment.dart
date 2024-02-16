@@ -8,16 +8,21 @@ import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/request.dart';
 
 class PaymentPage extends StatefulWidget {
-  const PaymentPage(
-      {super.key,
-      required this.from,
-      required this.to,
-      required this.amount,
-      required this.tripUserMap});
+  const PaymentPage({
+    super.key,
+    required this.from,
+    required this.to,
+    required this.amount,
+    required this.tripUserMap,
+    this.updating = false,
+    this.payment_id = "",
+  });
   final String from;
   final String to;
   final double amount;
   final Map<String, TripUser> tripUserMap;
+  final bool updating;
+  final String payment_id;
 
   @override
   State<PaymentPage> createState() => _PaymentPageState();
@@ -33,8 +38,13 @@ class _PaymentPageState extends State<PaymentPage> {
     // TODO: implement initState
     super.initState();
     setState(() {
-      amount = widget.amount.toStringAsFixed(2);
-      amountController.text = amount;
+      if (widget.amount.toStringAsFixed(2) != "0.00") {
+        amount = widget.amount.toStringAsFixed(2);
+        amountController.text = amount;
+      } else {
+        amount = "";
+        amountController.text = amount;
+      }
     });
   }
 
@@ -45,7 +55,7 @@ class _PaymentPageState extends State<PaymentPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         title: Text(
-          'Record Payment',
+          widget.updating ? 'Update Payment' : 'Record Payment',
           style: TextStyle(color: Colors.white),
         ),
         leading: IconButton(
@@ -60,16 +70,20 @@ class _PaymentPageState extends State<PaymentPage> {
         actions: [
           IconButton(
             icon: responseLoading
-                ? CircularProgressIndicator(
+                ? const CircularProgressIndicator(
                     strokeWidth: 3,
                   )
-                : Icon(
+                : const Icon(
                     Icons.done,
                     color: Colors.white,
                   ),
             onPressed: () {
               haptics();
-              createPayment();
+              if (widget.updating) {
+                updatePayment();
+              } else {
+                createPayment();
+              }
             },
           )
         ],
@@ -269,6 +283,53 @@ class _PaymentPageState extends State<PaymentPage> {
       if (data['status'] == 200) {
         const snackBar = SnackBar(
           content: Text('Payments added'),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        Navigator.pop(context, true);
+        return;
+      }
+    }
+    var snackBar = SnackBar(
+      content: Text(data['message']),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  void updatePayment() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      responseLoading = true;
+    });
+    bool res2 = amountController.text.isNotEmpty;
+    if (!res2) {
+      setState(() {
+        responseLoading = false;
+      });
+      return;
+    }
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? url = prefs.getString('url');
+    String? token = prefs.getString('token');
+    var data = await postRequest(
+        "${url!}/payment/${widget.payment_id}",
+        {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': token!
+        },
+        jsonEncode({
+          "amount": double.parse(amount),
+        }),
+        prefs,
+        context);
+    setState(() {
+      responseLoading = false;
+    });
+    if (data != null) {
+      if (data['status'] == 200) {
+        const snackBar = SnackBar(
+          content: Text('Payments Updated'),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         Navigator.pop(context, true);

@@ -35,7 +35,6 @@ class _FriendScreenState extends State<FriendScreen> {
         List<String> data = List<String>.from(json.decode(numb));
         setState(() {
           numbers = data;
-          loading = false;
         });
         await fetchFriends();
       }
@@ -45,6 +44,13 @@ class _FriendScreenState extends State<FriendScreen> {
 
     if (!await Permission.contacts.isGranted) {
       await Permission.contacts.request();
+      if (!await Permission.contacts.isGranted) {
+        var snackBar = SnackBar(
+          content: Text("Without contacts, you can't view friends"),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        return;
+      }
     }
 
     var ccc = await ContactsService.getContacts();

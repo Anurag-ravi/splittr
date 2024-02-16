@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_share/flutter_share.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -131,6 +133,7 @@ class _TripSettingState extends State<TripSetting> {
                                               name = controller.text;
                                             });
                                             Navigator.pop(context, 'Ok');
+                                            handleEditName();
                                           },
                                           child: const Text('OK'),
                                         ),
@@ -392,6 +395,44 @@ class _TripSettingState extends State<TripSetting> {
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (builder) => HomePage(curridx: 0)));
+        return;
+      } else {
+        var snackBar = SnackBar(
+          content: Text(data['message']),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        return;
+      }
+    }
+  }
+
+  Future<void> handleEditName() async {
+    setState(() {
+      loading = true;
+    });
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? url = prefs.getString('url');
+    String? token = prefs.getString('token');
+    var data = await postRequest(
+        "${url!}/trip/${widget.trip.id}/edit",
+        {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': token!
+        },
+        jsonEncode({"name": name}),
+        prefs,
+        context);
+    setState(() {
+      loading = false;
+    });
+    if (data != null) {
+      if (data['status'] == 200) {
+        var snackBar = SnackBar(
+          content: Text(data['message']),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        Navigator.pop(context, true);
         return;
       } else {
         var snackBar = SnackBar(

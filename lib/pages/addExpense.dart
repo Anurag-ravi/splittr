@@ -88,7 +88,7 @@ class _AddExpenseState extends State<AddExpense> {
                   color: Colors.white,
                 ),
                 onPressed: () {
-                  Navigator.pop(context);
+                  Navigator.pop(context, false);
                 },
               ),
               actions: [
@@ -484,7 +484,7 @@ class _AddExpenseState extends State<AddExpense> {
         setState(() {
           loading = false;
         });
-        Navigator.pop(context);
+        Navigator.pop(context, true);
         return;
       }
     }

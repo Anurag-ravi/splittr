@@ -50,6 +50,13 @@ class _MyAppState extends State<MyApp> {
   void FetchContacts() async {
     if (!await Permission.contacts.isGranted) {
       await Permission.contacts.request();
+      if (!await Permission.contacts.isGranted) {
+        var snackBar = SnackBar(
+          content: Text("Without contacts, you can't view friends"),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        return;
+      }
     }
 
     var ccc = await ContactsService.getContacts();
