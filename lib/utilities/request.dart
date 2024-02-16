@@ -73,3 +73,18 @@ dynamic deleteRequest(
   }
   return null;
 }
+
+void addLog(String message) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String url = prefs.getString('url')! + '/log';
+
+  await http.post(
+    Uri.parse(url),
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: jsonEncode({"message": message})
+  );
+  return;
+}

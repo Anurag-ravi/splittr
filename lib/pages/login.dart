@@ -10,6 +10,7 @@ import 'package:splittr/pages/homePage.dart';
 import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/jwt.dart';
 import 'package:http/http.dart' as http;
+import 'package:splittr/utilities/request.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -282,10 +283,33 @@ class _LoginPageState extends State<LoginPage> {
       );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
       GoogleAuthProvider provider = GoogleAuthProvider();
+      provider.addScope('email');
       setState(() {
         responseLoading = true;
       });
       final userCredential = await auth.signInWithProvider(provider);
+      if(userCredential.user == null){
+        setState(() {
+          responseLoading = false;
+        });
+        addLog("User is null");
+        var snackBar = SnackBar(
+          content: Text('Error Signing in'),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        return;
+      }
+      if(userCredential.user!.email == null){
+        setState(() {
+          responseLoading = false;
+        });
+        addLog(userCredential.user.toString());
+        var snackBar = SnackBar(
+          content: Text('Error Signing in'),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        return;
+      }
       String token = generateToken(userCredential.user!.email!);
       loginToServer(token, userCredential.user!.email!);
     } catch (err) {
