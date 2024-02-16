@@ -35,6 +35,7 @@ class _ChoosePaymentForState extends State<ChoosePaymentFor> {
         itemBuilder: (BuildContext context, int index) {
           return GestureDetector(
             onTap: () async {
+              if(widget.tripUserMap.values.elementAt(index).id == widget.from) return;
               haptics();
               final res = await Navigator.push(context,
                   MaterialPageRoute(builder: (context) {
@@ -47,27 +48,30 @@ class _ChoosePaymentForState extends State<ChoosePaymentFor> {
               if (!mounted) return;
               Navigator.pop(context, res);
             },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Image.asset(
-                      'assets/profile/${widget.tripUserMap.values.elementAt(index).dp}.png',
-                      height: 40.0,
-                      width: 40.0,
+            child: Opacity(
+              opacity: widget.tripUserMap.values.elementAt(index).id == widget.from ? 0.5 : 1,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.asset(
+                        'assets/profile/${widget.tripUserMap.values.elementAt(index).dp}.png',
+                        height: 40.0,
+                        width: 40.0,
+                      ),
                     ),
-                  ),
-                  SizedBox(
-                    width: 10,
-                  ),
-                  Text(
-                    widget.tripUserMap.values.elementAt(index).name,
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  Expanded(child: Container()),
-                ],
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Text(
+                      widget.tripUserMap.values.elementAt(index).name,
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    Expanded(child: Container()),
+                  ],
+                ),
               ),
             ),
           );

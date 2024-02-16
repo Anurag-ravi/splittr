@@ -44,6 +44,13 @@ class _FriendScreenState extends State<FriendScreen> {
 
     if (!await Permission.contacts.isGranted) {
       await Permission.contacts.request();
+      if(await Permission.contacts.isPermanentlyDenied){
+        var snackBar = SnackBar(
+          content: Text("Grant contacts permission from settings to view friends"),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        openAppSettings();
+      }
       if (!await Permission.contacts.isGranted) {
         var snackBar = SnackBar(
           content: Text("Without contacts, you can't view friends"),

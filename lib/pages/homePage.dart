@@ -10,6 +10,8 @@ import 'package:splittr/screens/friendsScreen.dart';
 import 'package:splittr/screens/groupScreen.dart';
 import 'package:splittr/screens/profileScreen.dart';
 import 'package:splittr/utilities/constants.dart';
+import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.curridx});
@@ -32,11 +34,60 @@ class _HomePageState extends State<HomePage> {
   }
 
   void init() async {
+    checkForNewRelease();
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       user = UserModel.fromJson(jsonDecode(prefs.getString('user')!));
       loading = false;
     });
+  }
+
+  Future<void> checkForNewRelease() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool readyForUpdate = prefs.getBool('update') ?? true;
+    if(!readyForUpdate) return;
+    String currentTag = const String.fromEnvironment('TAG');
+    String token = const String.fromEnvironment('GITHUB_TOKEN');
+    var response = await http.get(
+        Uri.parse('https://api.github.com/repos/Anurag-ravi/splittr/releases'),
+        headers: {
+          'Accept': 'application/vnd.github+json',
+          'Authorization': 'Bearer ${token}',
+          'X-GitHub-Api-Version': '2022-11-28',
+        });
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body);
+      if(data.length == 0) return;
+      if (data[0]['tag_name'] != currentTag) {
+        String download_url = data[0]['assets'][0]['browser_download_url'];
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: Text('New Update Available'),
+                content: Text('A new update is available. Please update the app'),
+                actions: [
+                  TextButton(
+                      onPressed: () {
+                        prefs.setBool('update', false);
+                        Navigator.of(context).pop();
+                      },
+                      child: Text('Later')),
+                  TextButton(
+                      onPressed: () {
+                        prefs.setBool('update', false);
+                        Navigator.of(context).pop();
+                        // Open download_url in browser
+                        launchUrl(
+                            Uri.parse(download_url),
+                          );
+                      },
+                      child: Text('Update'))
+                ],
+              );
+            });
+      }
+    }
   }
 
   @override

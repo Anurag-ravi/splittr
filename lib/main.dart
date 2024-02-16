@@ -45,11 +45,19 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     theme = false;
     FetchContacts();
+    widget.prefs.setBool("update", true);
   }
 
   void FetchContacts() async {
     if (!await Permission.contacts.isGranted) {
       await Permission.contacts.request();
+      if(await Permission.contacts.isPermanentlyDenied){
+        var snackBar = SnackBar(
+          content: Text("Grant contacts permission from settings to view friends"),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        openAppSettings();
+      }
       if (!await Permission.contacts.isGranted) {
         var snackBar = SnackBar(
           content: Text("Without contacts, you can't view friends"),

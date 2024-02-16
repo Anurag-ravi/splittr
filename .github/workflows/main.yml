@@ -36,7 +36,7 @@ jobs:
           echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
 
       - name: Build the apk
-        run: flutter build apk
+        run: flutter build apk --dart-define TAG=v1.1.${{ github.run_number }} --dart-define GITHUB_TOKEN=${{ secrets.TOKEN }}
 
       - name: Push to Releases
         uses: ncipollo/release-action@v1

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/models/trip.dart';
+import 'package:splittr/pages/createGroup.dart';
+import 'package:splittr/pages/joinGroup.dart';
 import 'package:splittr/pages/tripPage.dart';
 import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/request.dart';
@@ -68,9 +70,41 @@ class _GroupScreenState extends State<GroupScreen> {
             )
           : trips.length == 0
               ? Center(
-                  child: Text(
-                    "Join groups to participate",
-                    style: TextStyle(color: Colors.grey[100]),
+                  child: Column(
+                    children: [
+                      Text(
+                        "Join groups to participate",
+                        style: TextStyle(color: Colors.grey[100]),
+                      ),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          haptics();
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (builder) => CreateGroup()));
+                        },
+                        child: HButton(
+                          text: 'Create Group',
+                          color: Colors.grey[900] as Color,
+                        ),
+                      ),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          haptics();
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (builder) => JoinGroup()));
+                        },
+                        child: HButton(
+                          text: 'Join Group',
+                          color: Colors.grey[900] as Color,
+                        ),
+                      ),
+                    ],
                   ),
                 )
               : ListView.builder(

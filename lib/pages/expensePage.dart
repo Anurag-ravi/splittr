@@ -46,11 +46,14 @@ class _ExpensePageState extends State<ExpensePage> {
     for (var x in widget.expense.paid_for) {
       owed[widget.tripUserMap[x.user]!] = x.amount;
     }
+    List<String> t1=[],t2=[];
     widget.tripUserMap.forEach((id, tripuser) {
       String a = tripuser.name.trim();
       bool involved = false;
+      bool comesFirst = false;
       if (paid.containsKey(tripuser)) {
         involved = true;
+        comesFirst = true;
         a += " paid ₹${paid[tripuser]!.toStringAsFixed(2)}";
       }
       if (owed.containsKey(tripuser)) {
@@ -59,10 +62,16 @@ class _ExpensePageState extends State<ExpensePage> {
         a += " owed ₹${owed[tripuser]!.toStringAsFixed(2)}";
       }
       if (involved) {
-        setState(() {
-          nets.add(a);
-        });
+        if(comesFirst){
+          t1.add(a);
+        } else {
+          t2.add(a);
+        }
       }
+    });
+    setState(() {
+      nets.addAll(t1);
+      nets.addAll(t2);
     });
   }
 

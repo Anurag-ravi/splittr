@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/models/user.dart';
@@ -230,7 +229,6 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(
                     height: deviceWidth * .1,
                   ),
-                  // _user != null ? Text(_user!.email!) : Container(),
                   Container(
                     width: deviceWidth,
                     child: Column(
@@ -299,58 +297,6 @@ class _LoginPageState extends State<LoginPage> {
       setState(() {
         responseLoading = false;
       });
-    }
-  }
-
-  void facebookSignin() async {
-    try {
-      var snackBar = SnackBar(
-        content: Text('Redirecting to Facebook'),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      setState(() {
-        responseLoading = true;
-      });
-      final LoginResult result = await FacebookAuth.instance.login();
-      switch (result.status) {
-        case LoginStatus.success:
-          final AuthCredential facebookCredential =
-              FacebookAuthProvider.credential(result.accessToken!.token);
-          final userCredential =
-              await auth.signInWithCredential(facebookCredential);
-          String email = "";
-          if (userCredential.user!.email == null) {
-            for (var x in userCredential.user!.providerData) {
-              if (x.email != null) {
-                email = x.email!;
-              }
-            }
-          } else {
-            email = userCredential.user!.email!;
-          }
-          if (email == "") {
-            var snackBar = SnackBar(
-              content: Text(
-                  'No email found for this facebook account, try other method'),
-            );
-            ScaffoldMessenger.of(context).showSnackBar(snackBar);
-            setState(() {
-              responseLoading = false;
-            });
-            return;
-          }
-          String token = generateToken(email);
-          print(token);
-          loginToServer(token, email);
-          return;
-        default:
-          setState(() {
-            responseLoading = false;
-          });
-          return;
-      }
-    } on FirebaseAuthException catch (e) {
-      throw e;
     }
   }
 
