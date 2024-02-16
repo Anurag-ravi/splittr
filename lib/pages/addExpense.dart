@@ -509,7 +509,7 @@ class _AddExpenseState extends State<AddExpense> {
     }
     double diff = amnt - (perAmnt * participants);
     int i = 0;
-    while (diff >= 0.01) {
+    while (diff.toStringAsFixed(2) != "0.00") {
       temp[i % temp.length].amount += 0.01;
       i++;
       diff -= 0.01;

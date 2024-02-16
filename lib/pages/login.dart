@@ -310,8 +310,6 @@ class _LoginPageState extends State<LoginPage> {
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         return;
       }
-      addLog(userCredential.user.toString());
-      addLog(userCredential.user!.email!);
       String token = generateToken(userCredential.user!.email!);
       loginToServer(token, userCredential.user!.email!);
     } catch (err) {

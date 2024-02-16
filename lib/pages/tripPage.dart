@@ -202,7 +202,7 @@ class _TripPageState extends State<TripPage> {
               body: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: ListView.builder(
-                    itemCount: transactions.length + 3,
+                    itemCount: transactions.length == 0 ? 5 : transactions.length + 3,
                     itemBuilder: (context, index) {
                       if (index == 0) {
                         return Padding(
@@ -298,6 +298,34 @@ class _TripPageState extends State<TripPage> {
                                   color: Colors.grey[900] as Color,
                                 ),
                               ],
+                            ),
+                          ),
+                        );
+                      }
+                      if(transactions.length == 0 && index == 3) {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 30, left: 30),
+                          child: Center(
+                            child: Text(
+                              "No Expenses or Payments yet!",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                      if(transactions.length == 0 && index == 4) {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 20, left: 30),
+                          child: Center(
+                            child: Text(
+                              "Add Expenses or Payments to get started!",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                              ),
                             ),
                           ),
                         );
