@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:open_file/open_file.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/models/trip.dart';
 import 'package:splittr/models/tripuser.dart';
@@ -15,6 +16,7 @@ import 'package:splittr/pages/settleUpPage.dart';
 import 'package:splittr/pages/totalPage.dart';
 import 'package:splittr/pages/tripSettings.dart';
 import 'package:splittr/utilities/constants.dart';
+import 'package:splittr/utilities/excelExport.dart';
 import 'package:splittr/utilities/request.dart';
 
 class TripPage extends StatefulWidget {
@@ -26,7 +28,7 @@ class TripPage extends StatefulWidget {
 }
 
 class _TripPageState extends State<TripPage> {
-  bool loading = true, g_free = false;
+  bool loading = true, g_free = false, export = false;
   TripModel? trip;
   List<Transaction> transactions = [];
   String currentTripUser = "";
@@ -293,9 +295,31 @@ class _TripPageState extends State<TripPage> {
                                     color: Colors.grey[900] as Color,
                                   ),
                                 ),
-                                HButton(
-                                  text: 'Export',
-                                  color: Colors.grey[900] as Color,
+                                GestureDetector(
+                                  onTap: () async {
+                                    setState(() {
+                                      export = true;
+                                    });
+                                    String filePath = await excelExport(trip!, tripUserMap);
+                                    setState(() {
+                                      export = false;
+                                    });
+                                    var snackBar = SnackBar(
+                                      content: Text('Exported to Local Storage!'),
+                                      action: SnackBarAction(
+                                        label: 'Open',
+                                        onPressed: () async {
+                                          haptics();
+                                          OpenFile.open(filePath, type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                                        },
+                                      ),
+                                    );
+                                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                                  },
+                                  child: HButton(
+                                    text: export ? 'Exporting' : 'Export',
+                                    color: Colors.grey[900] as Color,
+                                  ),
                                 ),
                               ],
                             ),
@@ -310,7 +334,7 @@ class _TripPageState extends State<TripPage> {
                               "No Expenses or Payments yet!",
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 20,
+                                fontSize: 15,
                               ),
                             ),
                           ),
@@ -324,7 +348,7 @@ class _TripPageState extends State<TripPage> {
                               "Add Expenses or Payments to get started!",
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 20,
+                                fontSize: 14,
                               ),
                             ),
                           ),
