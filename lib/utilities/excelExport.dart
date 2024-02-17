@@ -32,7 +32,7 @@ Future<String> excelExport(TripModel trip,Map<String,TripUser> tripUserMap) asyn
     transactions.sort((a, b) => a.date.compareTo(b.date));
     for (var transaction in transactions) {
       List<CellValue> row = [];
-      row.add(DateCellValue(year: transaction.date.year, month: transaction.date.month, day: transaction.date.day));
+      row.add(TextCellValue(transaction.date.day.toString() + "/" + transaction.date.month.toString() + "/" + transaction.date.year.toString()));
       if (transaction.isExpense && transaction.expense != null) {
         row.add(TextCellValue(transaction.expense!.name));
         row.add(TextCellValue(catMap[transaction.expense!.category]!));
@@ -72,7 +72,8 @@ Future<String> excelExport(TripModel trip,Map<String,TripUser> tripUserMap) asyn
     rows.add([]);
     // add total row
     List<CellValue> last = [];
-    last.add(DateCellValue(year: DateTime.now().year, month: DateTime.now().month, day: DateTime.now().day));
+    DateTime now = DateTime.now();
+    last.add(TextCellValue('${now.day}/${now.month}/${now.year}'));
     last.add(TextCellValue('Total'));
     last.add(TextCellValue(''));
     last.add(TextCellValue(''));
@@ -90,7 +91,7 @@ Future<String> excelExport(TripModel trip,Map<String,TripUser> tripUserMap) asyn
       }
       var fileBytes = excel.save();
       var directory = await getApplicationDocumentsDirectory();
-      var filePath = "${directory.path}/splittr_${trip.name}_${trip.created.day}-${trip.created.month}-${trip.created.year}.xlsx";
+      var filePath = "${directory.path}/splittr_${trip.name}.xlsx";
       addLog(filePath);
       File(filePath).writeAsBytes(fileBytes!);
       return filePath;
