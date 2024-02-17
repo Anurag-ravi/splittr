@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:open_file/open_file.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/models/trip.dart';
 import 'package:splittr/models/tripuser.dart';
@@ -300,20 +299,10 @@ class _TripPageState extends State<TripPage> {
                                     setState(() {
                                       export = true;
                                     });
-                                    String filePath = await excelExport(trip!, tripUserMap);
+                                    var snackBar = await excelExport(trip!, tripUserMap);
                                     setState(() {
                                       export = false;
                                     });
-                                    var snackBar = SnackBar(
-                                      content: Text('Exported to Local Storage!'),
-                                      action: SnackBarAction(
-                                        label: 'Open',
-                                        onPressed: () async {
-                                          haptics();
-                                          OpenFile.open(filePath, type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-                                        },
-                                      ),
-                                    );
                                     ScaffoldMessenger.of(context).showSnackBar(snackBar);
                                   },
                                   child: HButton(
