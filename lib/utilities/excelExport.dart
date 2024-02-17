@@ -83,13 +83,19 @@ Future<String> excelExport(TripModel trip,Map<String,TripUser> tripUserMap) asyn
     addLog(rows.toString());
 
     var excel = Excel.createExcel();
-    Sheet sheetObject = excel['Sheet1'];
-    for (var row in rows) {
-      sheetObject.appendRow(row);
+    try {
+      Sheet sheetObject = excel['Sheet1'];
+      for (var row in rows) {
+        sheetObject.appendRow(row);
+      }
+      var fileBytes = excel.save();
+      var directory = await getApplicationDocumentsDirectory();
+      var filePath = "${directory.path}/splittr_${trip.name}_${trip.created.day}-${trip.created.month}-${trip.created.year}.xlsx";
+      addLog(filePath);
+      File(filePath).writeAsBytes(fileBytes!);
+      return filePath;
+    } catch (e) {
+      addLog(e.toString());
+      return "";
     }
-    var fileBytes = excel.save();
-    var directory = await getApplicationDocumentsDirectory();
-    var filePath = "${directory.path}/splittr_${trip.name}_${trip.created.day}-${trip.created.month}-${trip.created.year}.xlsx";
-    File(filePath).writeAsBytes(fileBytes!);
-    return filePath;
 }
