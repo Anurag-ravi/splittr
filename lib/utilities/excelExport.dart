@@ -36,11 +36,11 @@ Future<String> excelExport(TripModel trip,Map<String,TripUser> tripUserMap) asyn
       if (transaction.isExpense && transaction.expense != null) {
         row.add(TextCellValue(transaction.expense!.name));
         row.add(TextCellValue(catMap[transaction.expense!.category]!));
-        row.add(DoubleCellValue(double.parse(transaction.expense!.amount.toStringAsFixed(2))));
-      } else {
+        row.add(TextCellValue(transaction.expense!.amount.toStringAsFixed(2)));
+      } else if(!transaction.isExpense && transaction.payment != null) {
         row.add(TextCellValue("${tripUserMap[transaction.payment!.by]!.name} paid ${tripUserMap[transaction.payment!.to]!.name}"));
         row.add(TextCellValue("Payment"));
-        row.add(DoubleCellValue(double.parse(transaction.payment!.amount.toStringAsFixed(2))));
+        row.add(TextCellValue(transaction.payment!.amount.toStringAsFixed(2)));
       }
       for (var tu in trip.users) {
         double amount = 0;
@@ -63,7 +63,7 @@ Future<String> excelExport(TripModel trip,Map<String,TripUser> tripUserMap) asyn
             amount -= transaction.payment!.amount;
           }
         }
-        row.add(DoubleCellValue(double.parse(amount.toStringAsFixed(2)))); 
+        row.add(TextCellValue(amount.toStringAsFixed(2))); 
         userTotal[trip.users.indexOf(tu)] += amount;
       }
       rows.add(row);
@@ -78,7 +78,7 @@ Future<String> excelExport(TripModel trip,Map<String,TripUser> tripUserMap) asyn
     last.add(TextCellValue(''));
     last.add(TextCellValue(''));
     for (var total in userTotal) {
-      last.add(DoubleCellValue(double.parse(total.toStringAsFixed(2))));
+      last.add(TextCellValue(total.toStringAsFixed(2)));
     }
     rows.add(last);
     addLog(rows.toString());
