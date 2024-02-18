@@ -27,7 +27,7 @@ class TripPage extends StatefulWidget {
 }
 
 class _TripPageState extends State<TripPage> {
-  bool loading = true, g_free = false, export = false;
+  bool loading = true, g_free = false, export = false, g_deletable = false;
   TripModel? trip;
   List<Transaction> transactions = [];
   String currentTripUser = "";
@@ -63,6 +63,7 @@ class _TripPageState extends State<TripPage> {
       if (data['status'] == 200) {
         var temp = TripModel.fromJson(data['data']);
         SharedPreferences prefs = await SharedPreferences.getInstance();
+        Map<String, double> tripUserNet = {};
         var user = UserModel.fromJson(jsonDecode(prefs.getString('user')!));
         for (var tu in temp.users) {
           if (tu.user == user.id) {
@@ -73,6 +74,7 @@ class _TripPageState extends State<TripPage> {
           setState(() {
             tripUserMap.putIfAbsent(tu.id, () => tu);
           });
+          tripUserNet.putIfAbsent(tu.id, () => 0.00);
         }
         List<Transaction> t_temp = [];
         double paid_by_me = 0.00, paid_for_me = 0.00, total = 0.00;
@@ -81,9 +83,11 @@ class _TripPageState extends State<TripPage> {
           t_temp.add(Transaction(true, x.created, x, null));
           for (var y in x.paid_by) {
             if (y.user == currentTripUser) paid_by_me += y.amount;
+            tripUserNet[y.user] = tripUserNet[y.user]! + y.amount;
           }
           for (var y in x.paid_for) {
             if (y.user == currentTripUser) paid_for_me += y.amount;
+            tripUserNet[y.user] = tripUserNet[y.user]! - y.amount;
           }
         }
         setState(() {
@@ -95,6 +99,8 @@ class _TripPageState extends State<TripPage> {
           t_temp.add(Transaction(false, x.created, null, x));
           if (x.by == currentTripUser) paid_by_me += x.amount;
           if (x.to == currentTripUser) paid_for_me += x.amount;
+          tripUserNet[x.by] = tripUserNet[x.by]! + x.amount;
+          tripUserNet[x.to] = tripUserNet[x.to]! - x.amount;
         }
         t_temp.sort((a, b) => b.date.compareTo(a.date));
         if (paid_by_me.toStringAsFixed(2) == paid_for_me.toStringAsFixed(2)) {
@@ -116,10 +122,18 @@ class _TripPageState extends State<TripPage> {
             g_textColor = mainOrange;
           });
         }
+        bool deletable = true;
+        for (var x in tripUserNet.entries) {
+          if (x.value.toStringAsFixed(2) != "0.00") {
+            deletable = false;
+            break;
+          }
+        }
         setState(() {
           loading = false;
           trip = temp;
           transactions = t_temp;
+          g_deletable = deletable;
         });
 
         return;
@@ -578,6 +592,8 @@ class _TripPageState extends State<TripPage> {
         builder: (builder) => TripSetting(
               trip: trip!,
               free: g_free,
+              currentTripUser: currentTripUser,
+              deletable: g_deletable,
             )));
     if (!mounted) return;
     if (!updated) return;

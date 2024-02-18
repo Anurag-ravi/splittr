@@ -86,7 +86,7 @@ class _GroupScreenState extends State<GroupScreen> {
                               builder: (builder) => CreateGroup()));
                         },
                         child: HButton(
-                          text: 'Create Group',
+                          text: ' Create Group ',
                           color: Colors.grey[900] as Color,
                         ),
                       ),
@@ -100,7 +100,7 @@ class _GroupScreenState extends State<GroupScreen> {
                               builder: (builder) => JoinGroup()));
                         },
                         child: HButton(
-                          text: 'Join Group',
+                          text: ' Join Group ',
                           color: Colors.grey[900] as Color,
                         ),
                       ),

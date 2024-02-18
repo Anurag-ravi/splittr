@@ -1,11 +1,11 @@
 // ignore_for_file: prefer_const_constructors
-
 import 'dart:io';
 
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:splittr/models/trip.dart';
 import 'package:splittr/models/tripuser.dart';
 import 'package:splittr/utilities/constants.dart';
@@ -77,7 +77,7 @@ Future<SnackBar> excelExport(
     rows.add(row);
   }
   // add empty row
-  rows.add([]);
+  rows.add([TextCellValue("")]);
   // add total row
   List<CellValue> last = [];
   DateTime now = DateTime.now();
@@ -89,7 +89,6 @@ Future<SnackBar> excelExport(
     last.add(TextCellValue(total.toStringAsFixed(2)));
   }
   rows.add(last);
-  addLog(rows.toString());
 
   var excel = Excel.createExcel();
   try {
@@ -98,7 +97,18 @@ Future<SnackBar> excelExport(
       sheetObject.appendRow(row);
     }
     var fileBytes = excel.save();
-    var directory = await getDownloadsDirectory();
+    // request storage permissions
+    if (!await Permission.storage.isGranted) {
+      await Permission.storage.request();
+      if(await Permission.storage.isPermanentlyDenied){
+        openAppSettings();
+      }
+      if (!await Permission.storage.isGranted) {
+        return SnackBar(content: Text('Grant Storage Permission to export'));
+      }
+    }
+    Directory? directory = Directory('/storage/emulated/0/Download');
+    if (!await directory.exists()) directory = await getExternalStorageDirectory();
     if (directory == null) {
       return SnackBar(content: Text("Could not get downloads directory"));
     }

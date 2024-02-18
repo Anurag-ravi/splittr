@@ -10,9 +10,11 @@ import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/request.dart';
 
 class TripSetting extends StatefulWidget {
-  const TripSetting({super.key, required this.trip, required this.free});
+  const TripSetting({super.key, required this.trip, required this.free,required this.currentTripUser,required this.deletable});
   final TripModel trip;
   final bool free;
+  final bool deletable;
+  final String currentTripUser;
 
   @override
   State<TripSetting> createState() => _TripSettingState();
@@ -290,20 +292,47 @@ class _TripSettingState extends State<TripSetting> {
                   );
                 }
                 if (index == widget.trip.users.length + 7) {
-                  return const Padding(
-                    padding: EdgeInsets.all(15),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Icon(Icons.delete_outline, color: Colors.red, size: 25),
-                        SizedBox(
-                          width: 20,
+                  return GestureDetector(
+                    onTap: () {
+                      haptics();
+                      handleDelete();
+                    },
+                    child: Padding(
+                      padding: EdgeInsets.all(15),
+                      child: Opacity(
+                          opacity: widget.trip.created_by == widget.currentTripUser && widget.deletable ? 1 : 0.2,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              const Icon(Icons.delete_outline,
+                                  color: Colors.red, size: 25),
+                              const SizedBox(
+                                width: 20,
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Delete Group',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  widget.trip.created_by == widget.currentTripUser && widget.deletable
+                                      ? Container()
+                                      : Container(
+                                          width: deviceWidth - 80,
+                                          child: Text(
+                                            widget.trip.created_by == widget.currentTripUser ? "You can't delete this group because there are outstanding debts with other group members. Please make sure all of the debts have been settled up, and try again." : "You can't delete this group because you are not the creator of this group.",
+                                            softWrap: true,
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 10),
+                                          ),
+                                        ),
+                                ],
+                              )
+                            ],
+                          ),
                         ),
-                        Text(
-                          'Delete group',
-                          style: TextStyle(color: Colors.red),
-                        )
-                      ],
                     ),
                   );
                 }
@@ -383,6 +412,65 @@ class _TripSettingState extends State<TripSetting> {
           'Authorization': token!
         },
         prefs,
+        context);
+    setState(() {
+      loading = false;
+    });
+    if (data != null) {
+      if (data['status'] == 200) {
+        var snackBar = SnackBar(
+          content: Text(data['message']),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (builder) => HomePage(curridx: 0)));
+        return;
+      } else {
+        var snackBar = SnackBar(
+          content: Text(data['message']),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        return;
+      }
+    }
+  }
+
+  Future<void> handleDelete() async {
+    if (widget.trip.created_by != widget.currentTripUser || !widget.deletable) return;
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Are you sure?'),
+        content: const Text('This action will permanently delete this group and all of its data. This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == null || !result) {
+      return;
+    }
+    setState(() {
+      loading = true;
+    });
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? url = prefs.getString('url');
+    String? token = prefs.getString('token');
+    var data = await deleteRequest(
+        "${url!}/trip/${widget.trip.id}",
+        {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': token!
+        },
         context);
     setState(() {
       loading = false;
