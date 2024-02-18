@@ -10,11 +10,11 @@ import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/request.dart';
 
 class TripSetting extends StatefulWidget {
-  const TripSetting({super.key, required this.trip, required this.free,required this.currentTripUser,required this.deletable});
+  const TripSetting({super.key, required this.trip, required this.free,required this.currentUserID,required this.deletable});
   final TripModel trip;
   final bool free;
   final bool deletable;
-  final String currentTripUser;
+  final String currentUserID;
 
   @override
   State<TripSetting> createState() => _TripSettingState();
@@ -300,7 +300,7 @@ class _TripSettingState extends State<TripSetting> {
                     child: Padding(
                       padding: EdgeInsets.all(15),
                       child: Opacity(
-                          opacity: widget.trip.created_by == widget.currentTripUser && widget.deletable ? 1 : 0.2,
+                          opacity: widget.trip.created_by == widget.currentUserID && widget.deletable ? 1 : 0.2,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
@@ -316,12 +316,12 @@ class _TripSettingState extends State<TripSetting> {
                                     'Delete Group',
                                     style: TextStyle(color: Colors.white),
                                   ),
-                                  widget.trip.created_by == widget.currentTripUser && widget.deletable
+                                  widget.trip.created_by == widget.currentUserID && widget.deletable
                                       ? Container()
                                       : Container(
                                           width: deviceWidth - 80,
                                           child: Text(
-                                            widget.trip.created_by == widget.currentTripUser ? "You can't delete this group because there are outstanding debts with other group members. Please make sure all of the debts have been settled up, and try again." : "You can't delete this group because you are not the creator of this group.",
+                                            widget.trip.created_by == widget.currentUserID ? "You can't delete this group because there are outstanding debts with other group members. Please make sure all of the debts have been settled up, and try again." : "You can't delete this group because you are not the creator of this group.",
                                             softWrap: true,
                                             style: TextStyle(
                                                 color: Colors.white,
@@ -436,7 +436,7 @@ class _TripSettingState extends State<TripSetting> {
   }
 
   Future<void> handleDelete() async {
-    if (widget.trip.created_by != widget.currentTripUser || !widget.deletable) return;
+    if (widget.trip.created_by != widget.currentUserID || !widget.deletable) return;
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(

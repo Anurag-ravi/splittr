@@ -592,7 +592,7 @@ class _TripPageState extends State<TripPage> {
         builder: (builder) => TripSetting(
               trip: trip!,
               free: g_free,
-              currentTripUser: currentTripUser,
+              currentUserID: tripUserMap[currentTripUser]!.user,
               deletable: g_deletable,
             )));
     if (!mounted) return;
