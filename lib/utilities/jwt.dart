@@ -6,6 +6,6 @@ String generateToken(String email) {
     {'email': email},
     issuer: 'https://github.com/jonasroussel/dart_jsonwebtoken',
   );
-  final token = jwt.sign(SecretKey(String.fromEnvironment('JWT_SECRET')));
+  final token = jwt.sign(SecretKey(const String.fromEnvironment('JWT_SECRET')));
   return token;
 }
