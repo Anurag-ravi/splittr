@@ -32,9 +32,10 @@ class _ChoosePaidForState extends State<ChoosePaidFor>
   splitTypeEnum splitType = splitTypeEnum.equal;
   late TabController _tabController;
   List<TextEditingController> controllers = [];
+  List<TextEditingController> shareControllers = [];
 
   // equal state
-  bool all_involved = true;
+  bool all_involved = false;
   int person = 0;
 
   // share state
@@ -55,10 +56,12 @@ class _ChoosePaidForState extends State<ChoosePaidFor>
       paid_for_unequally = users.map((e) => By(e.id, 0.00, 0.00)).toList();
       paid_for_percent = users.map((e) => By(e.id, 0.00, 0.00)).toList();
       paid_for_share = users.map((e) => ByShare(e.id, 0)).toList();
-      person = widget.paid_for.length;
-      all_involved = widget.paid_for.length == users.length;
 
       controllers = users.map((e) {
+        return TextEditingController(text: "");
+      }).toList();
+
+      shareControllers = users.map((e) {
         return TextEditingController(text: "");
       }).toList();
 
@@ -69,6 +72,8 @@ class _ChoosePaidForState extends State<ChoosePaidFor>
               paid_for_equally[i].involved = true;
             }
           }
+          all_involved = widget.paid_for.length == users.length;
+          person = widget.paid_for.length;
         }
       }
       if (splitType == splitTypeEnum.unequal) {
@@ -76,11 +81,34 @@ class _ChoosePaidForState extends State<ChoosePaidFor>
           for (int j = 0; j < widget.paid_for.length; j++) {
             if (paid_for_unequally[i].user == widget.paid_for[j].user) {
               paid_for_unequally[i].amount = widget.paid_for[j].amount;
+              total += widget.paid_for[j].amount;
             }
           }
         }
         controllers = paid_for_unequally.map((e) {
-          return TextEditingController(text: e.amount.toString());
+          if (e.amount.toStringAsFixed(2) != "0.00") {
+            return TextEditingController(text: e.amount.toStringAsFixed(2));
+          } else {
+            return TextEditingController(text: "");
+          }
+        }).toList();
+      }
+      if (splitType == splitTypeEnum.shares) {
+        for (int i = 0; i < paid_for_share.length; i++) {
+          for (int j = 0; j < widget.paid_for.length; j++) {
+            if (paid_for_share[i].user == widget.paid_for[j].user) {
+              paid_for_share[i].share =
+                  widget.paid_for[j].share_or_percent.toInt();
+              total_share += widget.paid_for[j].share_or_percent.toInt();
+            }
+          }
+        }
+        shareControllers = paid_for_share.map((e) {
+          if (e.share != 0) {
+            return TextEditingController(text: e.share.toString());
+          } else {
+            return TextEditingController(text: "");
+          }
         }).toList();
       }
     });
@@ -220,6 +248,7 @@ class _ChoosePaidForState extends State<ChoosePaidFor>
       body: TabBarView(
         controller: _tabController,
         children: [
+          // equal
           Scaffold(
             backgroundColor: Colors.transparent,
             bottomNavigationBar: Container(
@@ -334,6 +363,7 @@ class _ChoosePaidForState extends State<ChoosePaidFor>
               },
             ),
           ),
+          // unequal
           Scaffold(
             backgroundColor: Colors.transparent,
             bottomNavigationBar: Container(
@@ -450,6 +480,7 @@ class _ChoosePaidForState extends State<ChoosePaidFor>
               },
             ),
           ),
+          // share
           Scaffold(
             backgroundColor: Colors.transparent,
             bottomNavigationBar: Container(
@@ -517,7 +548,7 @@ class _ChoosePaidForState extends State<ChoosePaidFor>
                         child: Container(
                           height: 30,
                           child: TextField(
-                            controller: controllers[index],
+                            controller: shareControllers[index],
                             keyboardType: TextInputType.numberWithOptions(
                               signed: false,
                             ),

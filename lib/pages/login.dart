@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/models/user.dart';
 import 'package:splittr/pages/completeSignup.dart';
 import 'package:splittr/pages/homePage.dart';
+import 'package:splittr/pages/otpPage.dart';
 import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/jwt.dart';
 import 'package:http/http.dart' as http;
@@ -102,6 +103,7 @@ class _LoginPageState extends State<LoginPage> {
                               });
                               return;
                             }
+                            loginViaOTP();
                           },
                           child: Container(
                             width: deviceWidth * .90,
@@ -207,24 +209,6 @@ class _LoginPageState extends State<LoginPage> {
                               height: deviceWidth * 0.17,
                             ))),
                       ),
-                      // GestureDetector(
-                      //   onTap: () {
-                      //     facebookSignin();
-                      //   },
-                      //   child: Container(
-                      //       width: deviceWidth * 0.25,
-                      //       height: deviceWidth * 0.25,
-                      //       decoration: BoxDecoration(
-                      //         color: Colors.white,
-                      //         borderRadius: BorderRadius.all(
-                      //             Radius.circular(deviceWidth * 0.05)),
-                      //       ),
-                      //       child: Center(
-                      //           child: SvgPicture.asset(
-                      //         'assets/icons/facebook.svg',
-                      //         height: deviceWidth * 0.17,
-                      //       ))),
-                      // ),
                     ],
                   ),
                   SizedBox(
@@ -232,34 +216,11 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   Container(
                     width: deviceWidth,
-                    child: Column(
+                    child: const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const SizedBox(
+                        SizedBox(
                           height: 5,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "Don't have an account? ",
-                              style: TextStyle(
-                                fontSize: deviceWidth * .035,
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () {},
-                              child: Text(
-                                'Sign up',
-                                style: TextStyle(
-                                  color:
-                                      Theme.of(context).colorScheme.secondary,
-                                  fontSize: deviceWidth * .035,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
                         ),
                       ],
                     ),
@@ -288,7 +249,7 @@ class _LoginPageState extends State<LoginPage> {
         responseLoading = true;
       });
       final userCredential = await auth.signInWithProvider(provider);
-      if(userCredential.user == null){
+      if (userCredential.user == null) {
         setState(() {
           responseLoading = false;
         });
@@ -299,7 +260,7 @@ class _LoginPageState extends State<LoginPage> {
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         return;
       }
-      if(userCredential.user!.email == null){
+      if (userCredential.user!.email == null) {
         setState(() {
           responseLoading = false;
         });
@@ -378,6 +339,56 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       setState(() {
         responseLoading = false;
+      });
+      print(e);
+      var snackBar = SnackBar(
+        content: Text(e.toString()),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    }
+  }
+
+  void loginViaOTP() async {
+    try {
+      setState(() {
+        loading = true;
+      });
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? url = prefs.getString('url');
+      prefs.setString('email', emailController.text);
+      final response = await http.post(Uri.parse("${url!}/auth/otp-login"),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: jsonEncode({"email": emailController.text}));
+      setState(() {
+        loading = false;
+      });
+      var data = jsonDecode(response.body);
+      print(data);
+      if (response.statusCode == 200) {
+        if (data['status'] == 200) {
+          String hash = data['hash'];
+          const snackBar = SnackBar(
+            content: Text('Otp Sent to your email'),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          Navigator.of(context).pushReplacement(MaterialPageRoute(
+              builder: (builder) => OTPPage(
+                    email: emailController.text,
+                    hash: hash,
+                  )));
+          return;
+        }
+      }
+      var snackBar = SnackBar(
+        content: Text(data['message']),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    } catch (e) {
+      setState(() {
+        loading = false;
       });
       print(e);
       var snackBar = SnackBar(

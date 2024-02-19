@@ -45,7 +45,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> checkForNewRelease() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool readyForUpdate = prefs.getBool('update') ?? true;
-    if(!readyForUpdate) return;
+    if (!readyForUpdate) return;
     String currentTag = const String.fromEnvironment('TAG');
     String token = const String.fromEnvironment('GITHUB_TOKEN');
     var response = await http.get(
@@ -57,7 +57,7 @@ class _HomePageState extends State<HomePage> {
         });
     if (response.statusCode == 200) {
       var data = jsonDecode(response.body);
-      if(data.length == 0) return;
+      if (data.length == 0) return;
       if (data[0]['tag_name'] != currentTag) {
         String download_url = data[0]['assets'][0]['browser_download_url'];
         showDialog(
@@ -65,7 +65,8 @@ class _HomePageState extends State<HomePage> {
             builder: (context) {
               return AlertDialog(
                 title: Text('New Update Available'),
-                content: Text('A new update is available. Your app version is ${currentTag} and the latest version is ${data[0]['tag_name']}. Please update to the latest version to get the latest features and bug fixes.'),
+                content: Text(
+                    'A new update is available. Your app version is ${currentTag} and the latest version is ${data[0]['tag_name']}. Please update to the latest version to get the latest features and bug fixes.'),
                 actions: [
                   TextButton(
                       onPressed: () {
@@ -79,8 +80,8 @@ class _HomePageState extends State<HomePage> {
                         Navigator.of(context).pop();
                         // Open download_url in browser
                         launchUrl(
-                            Uri.parse(download_url),
-                          );
+                          Uri.parse(download_url),
+                        );
                       },
                       child: Text('Update'))
                 ],
@@ -97,12 +98,22 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.grey[900],
         appBar: AppBar(
           backgroundColor: Colors.grey[900],
+          title: Text(
+            currIndex == 0
+                ? 'Groups'
+                : currIndex == 1
+                    ? 'Friends'
+                    : currIndex == 2
+                        ? 'Activity'
+                        : 'Profile',
+            style: TextStyle(color: Colors.white, fontSize: 18),
+          ),
           actions: [
-            IconButton(
-              icon: Icon(Icons.search),
-              color: Colors.white,
-              onPressed: () {},
-            ),
+            // IconButton(
+            //   icon: Icon(Icons.search),
+            //   color: Colors.white,
+            //   onPressed: () {},
+            // ),
             currIndex == 0
                 ? IconButton(
                     icon: Icon(Icons.add_box_outlined),

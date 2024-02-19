@@ -36,6 +36,10 @@ class _ChoosePaidByState extends State<ChoosePaidBy> {
       paid_by = widget.paid_by;
       single_paid = widget.paid_by.length == 1;
       currentPaidUser = widget.paid_by[0].user;
+      controllers = widget.tripUserMap.values
+          .toList()
+          .map((e) => TextEditingController(text: ""))
+          .toList();
     });
     setState(() {
       multiple_paid_by = users.map((e) {
@@ -51,10 +55,12 @@ class _ChoosePaidByState extends State<ChoosePaidBy> {
         }
         return By(e.id, paid ? amnt : 0.00, 0.00);
       }).toList();
-
-      controllers = multiple_paid_by.map((e) {
-        return TextEditingController(text: e.amount.toString());
-      }).toList();
+    });
+    setState(() {
+      for (int i = 0; i < multiple_paid_by.length; i++) {
+        if (multiple_paid_by[i].amount > 0.00)
+          controllers[i].text = multiple_paid_by[i].amount.toString();
+      }
     });
   }
 
@@ -74,15 +80,7 @@ class _ChoosePaidByState extends State<ChoosePaidBy> {
             color: Colors.white,
           ),
           onPressed: () {
-            if (single_paid)
-              Navigator.pop(context, paid_by);
-            else {
-              setState(() {
-                paid_by = widget.paid_by;
-                single_paid = true;
-                currentPaidUser = widget.paid_by[0].user;
-              });
-            }
+            Navigator.pop(context, widget.paid_by);
           },
         ),
         actions: [
@@ -202,8 +200,25 @@ class _ChoosePaidByState extends State<ChoosePaidBy> {
                 );
               })
           : ListView.builder(
-              itemCount: users.length,
+              itemCount: users.length + 1,
               itemBuilder: (context, index) {
+                if (index == users.length)
+                  return GestureDetector(
+                    onTap: () {
+                      haptics();
+                      setState(() {
+                        single_paid = true;
+                      });
+                    },
+                    child: Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                      child: Text(
+                        'Single person paid',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  );
                 return Padding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 15, vertical: 8),

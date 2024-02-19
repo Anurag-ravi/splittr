@@ -1,14 +1,13 @@
 // ignore_for_file: prefer_const_constructors
 import 'dart:io';
+import 'dart:math';
 
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
-import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:splittr/models/trip.dart';
 import 'package:splittr/models/tripuser.dart';
 import 'package:splittr/utilities/constants.dart';
-import 'package:splittr/utilities/request.dart';
 
 Future<SnackBar> excelExport(
     TripModel trip, Map<String, TripUser> tripUserMap) async {
@@ -22,6 +21,10 @@ Future<SnackBar> excelExport(
   for (var tu in trip.users) {
     row.add(TextCellValue(tu.name));
     userTotal.add(0);
+  }
+  List<int> columnWidths = [];
+  for (var x in row) {
+    columnWidths.add(x.toString().length);
   }
   rows.add(row);
   List<Transaction> transactions = [];
@@ -73,6 +76,10 @@ Future<SnackBar> excelExport(
       row.add(TextCellValue(amount.toStringAsFixed(2)));
       userTotal[trip.users.indexOf(tu)] += amount;
     }
+    for (var x in row) {
+      columnWidths[row.indexOf(x)] =
+          max(columnWidths[row.indexOf(x)], x.toString().length);
+    }
     rows.add(row);
   }
   // add empty row
@@ -95,27 +102,23 @@ Future<SnackBar> excelExport(
     for (var row in rows) {
       sheetObject.appendRow(row);
     }
+    // auto resize columns
+    for (var x in columnWidths) {
+      sheetObject.setColumnWidth(columnWidths.indexOf(x), x + 0.0);
+    }
     var fileBytes = excel.save();
     // request storage permissions
     Directory? directory = Directory('/storage/emulated/0/Download');
-    if (!await directory.exists()) directory = await getExternalStorageDirectory();
+    if (!await directory.exists())
+      directory = await getExternalStorageDirectory();
     if (directory == null) {
       return SnackBar(content: Text("Could not get downloads directory"));
     }
     var filePath = "${directory.path}/splittr_${trip.name}.xlsx";
     var file = await File(filePath).writeAsBytes(fileBytes!);
-    addLog(file.path);
+    print(file.path);
     return SnackBar(
-      content: Text('Exported splittr_${trip.name}.xlsx'),
-      action: SnackBarAction(
-        label: 'Open',
-        onPressed: () async {
-          haptics();
-          OpenFile.open(file.path,
-              type:
-                  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        },
-      ),
+      content: Text('Downloaded splittr_${trip.name}.xlsx'),
     );
   } catch (e) {
     return SnackBar(content: Text(e.toString()));

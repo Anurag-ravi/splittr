@@ -14,8 +14,14 @@ import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/request.dart';
 
 class AddExpense extends StatefulWidget {
-  AddExpense({super.key, required this.trip});
+  AddExpense(
+      {super.key,
+      required this.trip,
+      this.updating = false,
+      this.expense = null});
   final TripModel trip;
+  final bool updating;
+  final ExpenseModel? expense;
 
   @override
   State<AddExpense> createState() => _AddExpenseState();
@@ -24,6 +30,7 @@ class AddExpense extends StatefulWidget {
 class _AddExpenseState extends State<AddExpense> {
   String category = "general";
   TextEditingController nameController = TextEditingController();
+  TextEditingController amountController = TextEditingController();
   String amount = "0.00";
   String currentTripUser = "";
   late UserModel user;
@@ -61,11 +68,24 @@ class _AddExpenseState extends State<AddExpense> {
         tripUserMap.putIfAbsent(tu.id, () => tu);
       });
     }
-    setState(() {
-      paid_by = temp;
-      paid_for = temp2;
-      loading = false;
-    });
+    if (widget.updating) {
+      setState(() {
+        nameController.text = widget.expense!.name;
+        amount = widget.expense!.amount.toStringAsFixed(2);
+        amountController.text = widget.expense!.amount.toStringAsFixed(2);
+        category = widget.expense!.category;
+        splitType = widget.expense!.splitType;
+        paid_by = widget.expense!.paid_by;
+        paid_for = widget.expense!.paid_for;
+        loading = false;
+      });
+    } else {
+      setState(() {
+        paid_by = temp;
+        paid_for = temp2;
+        loading = false;
+      });
+    }
   }
 
   @override
@@ -79,7 +99,7 @@ class _AddExpenseState extends State<AddExpense> {
             appBar: AppBar(
               backgroundColor: Colors.transparent,
               title: Text(
-                'Add expense',
+                widget.updating ? 'Update Expense' : 'Add expense',
                 style: TextStyle(color: Colors.white),
               ),
               leading: IconButton(
@@ -275,6 +295,7 @@ class _AddExpenseState extends State<AddExpense> {
                         child: Padding(
                           padding: const EdgeInsets.only(left: 10),
                           child: TextField(
+                            controller: amountController,
                             keyboardType: TextInputType.numberWithOptions(
                               decimal: true,
                               signed: false,
@@ -458,13 +479,14 @@ class _AddExpenseState extends State<AddExpense> {
       paid_for_json.add(paid_for_item.toJson());
     });
     var data = await postRequest(
-        "${url!}/expense/new",
+        widget.updating ? "${url!}/expense/update" : "${url!}/expense/new",
         {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
           'Authorization': token!
         },
         jsonEncode({
+          "id": widget.updating ? widget.expense!.id : "",
           "trip": widget.trip.id,
           "name": nameController.text,
           "amount": double.parse(amount),
@@ -477,8 +499,8 @@ class _AddExpenseState extends State<AddExpense> {
         context);
     if (data != null) {
       if (data['status'] == 200) {
-        const snackBar = SnackBar(
-          content: Text('Expense added'),
+        var snackBar = SnackBar(
+          content: Text(widget.updating ? 'Expense Updated' : 'Expense added'),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         setState(() {

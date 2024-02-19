@@ -171,7 +171,8 @@ class _TripPageState extends State<TripPage> {
                     color: Colors.white,
                   ),
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.pop(
+                        context, {"message": g_involved, "color": g_textColor});
                   },
                 ),
                 actions: [
@@ -217,7 +218,8 @@ class _TripPageState extends State<TripPage> {
               body: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: ListView.builder(
-                    itemCount: transactions.length == 0 ? 5 : transactions.length + 3,
+                    itemCount:
+                        transactions.length == 0 ? 5 : transactions.length + 4,
                     itemBuilder: (context, index) {
                       if (index == 0) {
                         return Padding(
@@ -313,11 +315,13 @@ class _TripPageState extends State<TripPage> {
                                     setState(() {
                                       export = true;
                                     });
-                                    var snackBar = await excelExport(trip!, tripUserMap);
+                                    var snackBar =
+                                        await excelExport(trip!, tripUserMap);
                                     setState(() {
                                       export = false;
                                     });
-                                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(snackBar);
                                   },
                                   child: HButton(
                                     text: export ? 'Exporting' : 'Export',
@@ -329,9 +333,9 @@ class _TripPageState extends State<TripPage> {
                           ),
                         );
                       }
-                      if(transactions.length == 0 && index == 3) {
+                      if (transactions.length == 0 && index == 3) {
                         return Padding(
-                          padding: const EdgeInsets.only(top: 30, left: 30),
+                          padding: const EdgeInsets.only(top: 30),
                           child: Center(
                             child: Text(
                               "No Expenses or Payments yet!",
@@ -343,19 +347,24 @@ class _TripPageState extends State<TripPage> {
                           ),
                         );
                       }
-                      if(transactions.length == 0 && index == 4) {
+                      if (transactions.length == 0 && index == 4) {
                         return Padding(
-                          padding: const EdgeInsets.only(top: 20, left: 30),
+                          padding: const EdgeInsets.only(top: 20),
                           child: Center(
                             child: Text(
                               "Add Expenses or Payments to get started!",
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 14,
+                                fontSize: 13,
                               ),
                             ),
                           ),
                         );
+                      }
+                      if (index == transactions.length + 3) {
+                        return Padding(
+                            padding: const EdgeInsets.only(bottom: 50),
+                            child: Container());
                       }
                       int idx = index - 3;
                       DateTime date = transactions[idx].date;
@@ -486,6 +495,7 @@ class _TripPageState extends State<TripPage> {
                                       builder: (builder) => ExpensePage(
                                             expense: transactions[idx].expense!,
                                             tripUserMap: tripUserMap,
+                                            trip: trip!,
                                           )));
                               if (!mounted) return;
                               if (res) {

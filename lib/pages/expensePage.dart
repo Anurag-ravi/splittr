@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/models/expense.dart';
+import 'package:splittr/models/trip.dart';
 import 'package:splittr/models/tripuser.dart';
+import 'package:splittr/pages/addExpense.dart';
 import 'package:splittr/utilities/request.dart';
 
 class ExpensePage extends StatefulWidget {
   const ExpensePage(
-      {super.key, required this.expense, required this.tripUserMap});
+      {super.key,
+      required this.expense,
+      required this.trip,
+      required this.tripUserMap});
   final ExpenseModel expense;
   final Map<String, TripUser> tripUserMap;
+  final TripModel trip;
 
   @override
   State<ExpensePage> createState() => _ExpensePageState();
@@ -46,7 +52,7 @@ class _ExpensePageState extends State<ExpensePage> {
     for (var x in widget.expense.paid_for) {
       owed[widget.tripUserMap[x.user]!] = x.amount;
     }
-    List<String> t1=[],t2=[];
+    List<String> t1 = [], t2 = [];
     widget.tripUserMap.forEach((id, tripuser) {
       String a = tripuser.name.trim();
       bool involved = false;
@@ -62,7 +68,7 @@ class _ExpensePageState extends State<ExpensePage> {
         a += " owed ₹${owed[tripuser]!.toStringAsFixed(2)}";
       }
       if (involved) {
-        if(comesFirst){
+        if (comesFirst) {
           t1.add(a);
         } else {
           t2.add(a);
@@ -106,7 +112,9 @@ class _ExpensePageState extends State<ExpensePage> {
                   icon: const Icon(
                     Icons.edit_outlined,
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    handleEdit();
+                  },
                 ),
               ],
             ),
@@ -262,5 +270,19 @@ class _ExpensePageState extends State<ExpensePage> {
     setState(() {
       loading = false;
     });
+  }
+
+  void handleEdit() async {
+    final res =
+        await Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return AddExpense(
+        trip: widget.trip,
+        updating: true,
+        expense: widget.expense,
+      );
+    }));
+    if (res != null && res) {
+      Navigator.pop(context, true);
+    }
   }
 }

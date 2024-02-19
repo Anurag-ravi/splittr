@@ -10,11 +10,10 @@ class ActivityScreen extends StatefulWidget {
 class _ActivityScreenState extends State<ActivityScreen> {
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          Text('Activity Screen',style: TextStyle(color: Colors.white),)
-        ],
+    return Center(
+      child: Text(
+        'Will be implemented soon',
+        style: TextStyle(color: Colors.white, fontSize: 20),
       ),
     );
   }

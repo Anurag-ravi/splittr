@@ -51,9 +51,10 @@ class _MyAppState extends State<MyApp> {
   void FetchContacts() async {
     if (!await Permission.contacts.isGranted) {
       await Permission.contacts.request();
-      if(await Permission.contacts.isPermanentlyDenied){
+      if (await Permission.contacts.isPermanentlyDenied) {
         var snackBar = SnackBar(
-          content: Text("Grant contacts permission from settings to view friends"),
+          content:
+              Text("Grant contacts permission from settings to view friends"),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         await Future.delayed(Duration(seconds: 2));
@@ -69,9 +70,10 @@ class _MyAppState extends State<MyApp> {
     }
     if (!await Permission.storage.isGranted) {
       await Permission.storage.request();
-      if(await Permission.storage.isPermanentlyDenied){
+      if (await Permission.storage.isPermanentlyDenied) {
         var snackBar = SnackBar(
-          content: Text("Grant storage permission from settings to export excel files"),
+          content: Text(
+              "Grant storage permission from settings to export excel files"),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         await Future.delayed(Duration(seconds: 2));
@@ -79,7 +81,8 @@ class _MyAppState extends State<MyApp> {
       }
       if (!await Permission.storage.isGranted) {
         var snackBar = SnackBar(
-          content: Text("Without Storage permission, you can't export excel files"),
+          content:
+              Text("Without Storage permission, you can't export excel files"),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         return;

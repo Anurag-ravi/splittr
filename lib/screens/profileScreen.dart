@@ -57,7 +57,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         Text(
                           'Account',
-                          style: TextStyle(color: Colors.white, fontSize: 20),
+                          style: TextStyle(color: Colors.white, fontSize: 17),
                         ),
                         SizedBox(
                           height: 17,
@@ -110,37 +110,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(
                   height: 10,
                 ),
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Icon(Icons.qr_code, color: Colors.white, size: 30),
-                      SizedBox(
-                        width: 20,
-                      ),
-                      Text(
-                        'Scan Code',
-                        style: TextStyle(color: Colors.white),
-                      )
-                    ],
-                  ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Icon(Icons.workspace_premium_outlined,
-                          color: Colors.yellow, size: 30),
-                      SizedBox(
-                        width: 20,
-                      ),
-                      Text(
-                        'Splittr Pro',
-                        style: TextStyle(color: Colors.white),
-                      )
-                    ],
+                const Opacity(
+                  opacity: 0.2,
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Icon(Icons.qr_code, color: Colors.white, size: 30),
+                        SizedBox(
+                          width: 20,
+                        ),
+                        Text(
+                          'Scan Code',
+                          style: TextStyle(color: Colors.white),
+                        )
+                      ],
+                    ),
                   ),
                 ),
                 const Padding(
@@ -154,54 +140,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Icon(Icons.email_outlined, color: Colors.white, size: 30),
-                      SizedBox(
-                        width: 20,
-                      ),
-                      Text(
-                        'Email settings',
-                        style: TextStyle(color: Colors.white),
-                      )
-                    ],
+                const Opacity(
+                  opacity: 0.2,
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Icon(Icons.email_outlined,
+                            color: Colors.white, size: 30),
+                        SizedBox(
+                          width: 20,
+                        ),
+                        Text(
+                          'Email settings',
+                          style: TextStyle(color: Colors.white),
+                        )
+                      ],
+                    ),
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Icon(Icons.notifications_none_outlined,
-                          color: Colors.white, size: 30),
-                      SizedBox(
-                        width: 20,
-                      ),
-                      Text(
-                        'Notifications settings',
-                        style: TextStyle(color: Colors.white),
-                      )
-                    ],
+                const Opacity(
+                  opacity: 0.2,
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Icon(Icons.notifications_none_outlined,
+                            color: Colors.white, size: 30),
+                        SizedBox(
+                          width: 20,
+                        ),
+                        Text(
+                          'Notifications settings',
+                          style: TextStyle(color: Colors.white),
+                        )
+                      ],
+                    ),
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Icon(Icons.lock_outline_rounded,
-                          color: Colors.white, size: 30),
-                      SizedBox(
-                        width: 20,
-                      ),
-                      Text(
-                        'Passcode',
-                        style: TextStyle(color: Colors.white),
-                      )
-                    ],
+                const Opacity(
+                  opacity: 0.2,
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Icon(Icons.lock_outline_rounded,
+                            color: Colors.white, size: 30),
+                        SizedBox(
+                          width: 20,
+                        ),
+                        Text(
+                          'Passcode',
+                          style: TextStyle(color: Colors.white),
+                        )
+                      ],
+                    ),
                   ),
                 ),
                 const Padding(
@@ -215,37 +211,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Icon(Icons.star_outlined, color: Colors.white, size: 30),
-                      SizedBox(
-                        width: 20,
-                      ),
-                      Text(
-                        'Rate us',
-                        style: TextStyle(color: Colors.white),
-                      )
-                    ],
+                const Opacity(
+                  opacity: 0.2,
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Icon(Icons.star_outlined,
+                            color: Colors.white, size: 30),
+                        SizedBox(
+                          width: 20,
+                        ),
+                        Text(
+                          'Rate us',
+                          style: TextStyle(color: Colors.white),
+                        )
+                      ],
+                    ),
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Icon(Icons.question_mark_outlined,
-                          color: Colors.white, size: 30),
-                      SizedBox(
-                        width: 20,
-                      ),
-                      Text(
-                        'Support',
-                        style: TextStyle(color: Colors.white),
-                      )
-                    ],
+                const Opacity(
+                  opacity: 0.2,
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Icon(Icons.question_mark_outlined,
+                            color: Colors.white, size: 30),
+                        SizedBox(
+                          width: 20,
+                        ),
+                        Text(
+                          'Support',
+                          style: TextStyle(color: Colors.white),
+                        )
+                      ],
+                    ),
                   ),
                 ),
                 Container(
