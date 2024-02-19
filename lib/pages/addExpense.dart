@@ -466,7 +466,28 @@ class _AddExpenseState extends State<AddExpense> {
     }
 
     adjustBalanceIfSplitEqually();
+    adjustBalanceIfSplitShare();
     adjustPaidIfIndividual();
+    // check if total adds to amount
+    double total_paid_by = 0.00, total_paid_for = 0.00;
+    paid_by.forEach((element) {
+      total_paid_by += element.amount;
+    });
+    paid_for.forEach((element) {
+      total_paid_for += element.amount;
+    });
+    if (total_paid_by.toStringAsFixed(2) != double.parse(amount).toStringAsFixed(2) ||
+        total_paid_for.toStringAsFixed(2) != double.parse(amount).toStringAsFixed(2)) {
+      var snackBar = SnackBar(
+        content: Text('The split does not add up to the amount. Please check again.'),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      setState(() {
+        loading = false;
+      });
+      addLog("${paid_by.toString()} ${paid_for.toString()} ${total_paid_by.toString()} ${total_paid_for.toString()} ${amount.toString()}");
+      return;
+    }
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? url = prefs.getString('url');
     String? token = prefs.getString('token');
@@ -530,6 +551,32 @@ class _AddExpenseState extends State<AddExpense> {
       temp[i].amount = perAmnt;
     }
     double diff = amnt - (perAmnt * participants);
+    int i = 0;
+    while (diff.toStringAsFixed(2) != "0.00") {
+      temp[i % temp.length].amount += 0.01;
+      i++;
+      diff -= 0.01;
+    }
+    setState(() {
+      paid_for = temp;
+    });
+  }
+
+  void adjustBalanceIfSplitShare() {
+    if (splitType != splitTypeEnum.shares) return;
+    List<By> temp = paid_for;
+    double amnt = double.parse(amount);
+    int totalShares = 0;
+    for(var x in paid_for){
+      totalShares += x.share_or_percent.toInt();
+    }
+    double tot = 0.00;
+    for (int i = 0; i < temp.length; i++) {
+      double c_amnt = roundAmount((amnt * temp[i].share_or_percent) / (totalShares + 0.00));
+      temp[i].amount = c_amnt;
+      tot += c_amnt;
+    }
+    double diff = amnt - tot;
     int i = 0;
     while (diff.toStringAsFixed(2) != "0.00") {
       temp[i % temp.length].amount += 0.01;
