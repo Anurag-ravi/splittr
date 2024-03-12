@@ -81,6 +81,11 @@ double roundAmount(double amount) {
   return double.parse(x.substring(0, x.length - 18));
 }
 
+double roundAmount2(double amount) {
+  String x = (amount).toStringAsFixed(2);
+  return double.parse(x);
+}
+
 String roundAmountStr(double amount) {
   String x = (amount).toStringAsFixed(20);
   return x.substring(0, x.length - 18);

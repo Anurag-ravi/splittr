@@ -547,15 +547,16 @@ class _AddExpenseState extends State<AddExpense> {
     int participants = paid_for.length;
     String x = (amnt / participants).toStringAsFixed(20);
     double perAmnt = double.parse(x.substring(0, x.length - 18));
+    perAmnt = roundAmount2(perAmnt);
     for (int i = 0; i < temp.length; i++) {
       temp[i].amount = perAmnt;
     }
-    double diff = amnt - (perAmnt * participants);
+    double diff = roundAmount2(amnt - (perAmnt * participants));
     int i = 0;
-    while (diff.toStringAsFixed(2) != "0.00") {
-      temp[i % temp.length].amount += 0.01;
+    while (roundAmount2(diff) > 0.00) {
+      temp[i % temp.length].amount = roundAmount2(temp[i % temp.length].amount + 0.01);
       i++;
-      diff -= 0.01;
+      diff = roundAmount2(diff - 0.01);
     }
     setState(() {
       paid_for = temp;
@@ -573,15 +574,16 @@ class _AddExpenseState extends State<AddExpense> {
     double tot = 0.00;
     for (int i = 0; i < temp.length; i++) {
       double c_amnt = roundAmount((amnt * temp[i].share_or_percent) / (totalShares + 0.00));
+      c_amnt = roundAmount2(c_amnt);
       temp[i].amount = c_amnt;
-      tot += c_amnt;
+      tot = roundAmount2(tot + c_amnt);
     }
-    double diff = amnt - tot;
+    double diff = roundAmount2(amnt - tot);
     int i = 0;
-    while (diff.toStringAsFixed(2) != "0.00") {
-      temp[i % temp.length].amount += 0.01;
+    while (roundAmount2(diff) > 0.00) {
+      temp[i % temp.length].amount = roundAmount2(temp[i % temp.length].amount + 0.01);
       i++;
-      diff -= 0.01;
+      diff = roundAmount2(diff - 0.01);
     }
     setState(() {
       paid_for = temp;
