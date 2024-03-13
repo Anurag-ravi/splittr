@@ -124,7 +124,7 @@ class _TripPageState extends State<TripPage> {
         }
         bool deletable = true;
         for (var x in tripUserNet.entries) {
-          if (x.value.toStringAsFixed(2) != "0.00") {
+          if (roundAmount2(x.value) != 0.00) {
             deletable = false;
             break;
           }

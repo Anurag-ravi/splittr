@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -242,13 +243,19 @@ class _LoginPageState extends State<LoginPage> {
       var snackBar = SnackBar(
         content: Text('Redirecting to Google'),
       );
+      print(const String.fromEnvironment('JWT_SECRET'));
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
       GoogleAuthProvider provider = GoogleAuthProvider();
       provider.addScope('email');
       setState(() {
         responseLoading = true;
       });
-      final userCredential = await auth.signInWithProvider(provider);
+      UserCredential userCredential;
+      if(kIsWeb){
+        userCredential = await auth.signInWithPopup(provider);
+      } else {
+        userCredential = await auth.signInWithProvider(provider);
+      }
       if (userCredential.user == null) {
         setState(() {
           responseLoading = false;
@@ -272,6 +279,7 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
       String token = generateToken(userCredential.user!.email!);
+      print('Token: $token, Email: ${userCredential.user!.email!}');
       loginToServer(token, userCredential.user!.email!);
     } catch (err) {
       print(err);
