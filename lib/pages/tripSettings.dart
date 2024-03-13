@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/models/trip.dart';
 import 'package:splittr/pages/addToGroup.dart';
 import 'package:splittr/pages/homePage.dart';
+import 'package:splittr/pages/removeFromGroup.dart';
 import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/request.dart';
 
@@ -61,7 +62,7 @@ class _TripSettingState extends State<TripSetting> {
               ),
             ),
             body: ListView.builder(
-              itemCount: widget.trip.users.length + 8,
+              itemCount: widget.trip.users.length + 9,
               itemBuilder: (context, index) {
                 if (index == 0) {
                   return Container(
@@ -208,6 +209,39 @@ class _TripSettingState extends State<TripSetting> {
                 }
                 if (index == 4) {
                   return GestureDetector(
+                    onTap: () async {
+                      haptics();
+                      final res = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (builder) =>
+                                  RemoveFromGroup(trip: widget.trip)));
+                      if (!mounted) return;
+                      if (res) {
+                        Navigator.pop(context, true);
+                      }
+                    },
+                    child: const Padding(
+                      padding: EdgeInsets.all(15),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Icon(Icons.group_remove_outlined,
+                              color: Colors.white, size: 25),
+                          SizedBox(
+                            width: 20,
+                          ),
+                          Text(
+                            'Remove people from group',
+                            style: TextStyle(color: Colors.white),
+                          )
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                if (index == 5) {
+                  return GestureDetector(
                     onTap: () {
                       haptics();
                       FlutterShare.share(
@@ -233,7 +267,7 @@ class _TripSettingState extends State<TripSetting> {
                     ),
                   );
                 }
-                if (index == widget.trip.users.length + 5) {
+                if (index == widget.trip.users.length + 6) {
                   return const Padding(
                     padding: EdgeInsets.all(15),
                     child: Row(
@@ -246,7 +280,7 @@ class _TripSettingState extends State<TripSetting> {
                     ),
                   );
                 }
-                if (index == widget.trip.users.length + 6) {
+                if (index == widget.trip.users.length + 7) {
                   return GestureDetector(
                     onTap: () {
                       haptics();
@@ -291,7 +325,7 @@ class _TripSettingState extends State<TripSetting> {
                     ),
                   );
                 }
-                if (index == widget.trip.users.length + 7) {
+                if (index == widget.trip.users.length + 8) {
                   return GestureDetector(
                     onTap: () {
                       haptics();
@@ -337,7 +371,7 @@ class _TripSettingState extends State<TripSetting> {
                   );
                 }
 
-                if (!widget.trip.users[index - 5].involved) return Container();
+                if (!widget.trip.users[index - 6].involved) return Container();
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Row(
@@ -351,7 +385,7 @@ class _TripSettingState extends State<TripSetting> {
                           width: 50,
                           height: 50,
                           child: Image.asset(
-                              "assets/profile/${widget.trip.users[index - 5].dp}.png"),
+                              "assets/profile/${widget.trip.users[index - 6].dp}.png"),
                         ),
                       ),
                       const SizedBox(
@@ -362,7 +396,7 @@ class _TripSettingState extends State<TripSetting> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            widget.trip.users[index - 5].name,
+                            widget.trip.users[index - 6].name,
                             style: TextStyle(color: Colors.white, fontSize: 15),
                           ),
                         ],

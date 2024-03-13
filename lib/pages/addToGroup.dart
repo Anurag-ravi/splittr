@@ -22,7 +22,8 @@ class _AddToGroupState extends State<AddToGroup> {
   List<Contact> contacts = [];
   List<String> numbers = [];
   List<UserModel> friends = [];
-  bool loading = true;
+  List<bool> selected = [];
+  bool loading = true, selection = false;
   Set<String> involved_users = {};
 
   @override
@@ -108,6 +109,18 @@ class _AddToGroupState extends State<AddToGroup> {
             Navigator.pop(context, false);
           },
         ),
+        actions: [
+          selection ? GestureDetector(
+            onTap: () {
+              haptics();
+              add_to_group();
+            },
+            child: Text(
+              'Done',
+              style: TextStyle(color: Colors.white, fontSize: 15),
+            )
+          ) : Container()
+        ],
       ),
       body: loading
           ? Center(
@@ -180,7 +193,10 @@ class _AddToGroupState extends State<AddToGroup> {
                   onTap: () {
                     if (!x) {
                       haptics();
-                      add_to_group(friends[index].id);
+                      setState(() {
+                        selected[index] = !selected[index];
+                        selection = selected.contains(true);
+                      });
                     }
                   },
                   child: Padding(
@@ -223,7 +239,7 @@ class _AddToGroupState extends State<AddToGroup> {
                             ],
                           ),
                           Expanded(child: Container()),
-                          x
+                          selected[index]
                               ? Padding(
                                   padding: EdgeInsets.only(right: 10),
                                   child: Icon(
@@ -263,6 +279,7 @@ class _AddToGroupState extends State<AddToGroup> {
         setState(() {
           loading = false;
           friends = temp;
+          selected = List<bool>.filled(friends.length, false);
         });
         return;
       }
@@ -276,21 +293,27 @@ class _AddToGroupState extends State<AddToGroup> {
     });
   }
 
-  Future<void> add_to_group(String id) async {
+  Future<void> add_to_group() async {
     setState(() {
       loading = true;
     });
+    List<String> selected_users = [];
+    for (var i = 0; i < selected.length; i++) {
+      if (selected[i]) {
+        selected_users.add(friends[i].id);
+      }
+    }
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? url = prefs.getString('url');
     String? token = prefs.getString('token');
     var data = await postRequest(
-        "${url!}/trip/${widget.trip.id}/add",
+        "${url!}/trip/${widget.trip.id}/add-many",
         {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
           'Authorization': token!
         },
-        jsonEncode({"user_id": id}),
+        jsonEncode({"users": selected_users}),
         prefs,
         context);
     setState(() {

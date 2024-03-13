@@ -33,13 +33,25 @@ class _GroupScreenState extends State<GroupScreen> {
   List<ShortTripModel> trips = [];
   List<TripModel> tripData = [];
   List<Net> nets = [];
-  bool loading = true;
+  bool loading = true, showSettledUp = false;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     refresh();
+    init();
+  }
+  Future<void> init() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool hide = prefs.getBool('hideSettledUp') ?? false;
+    setState(() {
+      showSettledUp = hide;
+    });
+  }
+  Future<void> setPref() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setBool('hideSettledUp', showSettledUp);
   }
 
   Future<void> refresh() async {
@@ -224,9 +236,38 @@ class _GroupScreenState extends State<GroupScreen> {
                   ),
                 )
               : ListView.builder(
-                  itemCount: trips.length,
-                  itemBuilder: (context, index) {
-                    return GestureDetector(
+                  itemCount: trips.length + 1,
+                  itemBuilder: (context, idx) {
+                    if(idx == 0){
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text('Hide Settled Up Groups', style: TextStyle(color: Colors.grey[100]),),
+                          SizedBox(width: 10,),
+                          SizedBox(
+                            width: 40,
+                            height: 30,
+                            child: FittedBox(
+                              fit: BoxFit.fill,
+                              child: Switch(
+                                value: showSettledUp,
+                                onChanged: (value) {
+                                  haptics();
+                                  setState(() {
+                                    showSettledUp = value;
+                                  });
+                                  setPref();
+                                },
+                                activeColor: mainGreen,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 5,),
+                        ],
+                      );
+                    }
+                    int index = idx - 1;
+                    return showSettledUp && nets[index].color == Color(0xfff5f5f5) ? Container() :  GestureDetector(
                       onTap: () async {
                         haptics();
                         final res =
