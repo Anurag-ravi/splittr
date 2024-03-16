@@ -31,7 +31,6 @@ class TripModel {
       this.created_by, this.users, this.expenses, this.payments);
 
   factory TripModel.fromJson(Map<String, dynamic> json) {
-    // print(json);
     return TripModel(
       json['_id'],
       json['code'],
@@ -63,10 +62,12 @@ class TripModel {
 }
 
 class Transaction {
+  bool isMonth;
+  String month;
   bool isExpense;
   DateTime date;
   ExpenseModel? expense;
   PaymentModel? payment;
 
-  Transaction(this.isExpense, this.date, this.expense, this.payment);
+  Transaction(this.isExpense, this.date, this.expense, this.payment,{this.isMonth = false, this.month = ""});
 }

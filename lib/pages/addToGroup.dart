@@ -199,55 +199,59 @@ class _AddToGroupState extends State<AddToGroup> {
                       });
                     }
                   },
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 15),
-                    child: Opacity(
-                      opacity: x ? 0.3 : 1.0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            width: 10,
-                          ),
-                          ClipOval(
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              child: Image.asset(
-                                  "assets/profile/${friends[index].dp}.png"),
+                  child: Container(
+                    width: MediaQuery.of(context).size.width,
+                    decoration: BoxDecoration(color: Colors.transparent),
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 15),
+                      child: Opacity(
+                        opacity: x ? 0.3 : 1.0,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              width: 10,
                             ),
-                          ),
-                          SizedBox(
-                            width: 20,
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                friends[index].name,
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 15),
+                            ClipOval(
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                child: Image.asset(
+                                    "assets/profile/${friends[index].dp}.png"),
                               ),
-                              x
-                                  ? Text(
-                                      'Already in group',
-                                      style: TextStyle(
-                                          color: Colors.grey, fontSize: 11),
-                                    )
-                                  : Container(),
-                            ],
-                          ),
-                          Expanded(child: Container()),
-                          selected[index]
-                              ? Padding(
-                                  padding: EdgeInsets.only(right: 10),
-                                  child: Icon(
-                                    Icons.check,
-                                    color: Colors.white,
-                                  ))
-                              : Container(),
-                        ],
+                            ),
+                            SizedBox(
+                              width: 20,
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  friends[index].name,
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 15),
+                                ),
+                                x
+                                    ? Text(
+                                        'Already in group',
+                                        style: TextStyle(
+                                            color: Colors.grey, fontSize: 11),
+                                      )
+                                    : Container(),
+                              ],
+                            ),
+                            Expanded(child: Container()),
+                            selected[index]
+                                ? Padding(
+                                    padding: EdgeInsets.only(right: 10),
+                                    child: Icon(
+                                      Icons.check,
+                                      color: Colors.white,
+                                    ))
+                                : Container(),
+                          ],
+                        ),
                       ),
                     ),
                   ),

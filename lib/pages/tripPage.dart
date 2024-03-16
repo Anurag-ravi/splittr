@@ -35,6 +35,20 @@ class _TripPageState extends State<TripPage> {
   Color g_textColor = Color(0xfff5f5f5);
   Map<String, TripUser> tripUserMap = new Map<String, TripUser>();
   double g_paid_by_me = 0.00, g_paid_for_me = 0.00, g_total = 0.00;
+  List months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec'
+  ];
 
   @override
   void initState() {
@@ -129,10 +143,27 @@ class _TripPageState extends State<TripPage> {
             break;
           }
         }
+        List<Transaction> with_months = [];
+        for (int i = 0; i < t_temp.length; i++) {
+          if (i == 0) {
+            with_months.add(Transaction(false, t_temp[i].date, null, null,
+                isMonth: true, month: months[t_temp[i].date.month - 1] + " " + t_temp[i].date.year.toString()));
+            with_months.add(t_temp[i]);
+          } else {
+            if (t_temp[i].date.month != t_temp[i - 1].date.month ||
+                t_temp[i].date.year != t_temp[i - 1].date.year) {
+              with_months.add(Transaction(false, t_temp[i].date, null, null,
+                isMonth: true, month: months[t_temp[i].date.month - 1] + " " + t_temp[i].date.year.toString()));
+              with_months.add(t_temp[i]);
+            } else {
+              with_months.add(t_temp[i]);
+            }
+          }
+        }
         setState(() {
           loading = false;
           trip = temp;
-          transactions = t_temp;
+          transactions = with_months;
           g_deletable = deletable;
         });
 
@@ -374,20 +405,6 @@ class _TripPageState extends State<TripPage> {
                       String category = transactions[idx].isExpense
                           ? transactions[idx].expense!.category
                           : "general";
-                      List months = [
-                        'Jan',
-                        'Feb',
-                        'Mar',
-                        'Apr',
-                        'May',
-                        'Jun',
-                        'Jul',
-                        'Aug',
-                        'Sep',
-                        'Oct',
-                        'Nov',
-                        'Dec'
-                      ];
                       double paid_by_me = 0.00, paid_for_me = 0.00;
                       if (transactions[idx].isExpense) {
                         for (var x in transactions[idx].expense!.paid_by) {
@@ -412,7 +429,18 @@ class _TripPageState extends State<TripPage> {
                         textColor = mainOrange;
                         amnt = (paid_for_me - paid_by_me).toStringAsFixed(2);
                       }
-                      if (!transactions[idx].isExpense) {
+                      if(transactions[idx].isMonth){
+                        return Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 1,vertical: 8),
+                          child: Text(
+                            transactions[idx].month,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                            ),
+                          ),
+                        );
+                      } else if (!transactions[idx].isExpense) {
                         return GestureDetector(
                           onTap: () async {
                             haptics();

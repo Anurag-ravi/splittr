@@ -161,10 +161,21 @@ class _ExpensePageState extends State<ExpensePage> {
                   );
                 }
                 if (index == 1) {
+                  int hour = widget.expense.created.hour;
+                  String ampm = "AM";
+                  if (hour > 12) {
+                    hour -= 12;
+                    ampm = "PM";
+                  }
+                  if(hour == 0) hour = 12;
+                  String hr = hour < 10 ? "0$hour" : "$hour";
+                  String min = widget.expense.created.minute < 10
+                      ? "0${widget.expense.created.minute}"
+                      : "${widget.expense.created.minute}";
                   return Padding(
                     padding: const EdgeInsets.only(left: 50),
                     child: Text(
-                      "Added on ${months[widget.expense.created.month - 1]} ${widget.expense.created.day}, ${widget.expense.created.year}",
+                      "Added on ${months[widget.expense.created.month - 1]} ${widget.expense.created.day}, ${widget.expense.created.year} at ${hr}:${min} $ampm",
                       style: TextStyle(
                           color: Colors.white,
                           fontSize: 12,

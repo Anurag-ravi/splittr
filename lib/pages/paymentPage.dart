@@ -32,8 +32,20 @@ class _PaymentViewState extends State<PaymentView> {
     'Dec'
   ];
   bool loading = false;
+
   @override
   Widget build(BuildContext context) {
+    int hour = widget.payment.created.hour;
+    String ampm = "AM";
+    if (hour > 12) {
+      hour -= 12;
+      ampm = "PM";
+    }
+    if(hour == 0) hour = 12;
+    String hr = hour < 10 ? "0$hour" : "$hour";
+    String min = widget.payment.created.minute < 10
+        ? "0${widget.payment.created.minute}"
+        : "${widget.payment.created.minute}";
     return Scaffold(
       backgroundColor: Colors.grey[900],
       appBar: AppBar(
@@ -114,7 +126,7 @@ class _PaymentViewState extends State<PaymentView> {
             height: 20,
           ),
           Text(
-            "Added on ${months[widget.payment.created.month - 1]} ${widget.payment.created.day}, ${widget.payment.created.year} at ${widget.payment.created.hour}:${widget.payment.created.minute}",
+            "Added on ${months[widget.payment.created.month - 1]} ${widget.payment.created.day}, ${widget.payment.created.year} at ${hr}:${min} $ampm",
             style: TextStyle(
               color: Colors.white,
               fontSize: 12,
@@ -189,6 +201,7 @@ class _PaymentViewState extends State<PaymentView> {
         amount: widget.payment.amount,
         payment_id: widget.payment.id,
         updating: true,
+        created: widget.payment.created,
         tripUserMap: widget.tripUserMap,
       );
     }));

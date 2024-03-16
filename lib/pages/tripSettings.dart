@@ -188,21 +188,25 @@ class _TripSettingState extends State<TripSetting> {
                         Navigator.pop(context, true);
                       }
                     },
-                    child: const Padding(
-                      padding: EdgeInsets.all(15),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Icon(Icons.group_add_outlined,
-                              color: Colors.white, size: 25),
-                          SizedBox(
-                            width: 20,
-                          ),
-                          Text(
-                            'Add people to group',
-                            style: TextStyle(color: Colors.white),
-                          )
-                        ],
+                    child: Container(
+                      width: MediaQuery.of(context).size.width,
+                    decoration: BoxDecoration(color: Colors.transparent),
+                      child: const Padding(
+                        padding: EdgeInsets.all(15),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Icon(Icons.group_add_outlined,
+                                color: Colors.white, size: 25),
+                            SizedBox(
+                              width: 20,
+                            ),
+                            Text(
+                              'Add people to group',
+                              style: TextStyle(color: Colors.white),
+                            )
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -221,21 +225,25 @@ class _TripSettingState extends State<TripSetting> {
                         Navigator.pop(context, true);
                       }
                     },
-                    child: const Padding(
-                      padding: EdgeInsets.all(15),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Icon(Icons.group_remove_outlined,
-                              color: Colors.white, size: 25),
-                          SizedBox(
-                            width: 20,
-                          ),
-                          Text(
-                            'Remove people from group',
-                            style: TextStyle(color: Colors.white),
-                          )
-                        ],
+                    child: Container(
+                      width: MediaQuery.of(context).size.width,
+                    decoration: BoxDecoration(color: Colors.transparent),
+                      child: const Padding(
+                        padding: EdgeInsets.all(15),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Icon(Icons.group_remove_outlined,
+                                color: Colors.white, size: 25),
+                            SizedBox(
+                              width: 20,
+                            ),
+                            Text(
+                              'Remove people from group',
+                              style: TextStyle(color: Colors.white),
+                            )
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -249,20 +257,24 @@ class _TripSettingState extends State<TripSetting> {
                           text:
                               "Use this code: ${widget.trip.code} to join my Splittr Group: ${widget.trip.name}");
                     },
-                    child: const Padding(
-                      padding: EdgeInsets.all(15),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Icon(Icons.link, color: Colors.white, size: 25),
-                          SizedBox(
-                            width: 20,
-                          ),
-                          Text(
-                            'Invite via link',
-                            style: TextStyle(color: Colors.white),
-                          )
-                        ],
+                    child: Container(
+                      width: MediaQuery.of(context).size.width,
+                    decoration: BoxDecoration(color: Colors.transparent),
+                      child: const Padding(
+                        padding: EdgeInsets.all(15),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Icon(Icons.link, color: Colors.white, size: 25),
+                            SizedBox(
+                              width: 20,
+                            ),
+                            Text(
+                              'Invite via link',
+                              style: TextStyle(color: Colors.white),
+                            )
+                          ],
+                        ),
                       ),
                     ),
                   );

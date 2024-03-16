@@ -166,7 +166,6 @@ class _AddNewContactState extends State<AddNewContact> {
     });
     if (data != null) {
       if (data['status'] == 200) {
-        print(data);
         var snackBar = SnackBar(
           content: Text(data['message']),
         );

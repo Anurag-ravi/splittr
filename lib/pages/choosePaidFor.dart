@@ -308,56 +308,76 @@ class _ChoosePaidForState extends State<ChoosePaidFor>
             body: ListView.builder(
               itemCount: users.length,
               itemBuilder: (context, index) {
-                return Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 1,
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: Image.asset(
-                              'assets/profile/${users[index].dp}.png',
+                return GestureDetector(
+                  onTap: (){
+                    setState(() {
+                      paid_for_equally[index].involved =
+                          !paid_for_equally[index].involved;
+                    });
+                    int c = 0;
+                    for (var x in paid_for_equally) {
+                      if (!x.involved) c++;
+                    }
+                    setState(() {
+                      all_involved = c == 0;
+                      person = users.length - c;
+                    });
+                  },
+                  child: Container(
+                    width: MediaQuery.of(context).size.width,
+                      decoration: BoxDecoration(color: Colors.transparent),
+                    child: Padding(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 1,
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: Image.asset(
+                                  'assets/profile/${users[index].dp}.png',
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                      Expanded(
-                        flex: 7,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 10),
-                          child: Text(
-                            users[index].name,
-                            style: TextStyle(color: Colors.white),
+                          Expanded(
+                            flex: 7,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 10),
+                              child: Text(
+                                users[index].name,
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
                           ),
-                        ),
+                          // Expanded(child: Container()),
+                          Expanded(
+                            flex: 1,
+                            child: Checkbox(
+                              value: paid_for_equally[index].involved,
+                              onChanged: (value) {
+                                setState(() {
+                                  paid_for_equally[index].involved =
+                                      !paid_for_equally[index].involved;
+                                });
+                                int c = 0;
+                                for (var x in paid_for_equally) {
+                                  if (!x.involved) c++;
+                                }
+                                setState(() {
+                                  all_involved = c == 0;
+                                  person = users.length - c;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
                       ),
-                      // Expanded(child: Container()),
-                      Expanded(
-                        flex: 1,
-                        child: Checkbox(
-                          value: paid_for_equally[index].involved,
-                          onChanged: (value) {
-                            setState(() {
-                              paid_for_equally[index].involved =
-                                  !paid_for_equally[index].involved;
-                            });
-                            int c = 0;
-                            for (var x in paid_for_equally) {
-                              if (!x.involved) c++;
-                            }
-                            setState(() {
-                              all_involved = c == 0;
-                              person = users.length - c;
-                            });
-                          },
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 );
               },

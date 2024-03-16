@@ -41,6 +41,21 @@ class _AddExpenseState extends State<AddExpense> {
   List<By> paid_by = [];
   List<By> paid_for = [];
   Map<String, TripUser> tripUserMap = new Map<String, TripUser>();
+  DateTime selectedDate = DateTime.now();
+  List months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec'
+  ];
 
   @override
   void initState() {
@@ -78,6 +93,7 @@ class _AddExpenseState extends State<AddExpense> {
         paid_by = widget.expense!.paid_by;
         paid_for = widget.expense!.paid_for;
         loading = false;
+        selectedDate = widget.expense!.created;
       });
     } else {
       setState(() {
@@ -432,13 +448,140 @@ class _AddExpenseState extends State<AddExpense> {
                         ),
                       ),
                     ],
+                  ),
+                  SizedBox(
+                    height: 30,
+                  ),
+                  // show date and time
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.calendar_month_outlined,
+                        color: Colors.white,
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          haptics();
+                          showDatePicker(
+                            context: context,
+                            initialDate: selectedDate,
+                            firstDate: DateTime(0),
+                            lastDate: DateTime.now(),
+                          ).then((date) {
+                            if (date != null) {
+                              setState(() {
+                                selectedDate = DateTime(
+                                  date.year,
+                                  date.month,
+                                  date.day,
+                                  selectedDate.hour,
+                                  selectedDate.minute,
+                                ).toLocal();
+                              });
+                            }
+                          });
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Container(
+                            // width: 80,
+                            height: 30,
+                            padding: EdgeInsets.symmetric(horizontal: 5),
+                            decoration: BoxDecoration(
+                                color: Colors.grey[900],
+                                // only bottom border
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: Color(0xffa0a0a0),
+                                    width: 0.5,
+                                  ),
+                                ),
+
+                            ),
+                            child: Center(
+                              child: Text(
+                                "${selectedDate.day} ${months[selectedDate.month - 1]} ${selectedDate.year}",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Icon(
+                        Icons.access_time_outlined,
+                        color: Colors.white,
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          haptics();
+                          showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay.fromDateTime(selectedDate),
+                          ).then((time) {
+                            if (time != null) {
+                              setState(() {
+                                selectedDate = DateTime(
+                                  selectedDate.year,
+                                  selectedDate.month,
+                                  selectedDate.day,
+                                  time.hour,
+                                  time.minute,
+                                ).toLocal();
+                              });
+                            }
+                          });
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Container(
+                            // width: 80,
+                            height: 30,
+                            padding: EdgeInsets.symmetric(horizontal: 5),
+                            decoration: BoxDecoration(
+                                color: Colors.grey[900],
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: Color(0xffa0a0a0),
+                                    width: 0.5,
+                                  ),
+                                )),
+                            child: Center(
+                              child: Text(
+                                getTimeString(selectedDate),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   )
                 ],
               ),
             ),
           );
   }
-
+  String getTimeString(DateTime date) {
+    int hour = date.hour;
+    if (hour > 12) {
+      hour -= 12;
+    }
+    if(hour == 0) hour = 12;
+    String hr = hour < 10 ? "0$hour" : hour.toString();
+    String min = date.minute < 10 ? "0${date.minute}" : date.minute.toString();
+    String ampm = date.hour > 12 ? "PM" : "AM";
+    return "$hr:$min $ampm";
+  }
   Future<void> getCategory(String cat) async {
     final result = await Navigator.push(
       context,
@@ -515,6 +658,7 @@ class _AddExpenseState extends State<AddExpense> {
           "split_type": splitType.name,
           "paid_by": paid_by_json,
           "paid_for": paid_for_json,
+          "created": selectedDate.toIso8601String() + "+05:30"
         }),
         prefs,
         context);
@@ -610,7 +754,6 @@ class _AddExpenseState extends State<AddExpense> {
               )),
     );
     if (!mounted) return;
-    print(result);
     setState(() {
       paid_by = result;
     });
@@ -628,7 +771,6 @@ class _AddExpenseState extends State<AddExpense> {
               )),
     );
     if (!mounted) return;
-    print(result);
     setState(() {
       splitType = result['type'];
       paid_for = result['paid_for'];
