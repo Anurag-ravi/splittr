@@ -14,20 +14,27 @@ import 'package:splittr/pages/paymentPage.dart';
 import 'package:splittr/pages/settleUpPage.dart';
 import 'package:splittr/pages/totalPage.dart';
 import 'package:splittr/pages/tripSettings.dart';
+import 'package:splittr/screens/groupScreen.dart';
+import 'package:splittr/utilities/boxes.dart';
 import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/excelExport.dart';
 import 'package:splittr/utilities/request.dart';
 
 class TripPage extends StatefulWidget {
-  const TripPage({super.key, required this.id});
+  const TripPage({super.key, required this.id, required this.trip});
   final String id;
+  final TripModel trip;
 
   @override
   State<TripPage> createState() => _TripPageState();
 }
 
 class _TripPageState extends State<TripPage> {
-  bool loading = true, g_free = false, export = false, g_deletable = false;
+  bool loading = true,
+      g_free = false,
+      export = false,
+      g_deletable = false,
+      api_fetching = false;
   TripModel? trip;
   List<Transaction> transactions = [];
   String currentTripUser = "";
@@ -54,12 +61,21 @@ class _TripPageState extends State<TripPage> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    refresh();
+    init();
+  }
+
+  Future<void> init() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var user = UserModel.fromJson(jsonDecode(prefs.getString('user')!));
+    setState(() {
+      trip = widget.trip;
+    });
+    calculate(widget.trip, user.id);
   }
 
   Future<void> refresh() async {
     setState(() {
-      loading = true;
+      api_fetching = true;
     });
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? url = prefs.getString('url');
@@ -76,110 +92,128 @@ class _TripPageState extends State<TripPage> {
     if (data != null) {
       if (data['status'] == 200) {
         var temp = TripModel.fromJson(data['data']);
+        var tripBox = Boxes.getTrips();
+        tripBox.put(widget.id, temp);
         SharedPreferences prefs = await SharedPreferences.getInstance();
-        Map<String, double> tripUserNet = {};
         var user = UserModel.fromJson(jsonDecode(prefs.getString('user')!));
-        for (var tu in temp.users) {
-          if (tu.user == user.id) {
-            setState(() {
-              currentTripUser = tu.id;
-            });
-          }
-          setState(() {
-            tripUserMap.putIfAbsent(tu.id, () => tu);
-          });
-          tripUserNet.putIfAbsent(tu.id, () => 0.00);
-        }
-        List<Transaction> t_temp = [];
-        double paid_by_me = 0.00, paid_for_me = 0.00, total = 0.00;
-        for (var x in temp.expenses) {
-          total += x.amount;
-          t_temp.add(Transaction(true, x.created, x, null));
-          for (var y in x.paid_by) {
-            if (y.user == currentTripUser) paid_by_me += y.amount;
-            tripUserNet[y.user] = tripUserNet[y.user]! + y.amount;
-          }
-          for (var y in x.paid_for) {
-            if (y.user == currentTripUser) paid_for_me += y.amount;
-            tripUserNet[y.user] = tripUserNet[y.user]! - y.amount;
-          }
-        }
+        calculate(temp, user.id);
         setState(() {
-          g_paid_by_me = paid_by_me;
-          g_paid_for_me = paid_for_me;
-          g_total = total;
+          api_fetching = false;
         });
-        for (var x in temp.payments) {
-          t_temp.add(Transaction(false, x.created, null, x));
-          if (x.by == currentTripUser) paid_by_me += x.amount;
-          if (x.to == currentTripUser) paid_for_me += x.amount;
-          tripUserNet[x.by] = tripUserNet[x.by]! + x.amount;
-          tripUserNet[x.to] = tripUserNet[x.to]! - x.amount;
-        }
-        t_temp.sort((a, b) => b.date.compareTo(a.date));
-        if (paid_by_me.toStringAsFixed(2) == paid_for_me.toStringAsFixed(2)) {
-          setState(() {
-            g_involved = "You are all settled up in this group";
-            g_textColor = Color(0xfff5f5f5);
-            g_free = true;
-          });
-        } else if (paid_by_me >= paid_for_me) {
-          setState(() {
-            g_involved =
-                "You are owed ₹${(paid_by_me - paid_for_me).toStringAsFixed(2)} overall";
-            g_textColor = mainGreen;
-          });
-        } else {
-          setState(() {
-            g_involved =
-                "You owe ₹${(paid_for_me - paid_by_me).toStringAsFixed(2)} overall";
-            g_textColor = mainOrange;
-          });
-        }
-        bool deletable = true;
-        for (var x in tripUserNet.entries) {
-          if (roundAmount2(x.value) != 0.00) {
-            deletable = false;
-            break;
-          }
-        }
-        List<Transaction> with_months = [];
-        for (int i = 0; i < t_temp.length; i++) {
-          if (i == 0) {
-            with_months.add(Transaction(false, t_temp[i].date, null, null,
-                isMonth: true, month: months[t_temp[i].date.month - 1] + " " + t_temp[i].date.year.toString()));
-            with_months.add(t_temp[i]);
-          } else {
-            if (t_temp[i].date.month != t_temp[i - 1].date.month ||
-                t_temp[i].date.year != t_temp[i - 1].date.year) {
-              with_months.add(Transaction(false, t_temp[i].date, null, null,
-                isMonth: true, month: months[t_temp[i].date.month - 1] + " " + t_temp[i].date.year.toString()));
-              with_months.add(t_temp[i]);
-            } else {
-              with_months.add(t_temp[i]);
-            }
-          }
-        }
-        setState(() {
-          loading = false;
-          trip = temp;
-          transactions = with_months;
-          g_deletable = deletable;
-        });
-
         return;
       }
     }
     setState(() {
-      loading = false;
+      api_fetching = false;
     });
+  }
+
+  void calculate(TripModel temp, String userId) {
+    Map<String, double> tripUserNet = {};
+    for (var tu in temp.users) {
+      if (tu.user == userId) {
+        setState(() {
+          currentTripUser = tu.id;
+        });
+      }
+      setState(() {
+        tripUserMap.putIfAbsent(tu.id, () => tu);
+      });
+      tripUserNet.putIfAbsent(tu.id, () => 0.00);
+    }
+    List<Transaction> t_temp = [];
+    double paid_by_me = 0.00, paid_for_me = 0.00, total = 0.00;
+    for (var x in temp.expenses) {
+      total += x.amount;
+      t_temp.add(Transaction(true, x.created, x, null));
+      for (var y in x.paid_by) {
+        if (y.user == currentTripUser) paid_by_me += y.amount;
+        tripUserNet[y.user] = tripUserNet[y.user]! + y.amount;
+      }
+      for (var y in x.paid_for) {
+        if (y.user == currentTripUser) paid_for_me += y.amount;
+        tripUserNet[y.user] = tripUserNet[y.user]! - y.amount;
+      }
+    }
+    setState(() {
+      g_paid_by_me = paid_by_me;
+      g_paid_for_me = paid_for_me;
+      g_total = total;
+    });
+    for (var x in temp.payments) {
+      t_temp.add(Transaction(false, x.created, null, x));
+      if (x.by == currentTripUser) paid_by_me += x.amount;
+      if (x.to == currentTripUser) paid_for_me += x.amount;
+      tripUserNet[x.by] = tripUserNet[x.by]! + x.amount;
+      tripUserNet[x.to] = tripUserNet[x.to]! - x.amount;
+    }
+    t_temp.sort((a, b) => b.date.compareTo(a.date));
+    if (paid_by_me.toStringAsFixed(2) == paid_for_me.toStringAsFixed(2)) {
+      setState(() {
+        g_involved = "You are all settled up in this group";
+        g_textColor = Color(0xfff5f5f5);
+        g_free = true;
+      });
+    } else if (paid_by_me >= paid_for_me) {
+      setState(() {
+        g_involved =
+            "You are owed ₹${(paid_by_me - paid_for_me).toStringAsFixed(2)} overall";
+        g_textColor = mainGreen;
+      });
+    } else {
+      setState(() {
+        g_involved =
+            "You owe ₹${(paid_for_me - paid_by_me).toStringAsFixed(2)} overall";
+        g_textColor = mainOrange;
+      });
+    }
+    bool deletable = true;
+    for (var x in tripUserNet.entries) {
+      if (roundAmount2(x.value) != 0.00) {
+        deletable = false;
+        break;
+      }
+    }
+    List<Transaction> with_months = [];
+    for (int i = 0; i < t_temp.length; i++) {
+      if (i == 0) {
+        with_months.add(Transaction(false, t_temp[i].date, null, null,
+            isMonth: true,
+            month: months[t_temp[i].date.month - 1] +
+                " " +
+                t_temp[i].date.year.toString()));
+        with_months.add(t_temp[i]);
+      } else {
+        if (t_temp[i].date.month != t_temp[i - 1].date.month ||
+            t_temp[i].date.year != t_temp[i - 1].date.year) {
+          with_months.add(Transaction(false, t_temp[i].date, null, null,
+              isMonth: true,
+              month: months[t_temp[i].date.month - 1] +
+                  " " +
+                  t_temp[i].date.year.toString()));
+          with_months.add(t_temp[i]);
+        } else {
+          with_months.add(t_temp[i]);
+        }
+      }
+    }
+    setState(() {
+      loading = false;
+      trip = temp;
+      transactions = with_months;
+      g_deletable = deletable;
+    });
+  }
+
+  Future<void> onRefresh() async {
+    refresh();
   }
 
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: () {
-        return refresh();
+        return onRefresh();
       },
       child: loading
           ? const Center(
@@ -249,8 +283,13 @@ class _TripPageState extends State<TripPage> {
               body: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: ListView.builder(
-                    itemCount:
-                        transactions.length == 0 ? 5 : transactions.length + 4,
+                    itemCount: api_fetching
+                        ? transactions.length == 0
+                            ? 6
+                            : transactions.length + 5
+                        : transactions.length == 0
+                            ? 5
+                            : transactions.length + 4,
                     itemBuilder: (context, index) {
                       if (index == 0) {
                         return Padding(
@@ -364,7 +403,15 @@ class _TripPageState extends State<TripPage> {
                           ),
                         );
                       }
-                      if (transactions.length == 0 && index == 3) {
+                      if (api_fetching && index == 3) {
+                        return ApiLoader();
+                      }
+                      if ((!api_fetching &&
+                              transactions.length == 0 &&
+                              index == 3) ||
+                          (api_fetching &&
+                              transactions.length == 0 &&
+                              index == 4)) {
                         return Padding(
                           padding: const EdgeInsets.only(top: 30),
                           child: Center(
@@ -378,7 +425,12 @@ class _TripPageState extends State<TripPage> {
                           ),
                         );
                       }
-                      if (transactions.length == 0 && index == 4) {
+                      if ((!api_fetching &&
+                              transactions.length == 0 &&
+                              index == 4) ||
+                          (api_fetching &&
+                              transactions.length == 0 &&
+                              index == 5)) {
                         return Padding(
                           padding: const EdgeInsets.only(top: 20),
                           child: Center(
@@ -392,12 +444,13 @@ class _TripPageState extends State<TripPage> {
                           ),
                         );
                       }
-                      if (index == transactions.length + 3) {
+                      if ((!api_fetching && index == transactions.length + 3) ||
+                          (api_fetching && index == transactions.length + 4)) {
                         return Padding(
                             padding: const EdgeInsets.only(bottom: 50),
                             child: Container());
                       }
-                      int idx = index - 3;
+                      int idx = api_fetching ? index - 4 : index - 3;
                       DateTime date = transactions[idx].date;
                       String name = transactions[idx].isExpense
                           ? transactions[idx].expense!.name
@@ -429,9 +482,10 @@ class _TripPageState extends State<TripPage> {
                         textColor = mainOrange;
                         amnt = (paid_for_me - paid_by_me).toStringAsFixed(2);
                       }
-                      if(transactions[idx].isMonth){
+                      if (transactions[idx].isMonth) {
                         return Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 1,vertical: 8),
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 1, vertical: 8),
                           child: Text(
                             transactions[idx].month,
                             style: TextStyle(
