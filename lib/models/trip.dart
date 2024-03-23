@@ -1,9 +1,16 @@
+import 'package:hive/hive.dart';
 import 'package:splittr/models/expense.dart';
 import 'package:splittr/models/payment.dart';
 import 'package:splittr/models/tripuser.dart';
 
-class ShortTripModel {
+part 'trip.g.dart';
+
+@HiveType(typeId: 6)
+class ShortTripModel extends HiveObject{
+  @HiveField(0)
   String name;
+
+  @HiveField(1)
   String id;
 
   ShortTripModel({required this.name, required this.id});
@@ -16,15 +23,33 @@ class ShortTripModel {
   }
 }
 
-class TripModel {
+@HiveType(typeId: 7)
+class TripModel extends HiveObject{
+  @HiveField(0)
   String id;
+
+  @HiveField(1)
   String code;
+
+  @HiveField(2)
   String name;
+
+  @HiveField(3)
   DateTime created;
+
+  @HiveField(4)
   String currency;
+
+  @HiveField(5)
   String created_by;
+
+  @HiveField(6)
   List<TripUser> users;
+
+  @HiveField(7)
   List<ExpenseModel> expenses;
+
+  @HiveField(8)
   List<PaymentModel> payments;
 
   TripModel(this.id, this.code, this.name, this.created, this.currency,

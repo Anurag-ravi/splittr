@@ -12,7 +12,9 @@ dynamic postRequest(String url, Map<String, String> headers, Object body,
     Uri.parse(url),
     headers: headers,
     body: body,
-  );
+  ).timeout(Duration(seconds: 10), onTimeout: () {
+    return http.Response('{"status": 500}', 500);
+  });
   if (res.statusCode == 200) {
     var data = jsonDecode(res.body);
     if (data['status'] == 401) {
@@ -39,7 +41,9 @@ dynamic getRequest(String url, Map<String, String> headers,
   final res = await http.get(
     Uri.parse(url),
     headers: headers,
-  );
+  ).timeout(Duration(seconds: 10), onTimeout: () {
+    return http.Response('{"status": 500}', 500);
+  });
   if (res.statusCode == 200) {
     var data = jsonDecode(res.body);
     if (data['status'] == 401) {
@@ -66,7 +70,9 @@ dynamic deleteRequest(
   final res = await http.delete(
     Uri.parse(url),
     headers: headers,
-  );
+  ).timeout(Duration(seconds: 10), onTimeout: () {
+    return http.Response('{"status": 500}', 500);
+  });
   if (res.statusCode == 200) {
     var data = jsonDecode(res.body);
     return data;
@@ -85,6 +91,8 @@ void addLog(String message) async {
       'Content-Type': 'application/json'
     },
     body: jsonEncode({"message": message})
-  );
+  ).timeout(Duration(seconds: 10), onTimeout: () {
+    return http.Response('{"status": 500}', 500);
+  });
   return;
 }

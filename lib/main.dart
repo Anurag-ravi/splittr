@@ -4,6 +4,7 @@ import 'package:contacts_service/contacts_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/firebase_options.dart';
@@ -12,11 +13,37 @@ import 'package:splittr/pages/homePage.dart';
 import 'package:splittr/pages/login.dart';
 import 'package:splittr/utilities/constants.dart';
 
+// import all typeAdapter files
+import 'package:splittr/models/expense.dart';
+import 'package:splittr/models/payment.dart';
+import 'package:splittr/models/trip.dart';
+import 'package:splittr/models/tripuser.dart';
+import 'package:splittr/models/user.dart';
+
 late SharedPreferences prefs;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   prefs = await SharedPreferences.getInstance();
+  await Hive.initFlutter();
+  // register all typeAdapters
+  Hive.registerAdapter(ExpenseModelAdapter());
+  Hive.registerAdapter(splitTypeEnumAdapter());
+  Hive.registerAdapter(ByAdapter());
+  Hive.registerAdapter(PaymentModelAdapter());
+  Hive.registerAdapter(ShortTripModelAdapter());
+  Hive.registerAdapter(TripModelAdapter());
+  Hive.registerAdapter(TripUserAdapter());
+  Hive.registerAdapter(UserModelAdapter());
+  // open all boxes
+  await Hive.openBox<ExpenseModel>('expenses');
+  await Hive.openBox<PaymentModel>('payments');
+  await Hive.openBox<ShortTripModel>('shorttrips');
+  await Hive.openBox<TripModel>('trips');
+  await Hive.openBox<TripUser>('tripusers');
+  await Hive.openBox<UserModel>('users');
+  
+
   runApp(MyApp(
     prefs: prefs,
   ));

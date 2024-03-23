@@ -1,6 +1,29 @@
+import 'package:hive/hive.dart';
 
-class UserModel {
-  String id,name,email,country_code,phone,upi_id,dp;
+part 'user.g.dart';
+
+@HiveType(typeId: 0)
+class UserModel extends HiveObject{
+  @HiveField(0)
+  String id;
+  
+  @HiveField(1)
+  String name;
+  
+  @HiveField(2)
+  String email;
+  
+  @HiveField(3)
+  String country_code;
+  
+  @HiveField(4)
+  String phone;
+  
+  @HiveField(5)
+  String upi_id;
+  
+  @HiveField(6)
+  String dp;
 
   UserModel(this.id,this.name,this.email,this.country_code,this.phone,this.upi_id,this.dp);
 
