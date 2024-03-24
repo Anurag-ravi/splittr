@@ -9,6 +9,7 @@ import 'package:splittr/models/user.dart';
 import 'package:splittr/pages/completeSignup.dart';
 import 'package:splittr/pages/homePage.dart';
 import 'package:splittr/pages/otpPage.dart';
+import 'package:splittr/utilities/boxes.dart';
 import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/jwt.dart';
 import 'package:http/http.dart' as http;
@@ -251,7 +252,7 @@ class _LoginPageState extends State<LoginPage> {
         responseLoading = true;
       });
       UserCredential userCredential;
-      if(kIsWeb){
+      if (kIsWeb) {
         userCredential = await auth.signInWithPopup(provider);
       } else {
         userCredential = await auth.signInWithProvider(provider);
@@ -329,6 +330,7 @@ class _LoginPageState extends State<LoginPage> {
           } else {
             prefs.setString(
                 'user', jsonEncode(UserModel.fromJson(data['user'])));
+            await Boxes.getMe().put('me', UserModel.fromJson(data['user']));
             Navigator.of(context).pushReplacement(MaterialPageRoute(
                 builder: (builder) => HomePage(
                       curridx: 0,

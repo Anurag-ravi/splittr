@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/models/user.dart';
+import 'package:splittr/screens/groupScreen.dart';
+import 'package:splittr/utilities/boxes.dart';
 import 'package:splittr/utilities/request.dart';
 
 class FriendScreen extends StatefulWidget {
@@ -18,7 +20,7 @@ class _FriendScreenState extends State<FriendScreen> {
   List<Contact> contacts = [];
   List<String> numbers = [];
   List<UserModel> friends = [];
-  bool loading = true;
+  bool loading = true, api_fetching = true;
 
   @override
   void initState() {
@@ -28,25 +30,34 @@ class _FriendScreenState extends State<FriendScreen> {
   }
 
   void getContacts() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    try {
-      String? numb = await prefs.getString('numbers');
-      if (numb != null) {
-        List<String> data = List<String>.from(json.decode(numb));
-        setState(() {
-          numbers = data;
-        });
-        await fetchFriends();
-      }
-    } catch (e) {
-      print(e);
-    }
+    setState(() {
+      loading = true;
+      api_fetching = true;
+      friends = Boxes.getUsers().values.toList();
+    });
+    setState(() {
+      loading = false;
+    });
+    // SharedPreferences prefs = await SharedPreferences.getInstance();
+    // try {
+    //   String? numb = await prefs.getString('numbers');
+    //   if (numb != null) {
+    //     List<String> data = List<String>.from(json.decode(numb));
+    //     setState(() {
+    //       numbers = data;
+    //     });
+    //     await fetchFriends();
+    //   }
+    // } catch (e) {
+    //   print(e);
+    // }
 
     if (!await Permission.contacts.isGranted) {
       await Permission.contacts.request();
-      if(await Permission.contacts.isPermanentlyDenied){
+      if (await Permission.contacts.isPermanentlyDenied) {
         var snackBar = SnackBar(
-          content: Text("Grant contacts permission from settings to view friends"),
+          content:
+              Text("Grant contacts permission from settings to view friends"),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         openAppSettings();
@@ -79,7 +90,7 @@ class _FriendScreenState extends State<FriendScreen> {
         }
       }
     }
-    prefs.setString('numbers', jsonEncode(cc));
+    // prefs.setString('numbers', jsonEncode(cc));
     setState(() {
       contacts = ccc;
       numbers = cc;
@@ -97,8 +108,12 @@ class _FriendScreenState extends State<FriendScreen> {
             child: CircularProgressIndicator(),
           )
         : ListView.builder(
-            itemCount: friends.length,
-            itemBuilder: ((context, index) {
+            itemCount: api_fetching ? friends.length + 1 : friends.length,
+            itemBuilder: ((context, idx) {
+              if (api_fetching && idx == 0) {
+                return ApiLoader();
+              }
+              int index = api_fetching ? idx - 1 : idx;
               return Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Container(
@@ -169,9 +184,20 @@ class _FriendScreenState extends State<FriendScreen> {
         var users = data['friends'];
         List<UserModel> temp = [];
         users.forEach((user) => {temp.add(UserModel.fromJson(user))});
+        var userBox = Boxes.getUsers();
+        var localUsers = userBox.values.toList();
+        for (var user in localUsers) {
+          if (!temp.contains(user)) {
+            userBox.delete(user.id);
+          }
+        }
+        for (var user in temp) {
+          await userBox.put(user.id, user);
+        }
         setState(() {
           loading = false;
           friends = temp;
+          api_fetching = false;
         });
         return;
       }
@@ -182,6 +208,7 @@ class _FriendScreenState extends State<FriendScreen> {
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
     setState(() {
       loading = false;
+      api_fetching = false;
     });
   }
 }

@@ -1,9 +1,25 @@
-class PaymentModel {
+import 'package:hive/hive.dart';
+
+part 'payment.g.dart';
+
+@HiveType(typeId: 2)
+class PaymentModel extends HiveObject{
+  @HiveField(0)
   String id;
+
+  @HiveField(1)
   String trip;
+
+  @HiveField(2)
   double amount;
+
+  @HiveField(3)
   DateTime created;
+
+  @HiveField(4)
   String by;
+
+  @HiveField(5)
   String to;
 
   PaymentModel(this.id, this.trip, this.amount, this.created, this.by, this.to);

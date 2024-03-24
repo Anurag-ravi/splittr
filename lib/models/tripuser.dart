@@ -1,9 +1,25 @@
-class TripUser {
+import 'package:hive/hive.dart';
+
+part 'tripuser.g.dart';
+
+@HiveType(typeId: 1)
+class TripUser extends HiveObject{
+  @HiveField(0)
   String id;
+
+  @HiveField(1)
   String trip;
+
+  @HiveField(2)
   String user;
+
+  @HiveField(3)
   String name;
+
+  @HiveField(4)
   String dp;
+
+  @HiveField(5)
   bool involved;
 
   TripUser(this.id, this.trip, this.user, this.name, this.dp, this.involved);

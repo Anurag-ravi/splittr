@@ -1,14 +1,46 @@
-enum splitTypeEnum { equal, unequal, shares, percent }
+import 'package:hive/hive.dart';
 
-class ExpenseModel {
+part 'expense.g.dart';
+
+@HiveType(typeId: 3)
+enum splitTypeEnum { 
+  @HiveField(0)
+  equal, 
+  @HiveField(1)
+  unequal, 
+  @HiveField(2)
+  shares, 
+  @HiveField(3)
+  percent 
+}
+
+@HiveType(typeId: 5)
+class ExpenseModel extends HiveObject{
+  @HiveField(0)
   String id;
+
+  @HiveField(1)
   String trip;
+
+  @HiveField(2)
   String name;
+
+  @HiveField(3)
   double amount;
+
+  @HiveField(4)
   String category;
+
+  @HiveField(5)
   splitTypeEnum splitType;
+
+  @HiveField(6)
   DateTime created;
+
+  @HiveField(7)
   List<By> paid_by;
+
+  @HiveField(8)
   List<By> paid_for;
 
   ExpenseModel(this.id, this.trip, this.name, this.amount, this.category,
@@ -65,9 +97,15 @@ class ExpenseModel {
   }
 }
 
-class By {
+@HiveType(typeId: 4)
+class By extends HiveObject{
+  @HiveField(0)
   String user;
+
+  @HiveField(1)
   double amount;
+
+  @HiveField(2)
   double share_or_percent;
 
   By(this.user, this.amount, this.share_or_percent);

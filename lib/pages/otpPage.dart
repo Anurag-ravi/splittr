@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:splittr/models/user.dart';
 import 'package:splittr/pages/completeSignup.dart';
 import 'package:splittr/pages/homePage.dart';
+import 'package:splittr/utilities/boxes.dart';
 
 class OTPPage extends StatefulWidget {
   const OTPPage({super.key, required this.hash, required this.email});
@@ -156,6 +157,7 @@ class _OTPPageState extends State<OTPPage> {
           } else {
             prefs.setString(
                 'user', jsonEncode(UserModel.fromJson(data['user'])));
+            await Boxes.getMe().put('me', UserModel.fromJson(data['user']));
             Navigator.of(context).pushReplacement(MaterialPageRoute(
                 builder: (builder) => HomePage(
                       curridx: 0,

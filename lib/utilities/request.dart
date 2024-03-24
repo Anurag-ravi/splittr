@@ -8,83 +8,109 @@ import 'package:splittr/pages/login.dart';
 
 dynamic postRequest(String url, Map<String, String> headers, Object body,
     SharedPreferences prefs, BuildContext context) async {
-  final res = await http.post(
-    Uri.parse(url),
-    headers: headers,
-    body: body,
-  );
-  if (res.statusCode == 200) {
-    var data = jsonDecode(res.body);
-    if (data['status'] == 401) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('registered_now', true);
-      await prefs.remove('token');
-      await prefs.remove('user');
-      FirebaseAuth auth = FirebaseAuth.instance;
-      await auth.signOut();
-      Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (builder) => LoginPage()));
-      return null;
+  try {
+    final res = await http
+        .post(
+      Uri.parse(url),
+      headers: headers,
+      body: body,
+    )
+        .timeout(Duration(seconds: 10), onTimeout: () {
+      return http.Response('{"status": 500}', 500);
+    });
+    if (res.statusCode == 200) {
+      var data = jsonDecode(res.body);
+      if (data['status'] == 401) {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('registered_now', true);
+        await prefs.remove('token');
+        await prefs.remove('user');
+        FirebaseAuth auth = FirebaseAuth.instance;
+        await auth.signOut();
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (builder) => LoginPage()));
+        return null;
+      }
+      if (data['token'] != null) {
+        prefs.setString('token', data['token']);
+      }
+      return data;
     }
-    if (data['token'] != null) {
-      prefs.setString('token', data['token']);
-    }
-    return data;
+    return null;
+  } catch (e) {
+    return null;
   }
-  return null;
 }
 
 dynamic getRequest(String url, Map<String, String> headers,
     SharedPreferences prefs, BuildContext context) async {
-  final res = await http.get(
-    Uri.parse(url),
-    headers: headers,
-  );
-  if (res.statusCode == 200) {
-    var data = jsonDecode(res.body);
-    if (data['status'] == 401) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('registered_now', true);
-      await prefs.remove('token');
-      await prefs.remove('user');
-      FirebaseAuth auth = FirebaseAuth.instance;
-      await auth.signOut();
-      Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (builder) => LoginPage()));
-      return null;
+  try {
+    final res = await http
+        .get(
+      Uri.parse(url),
+      headers: headers,
+    )
+        .timeout(Duration(seconds: 10), onTimeout: () {
+      return http.Response('{"status": 500}', 500);
+    });
+    if (res.statusCode == 200) {
+      var data = jsonDecode(res.body);
+      if (data['status'] == 401) {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('registered_now', true);
+        await prefs.remove('token');
+        await prefs.remove('user');
+        FirebaseAuth auth = FirebaseAuth.instance;
+        await auth.signOut();
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (builder) => LoginPage()));
+        return null;
+      }
+      if (data['token'] != null) {
+        prefs.setString('token', data['token']);
+      }
+      return data;
     }
-    if (data['token'] != null) {
-      prefs.setString('token', data['token']);
-    }
-    return data;
+    return null;
+  } catch (e) {
+    return null;
   }
-  return null;
 }
 
 dynamic deleteRequest(
     String url, Map<String, String> headers, BuildContext context) async {
-  final res = await http.delete(
-    Uri.parse(url),
-    headers: headers,
-  );
-  if (res.statusCode == 200) {
-    var data = jsonDecode(res.body);
-    return data;
+  try {
+    final res = await http
+        .delete(
+      Uri.parse(url),
+      headers: headers,
+    )
+        .timeout(Duration(seconds: 10), onTimeout: () {
+      return http.Response('{"status": 500}', 500);
+    });
+    if (res.statusCode == 200) {
+      var data = jsonDecode(res.body);
+      return data;
+    }
+    return null;
+  } catch (e) {
+    return null;
   }
-  return null;
 }
 
 void addLog(String message) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String url = prefs.getString('url')! + '/log';
 
-  await http.post(
-    Uri.parse(url),
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    body: jsonEncode({"message": message})
-  );
+  await http
+      .post(Uri.parse(url),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: jsonEncode({"message": message}))
+      .timeout(Duration(seconds: 10), onTimeout: () {
+    return http.Response('{"status": 500}', 500);
+  });
   return;
 }

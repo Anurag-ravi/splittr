@@ -83,11 +83,11 @@ class _ExpensePageState extends State<ExpensePage> {
 
   @override
   Widget build(BuildContext context) {
-    return loading
-        ? const Center(
-            child: CircularProgressIndicator(),
-          )
-        : Scaffold(
+    return Stack(
+      children: [
+        Opacity(
+          opacity: loading ? 0.5 : 1,
+          child: Scaffold(
             backgroundColor: Colors.grey[900],
             appBar: AppBar(
               backgroundColor: Colors.pink[50],
@@ -96,7 +96,10 @@ class _ExpensePageState extends State<ExpensePage> {
                   Icons.arrow_back,
                 ),
                 onPressed: () {
-                  Navigator.pop(context, false);
+                  Navigator.pop(context, {
+                    'changed': false,
+                    'expense': widget.expense,
+                  });
                 },
               ),
               actions: [
@@ -167,7 +170,7 @@ class _ExpensePageState extends State<ExpensePage> {
                     hour -= 12;
                     ampm = "PM";
                   }
-                  if(hour == 0) hour = 12;
+                  if (hour == 0) hour = 12;
                   String hr = hour < 10 ? "0$hour" : "$hour";
                   String min = widget.expense.created.minute < 10
                       ? "0${widget.expense.created.minute}"
@@ -226,7 +229,13 @@ class _ExpensePageState extends State<ExpensePage> {
                 );
               },
             ),
-          );
+          ),
+        ),
+        loading
+            ? const Center(child: CircularProgressIndicator())
+            : Container(),
+      ],
+    );
   }
 
   Future<void> handleDelete() async {
@@ -274,7 +283,10 @@ class _ExpensePageState extends State<ExpensePage> {
           content: Text('Expense deleted'),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        Navigator.pop(context, true);
+        Navigator.pop(context, {
+          'changed': true,
+          'expense': null,
+        });
         return;
       }
     }
@@ -292,8 +304,9 @@ class _ExpensePageState extends State<ExpensePage> {
         expense: widget.expense,
       );
     }));
-    if (res != null && res) {
-      Navigator.pop(context, true);
+    if (res == null) return;
+    if (res != null) {
+      if (res['changed'] == true) Navigator.pop(context, res);
     }
   }
 }

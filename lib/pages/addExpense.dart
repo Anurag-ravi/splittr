@@ -106,11 +106,11 @@ class _AddExpenseState extends State<AddExpense> {
 
   @override
   Widget build(BuildContext context) {
-    return loading
-        ? Center(
-            child: CircularProgressIndicator(),
-          )
-        : Scaffold(
+    return Stack(
+      children: [
+        Opacity(
+          opacity: loading ? 0.5 : 1,
+          child: Scaffold(
             backgroundColor: Colors.grey[900],
             appBar: AppBar(
               backgroundColor: Colors.transparent,
@@ -124,7 +124,7 @@ class _AddExpenseState extends State<AddExpense> {
                   color: Colors.white,
                 ),
                 onPressed: () {
-                  Navigator.pop(context, false);
+                  Navigator.pop(context, {'changed': false, 'expense': null});
                 },
               ),
               actions: [
@@ -489,15 +489,14 @@ class _AddExpenseState extends State<AddExpense> {
                             height: 30,
                             padding: EdgeInsets.symmetric(horizontal: 5),
                             decoration: BoxDecoration(
-                                color: Colors.grey[900],
-                                // only bottom border
-                                border: Border(
-                                  bottom: BorderSide(
-                                    color: Color(0xffa0a0a0),
-                                    width: 0.5,
-                                  ),
+                              color: Colors.grey[900],
+                              // only bottom border
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: Color(0xffa0a0a0),
+                                  width: 0.5,
                                 ),
-
+                              ),
                             ),
                             child: Center(
                               child: Text(
@@ -569,19 +568,31 @@ class _AddExpenseState extends State<AddExpense> {
                 ],
               ),
             ),
-          );
+          ),
+        ),
+        loading
+            ? Center(
+                child: CircularProgressIndicator(
+                  color: mainGreen,
+                ),
+              )
+            : Container(),
+      ],
+    );
   }
+
   String getTimeString(DateTime date) {
     int hour = date.hour;
     if (hour > 12) {
       hour -= 12;
     }
-    if(hour == 0) hour = 12;
+    if (hour == 0) hour = 12;
     String hr = hour < 10 ? "0$hour" : hour.toString();
     String min = date.minute < 10 ? "0${date.minute}" : date.minute.toString();
     String ampm = date.hour > 12 ? "PM" : "AM";
     return "$hr:$min $ampm";
   }
+
   Future<void> getCategory(String cat) async {
     final result = await Navigator.push(
       context,
@@ -619,16 +630,20 @@ class _AddExpenseState extends State<AddExpense> {
     paid_for.forEach((element) {
       total_paid_for += element.amount;
     });
-    if (total_paid_by.toStringAsFixed(2) != double.parse(amount).toStringAsFixed(2) ||
-        total_paid_for.toStringAsFixed(2) != double.parse(amount).toStringAsFixed(2)) {
+    if (total_paid_by.toStringAsFixed(2) !=
+            double.parse(amount).toStringAsFixed(2) ||
+        total_paid_for.toStringAsFixed(2) !=
+            double.parse(amount).toStringAsFixed(2)) {
       var snackBar = SnackBar(
-        content: Text('The split does not add up to the amount. Please check again.'),
+        content: Text(
+            'The split does not add up to the amount. Please check again.'),
       );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
       setState(() {
         loading = false;
       });
-      addLog("${paid_by.toString()} ${paid_for.toString()} ${total_paid_by.toString()} ${total_paid_for.toString()} ${amount.toString()}");
+      addLog(
+          "${paid_by.toString()} ${paid_for.toString()} ${total_paid_by.toString()} ${total_paid_for.toString()} ${amount.toString()}");
       return;
     }
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -671,7 +686,11 @@ class _AddExpenseState extends State<AddExpense> {
         setState(() {
           loading = false;
         });
-        Navigator.pop(context, true);
+        ExpenseModel expense = ExpenseModel.fromJson(data['data']);
+        Navigator.pop(context, {
+          'changed': true,
+          'expense': expense,
+        });
         return;
       }
     }
@@ -698,7 +717,8 @@ class _AddExpenseState extends State<AddExpense> {
     double diff = roundAmount2(amnt - (perAmnt * participants));
     int i = 0;
     while (roundAmount2(diff) > 0.00) {
-      temp[i % temp.length].amount = roundAmount2(temp[i % temp.length].amount + 0.01);
+      temp[i % temp.length].amount =
+          roundAmount2(temp[i % temp.length].amount + 0.01);
       i++;
       diff = roundAmount2(diff - 0.01);
     }
@@ -712,12 +732,13 @@ class _AddExpenseState extends State<AddExpense> {
     List<By> temp = paid_for;
     double amnt = double.parse(amount);
     int totalShares = 0;
-    for(var x in paid_for){
+    for (var x in paid_for) {
       totalShares += x.share_or_percent.toInt();
     }
     double tot = 0.00;
     for (int i = 0; i < temp.length; i++) {
-      double c_amnt = roundAmount((amnt * temp[i].share_or_percent) / (totalShares + 0.00));
+      double c_amnt =
+          roundAmount((amnt * temp[i].share_or_percent) / (totalShares + 0.00));
       c_amnt = roundAmount2(c_amnt);
       temp[i].amount = c_amnt;
       tot = roundAmount2(tot + c_amnt);
@@ -725,7 +746,8 @@ class _AddExpenseState extends State<AddExpense> {
     double diff = roundAmount2(amnt - tot);
     int i = 0;
     while (roundAmount2(diff) > 0.00) {
-      temp[i % temp.length].amount = roundAmount2(temp[i % temp.length].amount + 0.01);
+      temp[i % temp.length].amount =
+          roundAmount2(temp[i % temp.length].amount + 0.01);
       i++;
       diff = roundAmount2(diff - 0.01);
     }
