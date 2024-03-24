@@ -42,7 +42,7 @@ Future<void> main() async {
   await Hive.openBox<TripModel>('trips');
   await Hive.openBox<TripUser>('tripusers');
   await Hive.openBox<UserModel>('users');
-  
+  await Hive.openBox<UserModel>('me');
 
   runApp(MyApp(
     prefs: prefs,

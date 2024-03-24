@@ -6,7 +6,7 @@ import 'package:splittr/models/tripuser.dart';
 part 'trip.g.dart';
 
 @HiveType(typeId: 6)
-class ShortTripModel extends HiveObject{
+class ShortTripModel extends HiveObject {
   @HiveField(0)
   String name;
 
@@ -24,7 +24,7 @@ class ShortTripModel extends HiveObject{
 }
 
 @HiveType(typeId: 7)
-class TripModel extends HiveObject{
+class TripModel extends HiveObject {
   @HiveField(0)
   String id;
 
@@ -90,9 +90,11 @@ class Transaction {
   bool isMonth;
   String month;
   bool isExpense;
+  bool isLoading;
   DateTime date;
   ExpenseModel? expense;
   PaymentModel? payment;
 
-  Transaction(this.isExpense, this.date, this.expense, this.payment,{this.isMonth = false, this.month = ""});
+  Transaction(this.isExpense, this.date, this.expense, this.payment,
+      {this.isMonth = false, this.month = "", this.isLoading = false});
 }

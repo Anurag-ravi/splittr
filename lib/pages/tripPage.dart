@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:splittr/models/expense.dart';
 import 'package:splittr/models/trip.dart';
 import 'package:splittr/models/tripuser.dart';
 import 'package:splittr/models/user.dart';
@@ -580,9 +581,40 @@ class _TripPageState extends State<TripPage> {
                                             trip: trip!,
                                           )));
                               if (!mounted) return;
-                              if (res) {
-                                refresh();
+                              if (res == null) return;
+                              if (!res['changed']) return;
+                              if (res['expense'] == null) {
+                                // delete expense
+                                TripModel tempTrip = trip!;
+                                for (int i = 0;
+                                    i < tempTrip.expenses.length;
+                                    i++) {
+                                  if (tempTrip.expenses[i].id ==
+                                      transactions[idx].expense!.id) {
+                                    tempTrip.expenses.removeAt(i);
+                                    break;
+                                  }
+                                }
+                                await tempTrip.save();
+                                calculate(
+                                    tempTrip, Boxes.getMe().get('me')!.id);
+                                return;
                               }
+                              ExpenseModel expense = res['expense'];
+                              setState(() {
+                                transactions[idx].expense = expense;
+                              });
+                              TripModel tempTrip = trip!;
+                              for (int i = 0;
+                                  i < tempTrip.expenses.length;
+                                  i++) {
+                                if (tempTrip.expenses[i].id == expense.id) {
+                                  tempTrip.expenses[i] = expense;
+                                  break;
+                                }
+                              }
+                              await tempTrip.save();
+                              calculate(tempTrip, Boxes.getMe().get('me')!.id);
                             }
                           },
                           child: Padding(
@@ -667,8 +699,20 @@ class _TripPageState extends State<TripPage> {
     final res = await Navigator.of(context)
         .push(MaterialPageRoute(builder: (builder) => AddExpense(trip: trip!)));
     if (!mounted) return;
-    if (res == null || !res) return;
-    await refresh();
+    if (res == null) return;
+    if (!res['changed']) return;
+    ExpenseModel expense = res['expense'];
+    Transaction t = Transaction(true, expense.created, expense, null);
+    List<Transaction> temp = transactions;
+    temp.add(t);
+    temp.sort((a, b) => b.date.compareTo(a.date));
+    setState(() {
+      transactions = temp;
+    });
+    TripModel tempTrip = trip!;
+    tempTrip.expenses.add(expense);
+    await tempTrip.save();
+    calculate(tempTrip, Boxes.getMe().get('me')!.id);
   }
 
   Future<void> addPayment() async {
