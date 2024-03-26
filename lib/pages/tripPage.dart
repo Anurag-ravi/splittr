@@ -65,13 +65,12 @@ class _TripPageState extends State<TripPage> {
     init();
   }
 
-  Future<void> init() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    var user = UserModel.fromJson(jsonDecode(prefs.getString('user')!));
+  void init() {
+    var user = Boxes.getMe().get('me');
     setState(() {
-      trip = widget.trip;
+      trip = Boxes.getTrips().get(widget.id);
     });
-    calculate(widget.trip, user.id);
+    calculate(trip!, user!.id);
   }
 
   Future<void> refresh() async {
@@ -110,6 +109,11 @@ class _TripPageState extends State<TripPage> {
   }
 
   void calculate(TripModel temp, String userId) {
+    setState(() {
+      g_free = false;
+      g_deletable = false;
+      tripUserMap = {};
+    });
     Map<String, double> tripUserNet = {};
     for (var tu in temp.users) {
       if (tu.user == userId) {
@@ -237,8 +241,7 @@ class _TripPageState extends State<TripPage> {
                     color: Colors.white,
                   ),
                   onPressed: () {
-                    Navigator.pop(
-                        context, {"message": g_involved, "color": g_textColor});
+                    Navigator.pop(context);
                   },
                 ),
                 actions: [
@@ -337,7 +340,7 @@ class _TripPageState extends State<TripPage> {
                                                 )));
                                     if (!mounted) return;
                                     if (res) {
-                                      refresh();
+                                      init();
                                     }
                                   },
                                   child: const HButton(
@@ -356,7 +359,7 @@ class _TripPageState extends State<TripPage> {
                                                 )));
                                     if (!mounted) return;
                                     if (res) {
-                                      refresh();
+                                      init();
                                     }
                                   },
                                   child: HButton(
@@ -508,7 +511,7 @@ class _TripPageState extends State<TripPage> {
                                           )));
                               if (!mounted) return;
                               if (res) {
-                                refresh();
+                                init();
                               }
                             }
                           },
@@ -716,15 +719,14 @@ class _TripPageState extends State<TripPage> {
   }
 
   Future<void> addPayment() async {
-    final res = await Navigator.of(context).push(MaterialPageRoute(
+    await Navigator.of(context).push(MaterialPageRoute(
         builder: (builder) => ChoosePaymentBy(tripUserMap: tripUserMap)));
     if (!mounted) return;
-    if (res == null || !res) return;
-    await refresh();
+    init();
   }
 
   Future<void> changeSetting() async {
-    bool updated = await Navigator.of(context).push(MaterialPageRoute(
+    await Navigator.of(context).push(MaterialPageRoute(
         builder: (builder) => TripSetting(
               trip: trip!,
               free: g_free,
@@ -732,8 +734,7 @@ class _TripPageState extends State<TripPage> {
               deletable: g_deletable,
             )));
     if (!mounted) return;
-    if (!updated) return;
-    await refresh();
+    init();
   }
 }
 

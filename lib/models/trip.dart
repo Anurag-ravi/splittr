@@ -84,6 +84,11 @@ class TripModel extends HiveObject {
       'payments': List<dynamic>.from(payments.map((x) => x.toJson())),
     };
   }
+
+  @override
+  String toString() {
+    return 'TripModel{name: $name, users: $users, expenses: $expenses, payments: $payments}';
+  }
 }
 
 class Transaction {

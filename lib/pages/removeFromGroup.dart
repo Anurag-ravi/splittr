@@ -17,7 +17,7 @@ class RemoveFromGroup extends StatefulWidget {
 
 class _RemoveFromGroupState extends State<RemoveFromGroup> {
   List<TripUser> users = [];
-  List<bool> selected = [],allowed = [];
+  List<bool> selected = [], allowed = [];
   bool loading = false, selection = false;
 
   @override
@@ -53,6 +53,7 @@ class _RemoveFromGroupState extends State<RemoveFromGroup> {
       }
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,110 +70,114 @@ class _RemoveFromGroupState extends State<RemoveFromGroup> {
             color: Colors.white,
           ),
           onPressed: () {
-            Navigator.pop(context, false);
+            Navigator.pop(context);
           },
         ),
         actions: [
-          selection ? GestureDetector(
-            onTap: () {
-              haptics();
-              remove_from_group();
-            },
-            child: Text(
-              'Done',
-              style: TextStyle(color: Colors.white, fontSize: 15),
-            )
-          ) : Container()
+          selection
+              ? loading
+                  ? Container(
+                      margin: EdgeInsets.only(right: 10),
+                      width: 30,
+                      height: 30,
+                      child: CircularProgressIndicator(
+                        color: mainGreen,
+                        strokeWidth: 2,
+                      ))
+                  : GestureDetector(
+                      onTap: () {
+                        haptics();
+                        remove_from_group();
+                      },
+                      child: Text(
+                        'Done',
+                        style: TextStyle(color: Colors.white, fontSize: 15),
+                      ))
+              : Container()
         ],
       ),
-      body: loading
-          ? Center(
-              child: CircularProgressIndicator(),
-            )
-          : ListView.builder(
-              itemCount: users.length + 1,
-              itemBuilder: ((context, idx) {
-                if (idx == 0) {
-                  return Padding(
-                    padding:
-                        const EdgeInsets.only(top: 20, left: 10, bottom: 15),
-                    child: Text(
-                      'Friends in this group',
-                      style: TextStyle(color: Colors.white, fontSize: 13),
-                    ),
-                  );
-                }
-                int index = idx - 1;
-                return GestureDetector(
-                  onTap: () {
-                    haptics();
-                    if (!allowed[index]) {
-                      return;
-                    }
-                    setState(() {
-                      selected[index] = !selected[index];
-                      selection = selected.contains(true);
-                    });
-                  },
-                  child: Container(
-                    width: MediaQuery.of(context).size.width,
-                    decoration: BoxDecoration(color: Colors.transparent),
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 15),
-                      child: Opacity(
-                        opacity: !allowed[index] ? 0.3 : 1.0,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              width: 10,
-                            ),
-                            ClipOval(
-                              child: Container(
-                                width: 40,
-                                height: 40,
-                                child: Image.asset(
-                                    "assets/profile/${users[index].dp}.png"),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 20,
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  users[index].name,
-                                  style: TextStyle(
-                                      color: Colors.white, fontSize: 15),
-                                ),
-                                !allowed[index]
-                                    ? Text(
-                                        'Remaining Unsettled balances',
-                                        style: TextStyle(
-                                            color: Colors.grey, fontSize: 11),
-                                      )
-                                    : Container(),
-                              ],
-                            ),
-                            Expanded(child: Container()),
-                            selected[index]
-                                ? Padding(
-                                    padding: EdgeInsets.only(right: 10),
-                                    child: Icon(
-                                      Icons.check,
-                                      color: Colors.white,
-                                    ))
-                                : Container(),
-                          ],
+      body: ListView.builder(
+        itemCount: users.length + 1,
+        itemBuilder: ((context, idx) {
+          if (idx == 0) {
+            return Padding(
+              padding: const EdgeInsets.only(top: 20, left: 10, bottom: 15),
+              child: Text(
+                'Friends in this group',
+                style: TextStyle(color: Colors.white, fontSize: 13),
+              ),
+            );
+          }
+          int index = idx - 1;
+          return GestureDetector(
+            onTap: () {
+              haptics();
+              if (!allowed[index]) {
+                return;
+              }
+              setState(() {
+                selected[index] = !selected[index];
+                selection = selected.contains(true);
+              });
+            },
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              decoration: BoxDecoration(color: Colors.transparent),
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 15),
+                child: Opacity(
+                  opacity: !allowed[index] ? 0.3 : 1.0,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 10,
+                      ),
+                      ClipOval(
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          child: Image.asset(
+                              "assets/profile/${users[index].dp}.png"),
                         ),
                       ),
-                    ),
+                      SizedBox(
+                        width: 20,
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            users[index].name,
+                            style: TextStyle(color: Colors.white, fontSize: 15),
+                          ),
+                          !allowed[index]
+                              ? Text(
+                                  'Remaining Unsettled balances',
+                                  style: TextStyle(
+                                      color: Colors.grey, fontSize: 11),
+                                )
+                              : Container(),
+                        ],
+                      ),
+                      Expanded(child: Container()),
+                      selected[index]
+                          ? Padding(
+                              padding: EdgeInsets.only(right: 10),
+                              child: Icon(
+                                Icons.check,
+                                color: Colors.white,
+                              ))
+                          : Container(),
+                    ],
                   ),
-                );
-              }),
-          ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
     );
   }
 
@@ -184,7 +189,6 @@ class _RemoveFromGroupState extends State<RemoveFromGroup> {
     for (var i = 0; i < selected.length; i++) {
       if (selected[i]) {
         selected_users.add(users[i].user);
-        print('selected: ${users[i].name}');
       }
     }
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -209,7 +213,12 @@ class _RemoveFromGroupState extends State<RemoveFromGroup> {
           content: Text(data['message']),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        Navigator.pop(context, true);
+        List<TripUser> modified =
+            List<TripUser>.from(data['data'].map((x) => TripUser.fromJson(x)));
+        widget.trip.users = modified;
+        await widget.trip.save();
+        setState(() {});
+        Navigator.pop(context);
         return;
       }
     }

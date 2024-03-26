@@ -2,12 +2,15 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:splittr/models/trip.dart';
+import 'package:splittr/models/tripuser.dart';
 import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/request.dart';
 
 class AddNewContact extends StatefulWidget {
-  const AddNewContact({super.key, required this.id});
+  const AddNewContact({super.key, required this.id, required this.trip});
   final String id;
+  final TripModel trip;
 
   @override
   State<AddNewContact> createState() => _AddNewContactState();
@@ -36,7 +39,7 @@ class _AddNewContactState extends State<AddNewContact> {
               color: Colors.white,
             ),
             onPressed: () {
-              Navigator.pop(context, false);
+              Navigator.pop(context);
             },
           ),
           actions: [
@@ -170,7 +173,12 @@ class _AddNewContactState extends State<AddNewContact> {
           content: Text(data['message']),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        Navigator.pop(context, true);
+        List<TripUser> modified =
+            List<TripUser>.from(data['data'].map((x) => TripUser.fromJson(x)));
+        widget.trip.users = modified;
+        await widget.trip.save();
+        setState(() {});
+        Navigator.pop(context);
         return;
       }
     }

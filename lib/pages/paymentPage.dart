@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/models/payment.dart';
+import 'package:splittr/models/trip.dart';
 import 'package:splittr/models/tripuser.dart';
 import 'package:splittr/pages/payment.dart';
+import 'package:splittr/utilities/boxes.dart';
 import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/request.dart';
 
@@ -41,7 +43,7 @@ class _PaymentViewState extends State<PaymentView> {
       hour -= 12;
       ampm = "PM";
     }
-    if(hour == 0) hour = 12;
+    if (hour == 0) hour = 12;
     String hr = hour < 10 ? "0$hour" : "$hour";
     String min = widget.payment.created.minute < 10
         ? "0${widget.payment.created.minute}"
@@ -182,6 +184,9 @@ class _PaymentViewState extends State<PaymentView> {
           content: Text('Payment deleted'),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        TripModel trip = Boxes.getTrips().get(widget.payment.trip)!;
+        trip.payments.removeWhere((element) => element.id == widget.payment.id);
+        await trip.save();
         Navigator.pop(context, true);
         return;
       }

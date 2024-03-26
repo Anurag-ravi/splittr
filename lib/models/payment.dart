@@ -3,7 +3,7 @@ import 'package:hive/hive.dart';
 part 'payment.g.dart';
 
 @HiveType(typeId: 2)
-class PaymentModel extends HiveObject{
+class PaymentModel extends HiveObject {
   @HiveField(0)
   String id;
 
@@ -44,5 +44,10 @@ class PaymentModel extends HiveObject{
       'by': by,
       'to': to,
     };
+  }
+
+  @override
+  String toString() {
+    return 'PaymentModel{id: $id, amount: $amount, created: $created, by: $by, to: $to}';
   }
 }
