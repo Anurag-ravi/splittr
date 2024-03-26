@@ -44,6 +44,8 @@ class _BalancesPageState extends State<BalancesPage> {
     setState(() {
       for (var x in temp) {
         String name = widget.tripUserMap[x.user]!.name;
+        bool involved = widget.tripUserMap[x.user]!.involved;
+        if (!involved) continue;
         if (x.amount == 0.0) {
           name += " is settled up";
           transactions.add(Bal(name, x.user, "", 0.0, true, true, true));
@@ -79,7 +81,7 @@ class _BalancesPageState extends State<BalancesPage> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            Navigator.pop(context,false);
+            Navigator.pop(context, false);
           },
         ),
       ),
@@ -265,15 +267,19 @@ class _BalancesPageState extends State<BalancesPage> {
                             GestureDetector(
                               onTap: () async {
                                 haptics();
-                                final res = await Navigator.push(context, MaterialPageRoute(builder: (context) => PaymentPage(
-                                  tripUserMap: widget.tripUserMap,
-                                  from: transactions[index].from,
-                                  to: transactions[index].to,
-                                  amount: transactions[index].amount,
-                                )));
-                                if(!mounted) return;
-                                if(res){
-                                  Navigator.pop(context,true);
+                                final res = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => PaymentPage(
+                                              tripUserMap: widget.tripUserMap,
+                                              from: transactions[index].from,
+                                              to: transactions[index].to,
+                                              amount:
+                                                  transactions[index].amount,
+                                            )));
+                                if (!mounted) return;
+                                if (res == true) {
+                                  Navigator.pop(context, true);
                                 }
                               },
                               child: Container(

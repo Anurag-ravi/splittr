@@ -244,7 +244,6 @@ class _LoginPageState extends State<LoginPage> {
       var snackBar = SnackBar(
         content: Text('Redirecting to Google'),
       );
-      print(const String.fromEnvironment('JWT_SECRET'));
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
       GoogleAuthProvider provider = GoogleAuthProvider();
       provider.addScope('email');
@@ -280,7 +279,6 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
       String token = generateToken(userCredential.user!.email!);
-      print('Token: $token, Email: ${userCredential.user!.email!}');
       loginToServer(token, userCredential.user!.email!);
     } catch (err) {
       print(err);
@@ -376,7 +374,6 @@ class _LoginPageState extends State<LoginPage> {
         loading = false;
       });
       var data = jsonDecode(response.body);
-      print(data);
       if (response.statusCode == 200) {
         if (data['status'] == 200) {
           String hash = data['hash'];

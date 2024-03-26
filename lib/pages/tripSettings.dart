@@ -11,7 +11,12 @@ import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/request.dart';
 
 class TripSetting extends StatefulWidget {
-  const TripSetting({super.key, required this.trip, required this.free,required this.currentUserID,required this.deletable});
+  const TripSetting(
+      {super.key,
+      required this.trip,
+      required this.free,
+      required this.currentUserID,
+      required this.deletable});
   final TripModel trip;
   final bool free;
   final bool deletable;
@@ -39,11 +44,11 @@ class _TripSettingState extends State<TripSetting> {
   @override
   Widget build(BuildContext context) {
     double deviceWidth = MediaQuery.of(context).size.width;
-    return loading
-        ? Center(
-            child: CircularProgressIndicator(),
-          )
-        : Scaffold(
+    return Stack(
+      children: [
+        Opacity(
+          opacity: loading ? 0.5 : 1,
+          child: Scaffold(
             backgroundColor: Colors.grey[900],
             appBar: AppBar(
               backgroundColor: Colors.transparent,
@@ -57,7 +62,7 @@ class _TripSettingState extends State<TripSetting> {
                   color: Colors.white,
                 ),
                 onPressed: () {
-                  Navigator.pop(context, false);
+                  Navigator.pop(context);
                 },
               ),
             ),
@@ -178,19 +183,17 @@ class _TripSettingState extends State<TripSetting> {
                   return GestureDetector(
                     onTap: () async {
                       haptics();
-                      final res = await Navigator.push(
+                      await Navigator.push(
                           context,
                           MaterialPageRoute(
                               builder: (builder) =>
                                   AddToGroup(trip: widget.trip)));
                       if (!mounted) return;
-                      if (res) {
-                        Navigator.pop(context, true);
-                      }
+                      setState(() {});
                     },
                     child: Container(
                       width: MediaQuery.of(context).size.width,
-                    decoration: BoxDecoration(color: Colors.transparent),
+                      decoration: BoxDecoration(color: Colors.transparent),
                       child: const Padding(
                         padding: EdgeInsets.all(15),
                         child: Row(
@@ -215,19 +218,17 @@ class _TripSettingState extends State<TripSetting> {
                   return GestureDetector(
                     onTap: () async {
                       haptics();
-                      final res = await Navigator.push(
+                      await Navigator.push(
                           context,
                           MaterialPageRoute(
                               builder: (builder) =>
                                   RemoveFromGroup(trip: widget.trip)));
                       if (!mounted) return;
-                      if (res) {
-                        Navigator.pop(context, true);
-                      }
+                      setState(() {});
                     },
                     child: Container(
                       width: MediaQuery.of(context).size.width,
-                    decoration: BoxDecoration(color: Colors.transparent),
+                      decoration: BoxDecoration(color: Colors.transparent),
                       child: const Padding(
                         padding: EdgeInsets.all(15),
                         child: Row(
@@ -259,7 +260,7 @@ class _TripSettingState extends State<TripSetting> {
                     },
                     child: Container(
                       width: MediaQuery.of(context).size.width,
-                    decoration: BoxDecoration(color: Colors.transparent),
+                      decoration: BoxDecoration(color: Colors.transparent),
                       child: const Padding(
                         padding: EdgeInsets.all(15),
                         child: Row(
@@ -346,39 +347,48 @@ class _TripSettingState extends State<TripSetting> {
                     child: Padding(
                       padding: EdgeInsets.all(15),
                       child: Opacity(
-                          opacity: widget.trip.created_by == widget.currentUserID && widget.deletable ? 1 : 0.2,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              const Icon(Icons.delete_outline,
-                                  color: Colors.red, size: 25),
-                              const SizedBox(
-                                width: 20,
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Delete Group',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  widget.trip.created_by == widget.currentUserID && widget.deletable
-                                      ? Container()
-                                      : Container(
-                                          width: deviceWidth - 80,
-                                          child: Text(
-                                            widget.trip.created_by == widget.currentUserID ? "You can't delete this group because there are outstanding debts with other group members. Please make sure all of the debts have been settled up, and try again." : "You can't delete this group because you are not the creator of this group.",
-                                            softWrap: true,
-                                            style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 10),
-                                          ),
+                        opacity:
+                            widget.trip.created_by == widget.currentUserID &&
+                                    widget.deletable
+                                ? 1
+                                : 0.2,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.delete_outline,
+                                color: Colors.red, size: 25),
+                            const SizedBox(
+                              width: 20,
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Delete Group',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                widget.trip.created_by ==
+                                            widget.currentUserID &&
+                                        widget.deletable
+                                    ? Container()
+                                    : Container(
+                                        width: deviceWidth - 80,
+                                        child: Text(
+                                          widget.trip.created_by ==
+                                                  widget.currentUserID
+                                              ? "You can't delete this group because there are outstanding debts with other group members. Please make sure all of the debts have been settled up, and try again."
+                                              : "You can't delete this group because you are not the creator of this group.",
+                                          softWrap: true,
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 10),
                                         ),
-                                ],
-                              )
-                            ],
-                          ),
+                                      ),
+                              ],
+                            )
+                          ],
                         ),
+                      ),
                     ),
                   );
                 }
@@ -418,7 +428,17 @@ class _TripSettingState extends State<TripSetting> {
                 );
               },
             ),
-          );
+          ),
+        ),
+        loading
+            ? Center(
+                child: CircularProgressIndicator(
+                  color: mainGreen,
+                ),
+              )
+            : Container(),
+      ],
+    );
   }
 
   Future<void> handleLeave() async {
@@ -482,12 +502,14 @@ class _TripSettingState extends State<TripSetting> {
   }
 
   Future<void> handleDelete() async {
-    if (widget.trip.created_by != widget.currentUserID || !widget.deletable) return;
+    if (widget.trip.created_by != widget.currentUserID || !widget.deletable)
+      return;
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Are you sure?'),
-        content: const Text('This action will permanently delete this group and all of its data. This action cannot be undone.'),
+        content: const Text(
+            'This action will permanently delete this group and all of its data. This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -566,7 +588,10 @@ class _TripSettingState extends State<TripSetting> {
           content: Text(data['message']),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        Navigator.pop(context, true);
+        widget.trip.name = name;
+        await widget.trip.save();
+        setState(() {});
+        Navigator.pop(context);
         return;
       } else {
         var snackBar = SnackBar(

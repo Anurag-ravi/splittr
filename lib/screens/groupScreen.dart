@@ -150,45 +150,49 @@ class _GroupScreenState extends State<GroupScreen> {
         List<Net> nets = List.generate(
             nets_length, (index) => Net(message: "", color: Colors.white));
         var user = Boxes.getMe().get('me');
-
-        for (int i = 0; i < tripData.length; i++) {
-          var trip = tripData[i];
-          String currentTripUser = "";
-          Map<String, TripUser> tripUserMap = {};
-          for (var tu in trip.users) {
-            if (tu.user == user!.id) {
-              currentTripUser = tu.id;
+        try {
+          for (int i = 0; i < tripData.length; i++) {
+            var trip = tripData[i];
+            String currentTripUser = "";
+            Map<String, TripUser> tripUserMap = {};
+            for (var tu in trip.users) {
+              if (tu.user == user!.id) {
+                currentTripUser = tu.id;
+              }
+              tripUserMap.putIfAbsent(tu.id, () => tu);
             }
-            tripUserMap.putIfAbsent(tu.id, () => tu);
-          }
-          double paid_by_me = 0.00, paid_for_me = 0.00;
-          for (var x in trip.expenses) {
-            for (var y in x.paid_by) {
-              if (y.user == currentTripUser) paid_by_me += y.amount;
+            double paid_by_me = 0.00, paid_for_me = 0.00;
+            for (var x in trip.expenses) {
+              for (var y in x.paid_by) {
+                if (y.user == currentTripUser) paid_by_me += y.amount;
+              }
+              for (var y in x.paid_for) {
+                if (y.user == currentTripUser) paid_for_me += y.amount;
+              }
             }
-            for (var y in x.paid_for) {
-              if (y.user == currentTripUser) paid_for_me += y.amount;
+            for (var x in trip.payments) {
+              if (x.by == currentTripUser) paid_by_me += x.amount;
+              if (x.to == currentTripUser) paid_for_me += x.amount;
+            }
+            if (paid_by_me.toStringAsFixed(2) ==
+                paid_for_me.toStringAsFixed(2)) {
+              nets[i] = Net(
+                  message: "You are all settled up in this group",
+                  color: Color(0xfff5f5f5));
+            } else if (paid_by_me >= paid_for_me) {
+              nets[i] = Net(
+                  message:
+                      "You are owed ₹${(paid_by_me - paid_for_me).toStringAsFixed(2)} overall",
+                  color: mainGreen);
+            } else {
+              nets[i] = Net(
+                  message:
+                      "You owe ₹${(paid_for_me - paid_by_me).toStringAsFixed(2)} overall",
+                  color: mainOrange);
             }
           }
-          for (var x in trip.payments) {
-            if (x.by == currentTripUser) paid_by_me += x.amount;
-            if (x.to == currentTripUser) paid_for_me += x.amount;
-          }
-          if (paid_by_me.toStringAsFixed(2) == paid_for_me.toStringAsFixed(2)) {
-            nets[i] = Net(
-                message: "You are all settled up in this group",
-                color: Color(0xfff5f5f5));
-          } else if (paid_by_me >= paid_for_me) {
-            nets[i] = Net(
-                message:
-                    "You are owed ₹${(paid_by_me - paid_for_me).toStringAsFixed(2)} overall",
-                color: mainGreen);
-          } else {
-            nets[i] = Net(
-                message:
-                    "You owe ₹${(paid_for_me - paid_by_me).toStringAsFixed(2)} overall",
-                color: mainOrange);
-          }
+        } catch (e) {
+          print(e);
         }
         return RefreshIndicator(
           onRefresh: () {
@@ -200,70 +204,85 @@ class _GroupScreenState extends State<GroupScreen> {
                 )
               : trips.length == 0
                   ? ListView(
-                      // mainAxisAlignment: MainAxisAlignment.start,
+                      padding: EdgeInsets.symmetric(horizontal: 50),
                       children: [
                         SizedBox(
                           height: 150,
                         ),
-                        Text(
-                          "You are not involved in any groups",
-                          style: TextStyle(color: Colors.grey[100]),
+                        api_fetching ? ApiLoader() : Container(),
+                        Center(
+                          child: Text(
+                            "You are not involved in any groups",
+                            style: TextStyle(color: Colors.grey[100]),
+                          ),
                         ),
                         SizedBox(
                           height: 10,
                         ),
-                        GestureDetector(
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 50),
+                          child: GestureDetector(
+                              onTap: () {
+                                haptics();
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (builder) => CreateGroup()));
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(horizontal: 10),
+                                decoration: BoxDecoration(
+                                    color: mainGreen,
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(10))),
+                                child: Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 10),
+                                    child: Text(
+                                      'Create Group',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 15),
+                                    ),
+                                  ),
+                                ),
+                              )),
+                        ),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        Center(
+                            child: Text("OR",
+                                style: TextStyle(color: Colors.grey[100]))),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 50),
+                          child: GestureDetector(
                             onTap: () {
                               haptics();
                               Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (builder) => CreateGroup()));
+                                  builder: (builder) => JoinGroup()));
                             },
                             child: Container(
                               padding: EdgeInsets.symmetric(horizontal: 10),
                               decoration: BoxDecoration(
-                                  color: mainGreen,
+                                  color: mainOrange,
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(10))),
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 10),
-                                child: Text(
-                                  'Create Group',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 15),
+                              child: Center(
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 10),
+                                  child: Text(
+                                    'Join Group',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 15),
+                                  ),
                                 ),
-                              ),
-                            )),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Text("OR", style: TextStyle(color: Colors.grey[100])),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            haptics();
-                            Navigator.of(context).push(MaterialPageRoute(
-                                builder: (builder) => JoinGroup()));
-                          },
-                          child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 10),
-                            decoration: BoxDecoration(
-                                color: mainOrange,
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(10))),
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 10),
-                              child: Text(
-                                'Join Group',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 15),
                               ),
                             ),
                           ),
@@ -399,7 +418,12 @@ class _GroupScreenState extends State<GroupScreen> {
 class ApiLoader extends StatelessWidget {
   const ApiLoader({
     super.key,
+    this.text = 'Fetching data',
+    this.loading = true,
   });
+
+  final String text;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
@@ -419,19 +443,22 @@ class ApiLoader extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    strokeWidth: 2,
-                  ),
-                ),
+                !loading
+                    ? Container()
+                    : Container(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                          strokeWidth: 2,
+                        ),
+                      ),
                 SizedBox(
                   width: 5,
                 ),
                 Text(
-                  'Fetching data',
+                  text,
                   style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,

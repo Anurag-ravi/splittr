@@ -38,19 +38,19 @@ class _FriendScreenState extends State<FriendScreen> {
     setState(() {
       loading = false;
     });
-    // SharedPreferences prefs = await SharedPreferences.getInstance();
-    // try {
-    //   String? numb = await prefs.getString('numbers');
-    //   if (numb != null) {
-    //     List<String> data = List<String>.from(json.decode(numb));
-    //     setState(() {
-    //       numbers = data;
-    //     });
-    //     await fetchFriends();
-    //   }
-    // } catch (e) {
-    //   print(e);
-    // }
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    try {
+      String? numb = await prefs.getString('numbers');
+      if (numb != null) {
+        List<String> data = List<String>.from(json.decode(numb));
+        setState(() {
+          numbers = data;
+        });
+        await fetchFriends();
+      }
+    } catch (e) {
+      print(e);
+    }
 
     if (!await Permission.contacts.isGranted) {
       await Permission.contacts.request();

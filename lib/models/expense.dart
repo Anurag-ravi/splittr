@@ -3,19 +3,19 @@ import 'package:hive/hive.dart';
 part 'expense.g.dart';
 
 @HiveType(typeId: 3)
-enum splitTypeEnum { 
+enum splitTypeEnum {
   @HiveField(0)
-  equal, 
+  equal,
   @HiveField(1)
-  unequal, 
+  unequal,
   @HiveField(2)
-  shares, 
+  shares,
   @HiveField(3)
-  percent 
+  percent
 }
 
 @HiveType(typeId: 5)
-class ExpenseModel extends HiveObject{
+class ExpenseModel extends HiveObject {
   @HiveField(0)
   String id;
 
@@ -95,10 +95,15 @@ class ExpenseModel extends HiveObject{
     json['paid_for'] = paid_for_json;
     return json;
   }
+
+  @override
+  String toString() {
+    return 'ExpenseModel{id: $id, name: $name, amount: $amount, category: $category, splitType: $splitType, created: $created, paid_by: $paid_by, paid_for: $paid_for}';
+  }
 }
 
 @HiveType(typeId: 4)
-class By extends HiveObject{
+class By extends HiveObject {
   @HiveField(0)
   String user;
 

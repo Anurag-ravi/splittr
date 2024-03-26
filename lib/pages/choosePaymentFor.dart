@@ -27,17 +27,20 @@ class _ChoosePaymentForState extends State<ChoosePaymentFor> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () {
-              Navigator.pop(context, false);
+              Navigator.pop(context);
             },
           )),
       body: ListView.builder(
         itemCount: widget.tripUserMap.length,
         itemBuilder: (BuildContext context, int index) {
+          if (widget.tripUserMap.values.elementAt(index).involved == false)
+            return Container();
           return GestureDetector(
             onTap: () async {
-              if(widget.tripUserMap.values.elementAt(index).id == widget.from) return;
+              if (widget.tripUserMap.values.elementAt(index).id == widget.from)
+                return;
               haptics();
-              final res = await Navigator.push(context,
+              await Navigator.push(context,
                   MaterialPageRoute(builder: (context) {
                 return PaymentPage(
                     from: widget.from,
@@ -46,12 +49,16 @@ class _ChoosePaymentForState extends State<ChoosePaymentFor> {
                     tripUserMap: widget.tripUserMap);
               }));
               if (!mounted) return;
-              Navigator.pop(context, res);
+              Navigator.pop(context);
             },
             child: Opacity(
-              opacity: widget.tripUserMap.values.elementAt(index).id == widget.from ? 0.5 : 1,
+              opacity:
+                  widget.tripUserMap.values.elementAt(index).id == widget.from
+                      ? 0.5
+                      : 1,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
                 child: Row(
                   children: [
                     ClipRRect(

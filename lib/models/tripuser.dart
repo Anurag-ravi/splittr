@@ -3,7 +3,7 @@ import 'package:hive/hive.dart';
 part 'tripuser.g.dart';
 
 @HiveType(typeId: 1)
-class TripUser extends HiveObject{
+class TripUser extends HiveObject {
   @HiveField(0)
   String id;
 
@@ -38,5 +38,10 @@ class TripUser extends HiveObject{
     data['dp'] = dp;
     data['involved'] = involved;
     return data;
+  }
+
+  @override
+  String toString() {
+    return 'TripUser{id: $id, name: $name, involved: $involved}';
   }
 }
