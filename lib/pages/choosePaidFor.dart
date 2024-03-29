@@ -33,6 +33,7 @@ class _ChoosePaidForState extends State<ChoosePaidFor>
   late TabController _tabController;
   List<TextEditingController> controllers = [];
   List<TextEditingController> shareControllers = [];
+  int tab_index = 0;
 
   // equal state
   bool all_involved = false;
@@ -50,6 +51,12 @@ class _ChoosePaidForState extends State<ChoosePaidFor>
       splitType = widget.splitType;
       _tabController = TabController(length: 3, vsync: this);
       _tabController.animateTo(widget.splitType.index);
+      _tabController.addListener(() {
+        setState(() {
+          tab_index = _tabController.index;
+        });
+      });
+      tab_index = widget.splitType.index;
     });
     setState(() {
       paid_for_equally = users.map((e) => ByEqual(e.id, false)).toList();
@@ -135,70 +142,77 @@ class _ChoosePaidForState extends State<ChoosePaidFor>
           },
         ),
         actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.check,
-              color: Colors.white,
-            ),
-            onPressed: () {
-              List<By> temp = [];
-              if (_tabController.index == 0) {
-                for (var x in paid_for_equally) {
-                  if (x.involved) temp.add(By(x.user, 0.00, 0.00));
-                }
-                Navigator.pop(
-                    context, {'type': splitTypeEnum.equal, 'paid_for': temp});
-              }
-              if (_tabController.index == 1) {
-                if (widget.amount != total) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(
-                      'Amounts do not add up to ${widget.amount}',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ));
-                  return;
-                }
-                for (var x in paid_for_unequally) {
-                  if (x.amount > 0.00) temp.add(By(x.user, x.amount, 0.00));
-                }
-                Navigator.pop(
-                    context, {'type': splitTypeEnum.unequal, 'paid_for': temp});
-              }
-              if (_tabController.index == 2) {
-                if (total_share == 0) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(
-                      'Shares cannot be 0',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ));
-                  return;
-                }
-                double tot = 0.00;
-                for (var x in paid_for_share) {
-                  if (x.share > 0) {
-                    double c_amnt = roundAmount(
-                        (widget.amount * x.share) / (total_share + 0.00));
-                    tot += c_amnt;
-                    temp.add(By(x.user, c_amnt, x.share + 0.00));
-                  }
-                }
-                double diff =
-                    double.parse((widget.amount - tot).toStringAsFixed(2));
-                int i = 0;
-                while (diff >= 0.01) {
-                  temp[i % (temp.length)].amount = double.parse(
-                      (temp[i % (temp.length)].amount + 0.01)
-                          .toStringAsFixed(2));
-                  diff -= 0.01;
-                  i++;
-                }
-                Navigator.pop(
-                    context, {'type': splitTypeEnum.shares, 'paid_for': temp});
-              }
-            },
-          ),
+          (tab_index == 0 && person == 0) ||
+                  (tab_index == 1 &&
+                      total.toStringAsFixed(2) !=
+                          widget.amount.toStringAsFixed(2)) ||
+                  (tab_index == 2 && total_share == 0)
+              ? Container()
+              : IconButton(
+                  icon: const Icon(
+                    Icons.check,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    List<By> temp = [];
+                    if (_tabController.index == 0) {
+                      for (var x in paid_for_equally) {
+                        if (x.involved) temp.add(By(x.user, 0.00, 0.00));
+                      }
+                      Navigator.pop(context,
+                          {'type': splitTypeEnum.equal, 'paid_for': temp});
+                    }
+                    if (_tabController.index == 1) {
+                      if (widget.amount != total) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(
+                            'Amounts do not add up to ${widget.amount}',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ));
+                        return;
+                      }
+                      for (var x in paid_for_unequally) {
+                        if (x.amount > 0.00)
+                          temp.add(By(x.user, x.amount, 0.00));
+                      }
+                      Navigator.pop(context,
+                          {'type': splitTypeEnum.unequal, 'paid_for': temp});
+                    }
+                    if (_tabController.index == 2) {
+                      if (total_share == 0) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(
+                            'Shares cannot be 0',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ));
+                        return;
+                      }
+                      double tot = 0.00;
+                      for (var x in paid_for_share) {
+                        if (x.share > 0) {
+                          double c_amnt = roundAmount(
+                              (widget.amount * x.share) / (total_share + 0.00));
+                          tot += c_amnt;
+                          temp.add(By(x.user, c_amnt, x.share + 0.00));
+                        }
+                      }
+                      double diff = double.parse(
+                          (widget.amount - tot).toStringAsFixed(2));
+                      int i = 0;
+                      while (diff >= 0.01) {
+                        temp[i % (temp.length)].amount = double.parse(
+                            (temp[i % (temp.length)].amount + 0.01)
+                                .toStringAsFixed(2));
+                        diff -= 0.01;
+                        i++;
+                      }
+                      Navigator.pop(context,
+                          {'type': splitTypeEnum.shares, 'paid_for': temp});
+                    }
+                  },
+                ),
         ],
         bottom: TabBar(
           controller: _tabController,
@@ -309,7 +323,7 @@ class _ChoosePaidForState extends State<ChoosePaidFor>
               itemCount: users.length,
               itemBuilder: (context, index) {
                 return GestureDetector(
-                  onTap: (){
+                  onTap: () {
                     setState(() {
                       paid_for_equally[index].involved =
                           !paid_for_equally[index].involved;
@@ -325,10 +339,10 @@ class _ChoosePaidForState extends State<ChoosePaidFor>
                   },
                   child: Container(
                     width: MediaQuery.of(context).size.width,
-                      decoration: BoxDecoration(color: Colors.transparent),
+                    decoration: BoxDecoration(color: Colors.transparent),
                     child: Padding(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 15, vertical: 8),
                       child: Row(
                         children: [
                           Expanded(

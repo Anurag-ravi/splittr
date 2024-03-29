@@ -73,6 +73,7 @@ class _MyAppState extends State<MyApp> {
     theme = false;
     FetchContacts();
     widget.prefs.setBool("update", true);
+    widget.prefs.setBool("first_load", true);
   }
 
   void FetchContacts() async {

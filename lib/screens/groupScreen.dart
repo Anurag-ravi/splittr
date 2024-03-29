@@ -31,7 +31,7 @@ class GroupScreen extends StatefulWidget {
 class _GroupScreenState extends State<GroupScreen> {
   late SharedPreferences prefs;
   int nets_length = Boxes.getShortTrips().values.length;
-  bool loading = false, showSettledUp = false, api_fetching = true;
+  bool loading = false, showSettledUp = false, api_fetching = false;
 
   @override
   void initState() {
@@ -56,11 +56,14 @@ class _GroupScreenState extends State<GroupScreen> {
     prefs.setBool('hideSettledUp', showSettledUp);
   }
 
-  Future<void> refresh() async {
-    setState(() {
-      api_fetching = true;
-    });
+  Future<void> refresh({bool refreshed = false}) async {
+    print("refreshing");
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool first_load = prefs.getBool('first_load') ?? true;
+    setState(() {
+      api_fetching = first_load || refreshed;
+    });
+    prefs.setBool('first_load', false);
     String? url = prefs.getString('url');
     String? token = prefs.getString('token');
     var data = await getRequest(
@@ -137,7 +140,7 @@ class _GroupScreenState extends State<GroupScreen> {
   }
 
   Future<void> onRefresh() async {
-    refresh();
+    refresh(refreshed: true);
   }
 
   @override

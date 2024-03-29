@@ -260,7 +260,7 @@ class _LoginPageState extends State<LoginPage> {
         setState(() {
           responseLoading = false;
         });
-        addLog("User is null");
+        addLog("User is null", "", "log");
         var snackBar = SnackBar(
           content: Text('Error Signing in'),
         );
@@ -271,7 +271,7 @@ class _LoginPageState extends State<LoginPage> {
         setState(() {
           responseLoading = false;
         });
-        addLog(userCredential.user.toString());
+        addLog(userCredential.user.toString(), "unknown", "log");
         var snackBar = SnackBar(
           content: Text('Error Signing in'),
         );
