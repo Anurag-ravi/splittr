@@ -10,6 +10,7 @@ import 'package:splittr/models/user.dart';
 import 'package:splittr/pages/chooseCategory.dart';
 import 'package:splittr/pages/choosePaidBy.dart';
 import 'package:splittr/pages/choosePaidFor.dart';
+import 'package:splittr/utilities/boxes.dart';
 import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/request.dart';
 
@@ -643,7 +644,9 @@ class _AddExpenseState extends State<AddExpense> {
         loading = false;
       });
       addLog(
-          "${paid_by.toString()} ${paid_for.toString()} ${total_paid_by.toString()} ${total_paid_for.toString()} ${amount.toString()}");
+          "${paid_by.toString()} ${paid_for.toString()} ${total_paid_by.toString()} ${total_paid_for.toString()} ${amount.toString()}",
+          Boxes.getMe().get("me")!.name,
+          "log");
       return;
     }
     SharedPreferences prefs = await SharedPreferences.getInstance();

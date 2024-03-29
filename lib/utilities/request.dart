@@ -98,7 +98,7 @@ dynamic deleteRequest(
   }
 }
 
-void addLog(String message) async {
+void addLog(String message, String user, String category) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String url = prefs.getString('url')! + '/log';
 
@@ -108,7 +108,8 @@ void addLog(String message) async {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
           },
-          body: jsonEncode({"message": message}))
+          body: jsonEncode(
+              {"message": message, "user": user, "category": category}))
       .timeout(Duration(seconds: 10), onTimeout: () {
     return http.Response('{"status": 500}', 500);
   });
