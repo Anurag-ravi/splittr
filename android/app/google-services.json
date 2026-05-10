@@ -2,7 +2,7 @@
   "project_info": {
     "project_number": "617220506462",
     "project_id": "splittr-bee91",
-    "storage_bucket": "splittr-bee91.appspot.com"
+    "storage_bucket": "splittr-bee91.firebasestorage.app"
   },
   "client": [
     {
@@ -13,6 +13,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "617220506462-1nbp9nv2hj64hs5lj4mun8cu5skvqgf6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.splittr",
+            "certificate_hash": "5b9fd60b912e5e9984e36f922cb4026851ff2bea"
+          }
+        },
         {
           "client_id": "617220506462-41r3fv5jrmabspegp2cd75e4vtkvumen.apps.googleusercontent.com",
           "client_type": 1,
@@ -45,6 +53,13 @@
             {
               "client_id": "617220506462-1h1v0npafj9iebqtrgdbi17b31ufh7je.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "617220506462-o6gmvmsacbv0lb9c0dib21te50h7ti20.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.splittr"
+              }
             }
           ]
         }

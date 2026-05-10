@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:contacts_service/contacts_service.dart';
+import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -71,23 +71,17 @@ class _FriendScreenState extends State<FriendScreen> {
       }
     }
 
-    var ccc = await ContactsService.getContacts();
+    List<Contact> ccc = await FlutterContacts.getAll();
     List<String> cc = [];
     for (var contact in ccc) {
-      if (contact.phones != null) {
-        for (var phone in contact.phones!) {
-          String num = "";
-          for (var i = 0; i < phone.value!.length; i++) {
-            if (phone.value![i] == ' ') {
-              continue;
-            }
-            num += phone.value![i];
-          }
-          if (num.length > 10) {
-            num = num.substring(num.length - 10);
-          }
-          cc.add(num);
+      for (var phone in contact.phones) {
+        String num = phone.number.replaceAll(' ', '');
+
+        if (num.length > 10) {
+          num = num.substring(num.length - 10);
         }
+
+        cc.add(num);
       }
     }
     // prefs.setString('numbers', jsonEncode(cc));

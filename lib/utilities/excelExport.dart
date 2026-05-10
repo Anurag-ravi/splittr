@@ -5,7 +5,7 @@ import 'dart:math';
 import 'package:excel/excel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_share/flutter_share.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:splittr/models/trip.dart';
 import 'package:splittr/models/tripuser.dart';
@@ -37,9 +37,9 @@ Future<SnackBar> excelExport(
   for (var x in row) {
     columnWidths.add(x.toString().length);
   }
-  for(var x in row2) {
+  for (var x in row2) {
     columnWidths[row2.indexOf(x)] =
-          max(columnWidths[row2.indexOf(x)], x.toString().length);
+        max(columnWidths[row2.indexOf(x)], x.toString().length);
   }
   rows.add(row);
   rows.add(row2);
@@ -55,7 +55,7 @@ Future<SnackBar> excelExport(
     List<CellValue> row = [];
     int hours = transaction.date.hour;
     int minutes = transaction.date.minute;
-    if(hours > 12) {
+    if (hours > 12) {
       hours -= 12;
     }
     String am_pm = transaction.date.hour > 12 ? "PM" : "AM";
@@ -71,8 +71,7 @@ Future<SnackBar> excelExport(
         ":" +
         min +
         " " +
-        am_pm
-        ));
+        am_pm));
     if (transaction.isExpense && transaction.expense != null) {
       row.add(TextCellValue(transaction.expense!.name));
       row.add(TextCellValue(catMap[transaction.expense!.category]!));
@@ -84,7 +83,7 @@ Future<SnackBar> excelExport(
       row.add(TextCellValue(transaction.payment!.amount.toStringAsFixed(2)));
     }
     for (var tu in trip.users) {
-      double paid = 0,owed = 0;
+      double paid = 0, owed = 0;
       if (transaction.isExpense) {
         for (var by in transaction.expense!.paid_by) {
           if (by.user == tu.id) {
@@ -157,38 +156,36 @@ Future<SnackBar> excelExport(
       sheetObject.setColumnWidth(columnWidths.indexOf(x), x + 0.5);
     }
     // join cells for headers
-    int col_len = rows[0].length,row_len = rows.length;
+    int col_len = rows[0].length, row_len = rows.length;
     for (int i = 4; i < col_len; i += 2) {
-      sheetObject.merge(
-          CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0),
+      sheetObject.merge(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0),
           CellIndex.indexByColumnRow(columnIndex: i + 1, rowIndex: 0),
-          customValue: TextCellValue(rows[0][i].toString())
-          );
+          customValue: TextCellValue(rows[0][i].toString()));
     }
     // formatting
     for (int i = 0; i < row_len; i++) {
       for (int j = 0; j < col_len; j++) {
-        var cell = sheetObject.cell(CellIndex.indexByColumnRow(columnIndex: j, rowIndex: i));
+        var cell = sheetObject
+            .cell(CellIndex.indexByColumnRow(columnIndex: j, rowIndex: i));
         cell.cellStyle = CellStyle(
-            bold: i < 2 || i == row_len - 2 || i == row_len - 1,
-            horizontalAlign: i < 2 
-                    ? HorizontalAlign.Center 
-                    : j < 2
-                      ? HorizontalAlign.Left
-                      : j == 2
-                        ? HorizontalAlign.Center
-                        : HorizontalAlign.Right
-                    ,
-            verticalAlign: VerticalAlign.Center,
-            fontSize: i < 2 ? 11 : 10,
-          );
+          bold: i < 2 || i == row_len - 2 || i == row_len - 1,
+          horizontalAlign: i < 2
+              ? HorizontalAlign.Center
+              : j < 2
+                  ? HorizontalAlign.Left
+                  : j == 2
+                      ? HorizontalAlign.Center
+                      : HorizontalAlign.Right,
+          verticalAlign: VerticalAlign.Center,
+          fontSize: i < 2 ? 11 : 10,
+        );
       }
     }
 
     // save file
     var fileBytes = excel.save();
-    if(kIsWeb) {
-      return SnackBar(content: Text("Downloaded splittr_${trip.name}.xlsx")); 
+    if (kIsWeb) {
+      return SnackBar(content: Text("Downloaded splittr_${trip.name}.xlsx"));
     }
     // request storage permissions
     Directory? directory = Directory('/storage/emulated/0/Download');
@@ -203,14 +200,16 @@ Future<SnackBar> excelExport(
     return SnackBar(
       content: Text('Downloaded splittr_${trip.name}.xlsx'),
       action: SnackBarAction(
-          label: 'Open',
-          onPressed: () {
-            FlutterShare.shareFile(
+        label: 'Open',
+        onPressed: () async {
+          await SharePlus.instance.share(
+            ShareParams(
               title: 'splittr_${trip.name}.xlsx',
-              filePath: file.path,
-            );
-          },
-        ),
+              files: [XFile(file.path)],
+            ),
+          );
+        },
+      ),
     );
   } catch (e) {
     return SnackBar(content: Text(e.toString()));

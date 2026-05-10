@@ -10,37 +10,57 @@ jobs:
     name: Build and Release new apk
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-java@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
           distribution: "zulu"
-          java-version: "11"
+          java-version: "17"
           cache: "gradle"
 
-      - uses: subosito/flutter-action@v2
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
-          channel: "stable"
+          channel: stable
           cache: true
 
-      - name: Getting the dependencies
+      - name: Install dependencies
         run: flutter pub get
 
-      - name: Download keystore file
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | openssl base64 -d > android/app/key.jks
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/key.jks
 
-      - name: Create key.properties file
+      - name: Create key.properties
         run: |
           echo "storeFile=key.jks" > android/key.properties
           echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> android/key.properties
           echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
           echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
 
-      - name: Build the apk
-        run: flutter build apk --dart-define TAG=v2.0.${{ github.run_number }} --dart-define GITHUB_TOKEN=${{ secrets.TOKEN }} --dart-define JWT_SECRET=${{ secrets.JWT_SECRET }}
+      - name: Build App Bundle
+        run: |
+          flutter build appbundle \
+            --release \
+            --dart-define=TAG=v2.0.${{ github.run_number }} \
+            --dart-define GITHUB_TOKEN=${{ secrets.TOKEN }} \
+            --dart-define=JWT_SECRET=${{ secrets.JWT_SECRET }}
 
-      - name: Push to Releases
+      - name: Build APK
+        run: |
+          flutter build apk \
+            --release \
+            --dart-define=TAG=v2.0.${{ github.run_number }} \
+            --dart-define GITHUB_TOKEN=${{ secrets.TOKEN }} \
+            --dart-define=JWT_SECRET=${{ secrets.JWT_SECRET }}
+
+      - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "build/app/outputs/apk/release/app-release.apk"
+          artifacts: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
           tag: v2.0.${{ github.run_number }}
           token: ${{ secrets.TOKEN }}
