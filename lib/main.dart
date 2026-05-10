@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:contacts_service/contacts_service.dart';
+import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -80,16 +80,16 @@ class _MyAppState extends State<MyApp> {
     if (!await Permission.storage.isGranted) {
       await Permission.storage.request();
       if (await Permission.storage.isPermanentlyDenied) {
-        var snackBar = SnackBar(
+        var snackBar = const SnackBar(
           content: Text(
               "Grant storage permission from settings to export excel files"),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        await Future.delayed(Duration(seconds: 2));
+        await Future.delayed(const Duration(seconds: 2));
         openAppSettings();
       }
       if (!await Permission.storage.isGranted) {
-        var snackBar = SnackBar(
+        var snackBar = const SnackBar(
           content:
               Text("Without Storage permission, you can't export excel files"),
         );
@@ -99,16 +99,16 @@ class _MyAppState extends State<MyApp> {
     if (!await Permission.contacts.isGranted) {
       await Permission.contacts.request();
       if (await Permission.contacts.isPermanentlyDenied) {
-        var snackBar = SnackBar(
+        var snackBar = const SnackBar(
           content:
               Text("Grant contacts permission from settings to view friends"),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        await Future.delayed(Duration(seconds: 2));
+        await Future.delayed(const Duration(seconds: 2));
         openAppSettings();
       }
       if (!await Permission.contacts.isGranted) {
-        var snackBar = SnackBar(
+        var snackBar = const SnackBar(
           content: Text("Without contacts, you can't view friends"),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
@@ -116,23 +116,19 @@ class _MyAppState extends State<MyApp> {
       }
     }
 
-    var ccc = await ContactsService.getContacts();
+    List<Contact> ccc = await FlutterContacts.getAll();
+
     List<String> cc = [];
+
     for (var contact in ccc) {
-      if (contact.phones != null) {
-        for (var phone in contact.phones!) {
-          String num = "";
-          for (var i = 0; i < phone.value!.length; i++) {
-            if (phone.value![i] == ' ') {
-              continue;
-            }
-            num += phone.value![i];
-          }
-          if (num.length > 10) {
-            num = num.substring(num.length - 10);
-          }
-          cc.add(num);
+      for (var phone in contact.phones) {
+        String num = phone.number.replaceAll(' ', '');
+
+        if (num.length > 10) {
+          num = num.substring(num.length - 10);
         }
+
+        cc.add(num);
       }
     }
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -168,10 +164,10 @@ class _MyAppState extends State<MyApp> {
               ? CompleteSignUp(
                   email: email,
                 )
-              : HomePage(
+              : const HomePage(
                   curridx: 0,
                 )
-          : LoginPage(),
+          : const LoginPage(),
       debugShowCheckedModeBanner: false,
     );
   }

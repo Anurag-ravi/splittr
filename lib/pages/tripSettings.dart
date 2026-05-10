@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_share/flutter_share.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/models/trip.dart';
 import 'package:splittr/pages/addToGroup.dart';
@@ -253,10 +253,10 @@ class _TripSettingState extends State<TripSetting> {
                   return GestureDetector(
                     onTap: () {
                       haptics();
-                      FlutterShare.share(
+                      SharePlus.instance.share(ShareParams(
                           title: 'Invite to Group',
                           text:
-                              "Use this code: ${widget.trip.code} to join my Splittr Group: ${widget.trip.name}");
+                              "Use this code: ${widget.trip.code} to join my Splittr Group: ${widget.trip.name}"));
                     },
                     child: Container(
                       width: MediaQuery.of(context).size.width,

@@ -144,7 +144,7 @@ class _HomePageState extends State<HomePage> {
                     ? ActivityScreen()
                     : ProfileScreen(),
         bottomNavigationBar: Container(
-          height: 55,
+          height: 90,
           decoration: BoxDecoration(
               border: Border(top: BorderSide(color: Colors.grey, width: 1))),
           child: BottomNavigationBar(
