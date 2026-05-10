@@ -71,7 +71,9 @@ class _FriendScreenState extends State<FriendScreen> {
       }
     }
 
-    List<Contact> ccc = await FlutterContacts.getAll();
+    List<Contact> ccc = await FlutterContacts.getAll(
+      properties: {ContactProperty.phone},
+    );
     List<String> cc = [];
     for (var contact in ccc) {
       for (var phone in contact.phones) {

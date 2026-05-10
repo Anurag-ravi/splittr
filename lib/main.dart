@@ -116,7 +116,9 @@ class _MyAppState extends State<MyApp> {
       }
     }
 
-    List<Contact> ccc = await FlutterContacts.getAll();
+    List<Contact> ccc = await FlutterContacts.getAll(
+      properties: {ContactProperty.phone},
+    );
 
     List<String> cc = [];
 
