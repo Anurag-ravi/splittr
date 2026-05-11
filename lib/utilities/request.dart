@@ -98,6 +98,26 @@ dynamic deleteRequest(
   }
 }
 
+Future<void> updateFcmToken(String action, String fcmToken) async {
+  try {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? url = prefs.getString('url');
+    String? authToken = prefs.getString('token');
+    if (url == null || authToken == null) return;
+    await http
+        .post(
+          Uri.parse('$url/auth/fcm-token'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': authToken,
+          },
+          body: jsonEncode({'token': fcmToken, 'action': action}),
+        )
+        .timeout(const Duration(seconds: 10),
+            onTimeout: () => http.Response('{}', 500));
+  } catch (_) {}
+}
+
 void addLog(String message, String user, String category) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String url = prefs.getString('url')! + '/log';

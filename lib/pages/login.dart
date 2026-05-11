@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -13,7 +14,6 @@ import 'package:splittr/pages/homePage.dart';
 import 'package:splittr/pages/otpPage.dart';
 import 'package:splittr/utilities/boxes.dart';
 import 'package:splittr/utilities/constants.dart';
-import 'package:splittr/utilities/jwt.dart';
 import 'package:http/http.dart' as http;
 import 'package:splittr/utilities/request.dart';
 
@@ -280,8 +280,9 @@ class _LoginPageState extends State<LoginPage> {
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         return;
       }
-      String token = generateToken(userCredential.user!.email!);
-      loginToServer(token, userCredential.user!.email!);
+      final firebaseToken =
+          await FirebaseAuth.instance.currentUser!.getIdToken();
+      loginToServer(firebaseToken!, userCredential.user!.email!);
     } catch (err) {
       print(err);
       var snackBar = SnackBar(
@@ -302,7 +303,7 @@ class _LoginPageState extends State<LoginPage> {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? url = prefs.getString('url');
       prefs.setString('email', email);
-      final response = await http.post(Uri.parse("${url!}/auth/oauth-login"),
+      final response = await http.post(Uri.parse("${url!}/auth/v1/oauth-login"),
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'

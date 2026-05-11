@@ -443,6 +443,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       haptics();
                       SharedPreferences prefs =
                           await SharedPreferences.getInstance();
+                      String? fcmToken = prefs.getString('fcm_token');
+                      if (fcmToken != null) {
+                        await updateFcmToken('remove', fcmToken);
+                        await prefs.remove('fcm_token');
+                      }
                       await prefs.setBool('registered_now', true);
                       await prefs.remove('token');
                       await prefs.remove('user');

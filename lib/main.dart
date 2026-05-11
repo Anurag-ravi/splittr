@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -12,6 +13,7 @@ import 'package:splittr/pages/completeSignup.dart';
 import 'package:splittr/pages/homePage.dart';
 import 'package:splittr/pages/login.dart';
 import 'package:splittr/utilities/constants.dart';
+import 'package:splittr/utilities/request.dart';
 
 // import all typeAdapter files
 import 'package:splittr/models/expense.dart';
@@ -20,10 +22,53 @@ import 'package:splittr/models/trip.dart';
 import 'package:splittr/models/tripuser.dart';
 import 'package:splittr/models/user.dart';
 
+// Background message handler must be a top-level function
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  print("Handling a background message: ${message.messageId}");
+}
+
+Future<void> setupPushNotifications() async {
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+  NotificationSettings settings = await messaging.requestPermission();
+
+  if (settings.authorizationStatus != AuthorizationStatus.authorized) return;
+  String? token = await messaging.getToken();
+  if (token != null) {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? storedToken = prefs.getString('fcm_token');
+    String? authToken = prefs.getString('token');
+    if (authToken != null) {
+      if (storedToken != null && storedToken != token) {
+        await updateFcmToken('remove', storedToken);
+      }
+      await updateFcmToken('add', token);
+    }
+    await prefs.setString('fcm_token', token);
+  }
+
+  messaging.onTokenRefresh.listen((newToken) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? storedToken = prefs.getString('fcm_token');
+    String? authToken = prefs.getString('token');
+    if (authToken != null) {
+      if (storedToken != null) {
+        await updateFcmToken('remove', storedToken);
+      }
+      await updateFcmToken('add', newToken);
+    }
+    await prefs.setString('fcm_token', newToken);
+  });
+}
+
 late SharedPreferences prefs;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  await setupPushNotifications();
+
   prefs = await SharedPreferences.getInstance();
   await Hive.initFlutter();
   // register all typeAdapters
