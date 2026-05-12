@@ -19,7 +19,7 @@ import 'package:splittr/screens/groupScreen.dart';
 import 'package:splittr/utilities/boxes.dart';
 import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/excelExport.dart';
-import 'package:splittr/utilities/request.dart';
+import 'package:splittr/utilities/trip_service.dart';
 
 class TripPage extends StatefulWidget {
   const TripPage({super.key, required this.id, required this.trip});
@@ -74,38 +74,16 @@ class _TripPageState extends State<TripPage> {
   }
 
   Future<void> refresh() async {
-    setState(() {
-      api_fetching = true;
-    });
+    setState(() => api_fetching = true);
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? url = prefs.getString('url');
-    String? token = prefs.getString('token');
-    var data = await getRequest(
-        "${url!}/trip/${widget.id}",
-        {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': token!
-        },
-        prefs,
-        context);
-    if (data != null) {
-      if (data['status'] == 200) {
-        var temp = TripModel.fromJson(data['data']);
-        var tripBox = Boxes.getTrips();
-        tripBox.put(widget.id, temp);
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        var user = UserModel.fromJson(jsonDecode(prefs.getString('user')!));
-        calculate(temp, user.id);
-        setState(() {
-          api_fetching = false;
-        });
-        return;
-      }
+    if (!mounted) return;
+    final temp = await TripService.fetchAndCacheTrip(widget.id, prefs, context);
+    if (!mounted) return;
+    if (temp != null) {
+      final user = UserModel.fromJson(jsonDecode(prefs.getString('user')!));
+      calculate(temp, user.id);
     }
-    setState(() {
-      api_fetching = false;
-    });
+    setState(() => api_fetching = false);
   }
 
   void calculate(TripModel temp, String userId) {

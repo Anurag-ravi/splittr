@@ -12,6 +12,7 @@ import 'package:splittr/firebase_options.dart';
 import 'package:splittr/pages/completeSignup.dart';
 import 'package:splittr/pages/homePage.dart';
 import 'package:splittr/pages/login.dart';
+import 'package:splittr/utilities/activity_navigator.dart';
 import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/request.dart';
 
@@ -22,6 +23,8 @@ import 'package:splittr/models/payment.dart';
 import 'package:splittr/models/trip.dart';
 import 'package:splittr/models/tripuser.dart';
 import 'package:splittr/models/user.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 // Background message handler must be a top-level function
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -121,6 +124,59 @@ class _MyAppState extends State<MyApp> {
     FetchContacts();
     widget.prefs.setBool("update", true);
     widget.prefs.setBool("first_load", true);
+    _setupInteractedMessage();
+  }
+
+  // 3. Handle the interactions
+  Future<void> _setupInteractedMessage() async {
+    // State A: App is Terminated, user clicks notification to launch
+    RemoteMessage? initialMessage =
+        await FirebaseMessaging.instance.getInitialMessage();
+
+    if (initialMessage != null) {
+      _handleMessageClick(initialMessage);
+    }
+
+    // State B: App is in Background, user clicks notification to bring to foreground
+    FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageClick);
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (message.notification != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("${message.notification?.title}: ${message.notification?.body ?? ''}"),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'View',
+              textColor: Colors.white,
+              onPressed: () => _handleMessageClick(message),
+            ),
+          ),
+        );
+      }
+    });
+  }
+
+  void _handleMessageClick(RemoteMessage message) {
+    // Extract your custom data payload
+    final data = message.data;
+    final String? entityId = data['entity_id'];
+    final String? entityType = data['entity_type'];
+
+    if (entityId != null && entityType != null) {
+      // Use the global key to get the context safely
+      final context = navigatorKey.currentContext;
+      
+      if (context != null) {
+        ActivityNavigator.navigate(context, entityId, entityType);
+      } else {
+        print("Error: Context is null, cannot navigate.");
+        // Note: If context is null here (rare but possible on cold starts), 
+        // you might need to save the route intent in SharedPreferences or a 
+        // Provider/Bloc and execute it immediately after the first screen builds.
+      }
+    }
   }
 
   void FetchContacts() async {
@@ -197,6 +253,7 @@ class _MyAppState extends State<MyApp> {
       email = widget.prefs.getString('email')!;
     }
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Splittr',
       theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.brown),
