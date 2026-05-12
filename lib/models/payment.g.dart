@@ -23,13 +23,14 @@ class PaymentModelAdapter extends TypeAdapter<PaymentModel> {
       fields[3] as DateTime,
       fields[4] as String,
       fields[5] as String,
+      comments: (fields[6] as List?)?.cast<CommentModel>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, PaymentModel obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -41,7 +42,9 @@ class PaymentModelAdapter extends TypeAdapter<PaymentModel> {
       ..writeByte(4)
       ..write(obj.by)
       ..writeByte(5)
-      ..write(obj.to);
+      ..write(obj.to)
+      ..writeByte(6)
+      ..write(obj.comments);
   }
 
   @override

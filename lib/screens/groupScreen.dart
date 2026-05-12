@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/models/trip.dart';
 import 'package:splittr/models/tripuser.dart';
+import 'package:splittr/utilities/trip_service.dart';
 import 'package:splittr/pages/createGroup.dart';
 import 'package:splittr/pages/joinGroup.dart';
 import 'package:splittr/pages/tripPage.dart';
 import 'package:splittr/utilities/boxes.dart';
 import 'package:splittr/utilities/constants.dart';
-import 'package:splittr/utilities/request.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class Net {
@@ -30,7 +30,6 @@ class GroupScreen extends StatefulWidget {
 
 class _GroupScreenState extends State<GroupScreen> {
   late SharedPreferences prefs;
-  int nets_length = Boxes.getShortTrips().values.length;
   bool loading = false, showSettledUp = false, api_fetching = false;
 
   @override
@@ -57,69 +56,19 @@ class _GroupScreenState extends State<GroupScreen> {
   }
 
   Future<void> refresh({bool refreshed = false}) async {
-    print("refreshing");
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool first_load = prefs.getBool('first_load') ?? true;
     setState(() {
       api_fetching = first_load || refreshed;
     });
     prefs.setBool('first_load', false);
-    String? url = prefs.getString('url');
-    String? token = prefs.getString('token');
-    var data = await getRequest(
-        "${url!}/trip/",
-        {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': token!
-        },
-        prefs,
-        context);
-    if (data != null) {
-      if (data['status'] == 200) {
-        var tripsList = data['data'];
-        List<ShortTripModel> trips = [];
-        tripsList.forEach((e) {
-          trips.add(ShortTripModel.fromJson(e));
-        });
-        List<TripModel> tripData = [];
-        tripsList.forEach((e) {
-          tripData.add(TripModel.fromJson(e));
-        });
-        // match the data with the local data
-        var shortTripBox = Boxes.getShortTrips();
-        var tripBox = Boxes.getTrips();
-        var localShortTrips = shortTripBox.values.toList();
-        var localTrips = tripBox.values.toList();
-        for (var x in localShortTrips) {
-          bool found = false;
-          for (var y in trips) {
-            if (x.id == y.id) found = true;
-          }
-          if (!found) {
-            await shortTripBox.delete(x.id);
-          }
-        }
-        for (var x in localTrips) {
-          bool found = false;
-          for (var y in tripData) {
-            if (x.id == y.id) found = true;
-          }
-          if (!found) {
-            await tripBox.delete(x.id);
-          }
-        }
-        for (var x in trips) {
-          await shortTripBox.put(x.id, x);
-        }
-        for (var x in tripData) {
-          await tripBox.put(x.id, x);
-        }
-        setState(() {
-          api_fetching = false;
-          nets_length = trips.length;
-        });
-      }
+
+    if (!mounted) return;
+    final trips = await TripService.fetchAndCacheAllTrips(prefs, context);
+
+    if (!mounted) return;
+    if (trips != null) {
+      setState(() => api_fetching = false);
     } else {
       setState(() {
         loading = false;
@@ -151,7 +100,7 @@ class _GroupScreenState extends State<GroupScreen> {
         List<ShortTripModel> trips = Boxes.getShortTrips().values.toList();
         List<TripModel> tripData = Boxes.getTrips().values.toList();
         List<Net> nets = List.generate(
-            nets_length, (index) => Net(message: "", color: Colors.white));
+            trips.length, (index) => Net(message: "", color: Colors.white));
         var user = Boxes.getMe().get('me');
         try {
           for (int i = 0; i < tripData.length; i++) {

@@ -7,6 +7,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/models/user.dart';
 import 'package:splittr/pages/completeSignup.dart';
@@ -242,58 +243,79 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void googleSignin() async {
-    try {
-      var snackBar = SnackBar(
-        content: Text('Redirecting to Google'),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  try {
+    var snackBar = SnackBar(
+      content: Text('Redirecting to Google'),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+
+    setState(() {
+      responseLoading = true;
+    });
+
+    UserCredential userCredential;
+
+    if (kIsWeb) {
       GoogleAuthProvider provider = GoogleAuthProvider();
       provider.addScope('email');
-      setState(() {
-        responseLoading = true;
-      });
-      UserCredential userCredential;
-      if (kIsWeb) {
-        userCredential = await auth.signInWithPopup(provider);
-      } else {
-        userCredential = await auth.signInWithProvider(provider);
-      }
-      if (userCredential.user == null) {
+
+      userCredential =
+          await FirebaseAuth.instance.signInWithPopup(provider);
+    } else {
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+
+      final GoogleSignInAccount? googleUser =
+          await googleSignIn.signIn();
+
+      if (googleUser == null) {
         setState(() {
           responseLoading = false;
         });
-        addLog("User is null", "", "log");
-        var snackBar = SnackBar(
-          content: Text('Error Signing in'),
-        );
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
         return;
       }
-      if (userCredential.user!.email == null) {
-        setState(() {
-          responseLoading = false;
-        });
-        addLog(userCredential.user.toString(), "unknown", "log");
-        var snackBar = SnackBar(
-          content: Text('Error Signing in'),
-        );
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        return;
-      }
-      final firebaseToken =
-          await FirebaseAuth.instance.currentUser!.getIdToken();
-      loginToServer(firebaseToken!, userCredential.user!.email!);
-    } catch (err) {
-      print(err);
-      var snackBar = SnackBar(
-        content: Text(err.toString()),
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
       );
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+
+      userCredential = await FirebaseAuth.instance
+          .signInWithCredential(credential);
+    }
+
+    if (userCredential.user == null) {
       setState(() {
         responseLoading = false;
       });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error Signing in')),
+      );
+      return;
     }
+
+    final firebaseToken =
+        await userCredential.user!.getIdToken();
+
+    loginToServer(
+      firebaseToken!,
+      userCredential.user!.email!,
+    );
+  } catch (err) {
+    print(err);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(err.toString())),
+    );
+
+    setState(() {
+      responseLoading = false;
+    });
   }
+}
 
   void loginToServer(String token, String email) async {
     try {

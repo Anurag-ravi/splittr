@@ -54,6 +54,7 @@ dependencies:
   hive_flutter: ^1.1.0
   flutter_rating_bar: ^4.0.1
   firebase_messaging: ^16.2.1
+  google_sign_in: ^6.2.1
 
 dev_dependencies:
   flutter_test:
