@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'package:splittr/models/comment.dart';
 
 part 'expense.g.dart';
 
@@ -43,8 +44,12 @@ class ExpenseModel extends HiveObject {
   @HiveField(8)
   List<By> paid_for;
 
+  @HiveField(9)
+  List<CommentModel>? comments;
+
   ExpenseModel(this.id, this.trip, this.name, this.amount, this.category,
-      this.splitType, this.created, this.paid_by, this.paid_for);
+      this.splitType, this.created, this.paid_by, this.paid_for,
+      {this.comments});
 
   factory ExpenseModel.fromJson(Map<String, dynamic> json) {
     List<By> paid_by = [];

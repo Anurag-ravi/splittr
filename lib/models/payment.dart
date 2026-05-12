@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'package:splittr/models/comment.dart';
 
 part 'payment.g.dart';
 
@@ -22,7 +23,11 @@ class PaymentModel extends HiveObject {
   @HiveField(5)
   String to;
 
-  PaymentModel(this.id, this.trip, this.amount, this.created, this.by, this.to);
+  @HiveField(6)
+  List<CommentModel>? comments;
+
+  PaymentModel(this.id, this.trip, this.amount, this.created, this.by, this.to,
+      {this.comments});
 
   factory PaymentModel.fromJson(Map<String, dynamic> json) {
     return PaymentModel(

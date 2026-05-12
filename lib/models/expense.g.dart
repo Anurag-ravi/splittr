@@ -26,13 +26,14 @@ class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
       fields[6] as DateTime,
       (fields[7] as List).cast<By>(),
       (fields[8] as List).cast<By>(),
+      comments: (fields[9] as List?)?.cast<CommentModel>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, ExpenseModel obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -50,7 +51,9 @@ class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
       ..writeByte(7)
       ..write(obj.paid_by)
       ..writeByte(8)
-      ..write(obj.paid_for);
+      ..write(obj.paid_for)
+      ..writeByte(9)
+      ..write(obj.comments);
   }
 
   @override

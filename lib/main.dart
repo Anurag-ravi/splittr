@@ -16,6 +16,7 @@ import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/request.dart';
 
 // import all typeAdapter files
+import 'package:splittr/models/comment.dart';
 import 'package:splittr/models/expense.dart';
 import 'package:splittr/models/payment.dart';
 import 'package:splittr/models/trip.dart';
@@ -72,6 +73,7 @@ Future<void> main() async {
   prefs = await SharedPreferences.getInstance();
   await Hive.initFlutter();
   // register all typeAdapters
+  Hive.registerAdapter(CommentModelAdapter());
   Hive.registerAdapter(ExpenseModelAdapter());
   Hive.registerAdapter(splitTypeEnumAdapter());
   Hive.registerAdapter(ByAdapter());
