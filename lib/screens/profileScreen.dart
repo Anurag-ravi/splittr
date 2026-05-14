@@ -17,7 +17,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late UserModel user;
+  UserModel? user;
 
   @override
   void initState() {
@@ -27,14 +27,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void init() {
+    final tempUser = Boxes.getMe().get('me');
+
+    if (tempUser == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => LoginPage(),
+            ),
+          );
+        }
+      });
+      return;
+    }
+
     setState(() {
-      user = Boxes.getMe().get('me')!;
+      user = tempUser;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     double deviceWidth = MediaQuery.of(context).size.width;
+    if (user == null) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
     return SingleChildScrollView(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -64,18 +84,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: Container(
                           width: 70,
                           height: 70,
-                          child: Image.asset("assets/profile/${user.dp}.png"),
+                          child: Image.asset("assets/profile/${user!.dp}.png"),
                         ),
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            user.name,
+                            user!.name,
                             style: TextStyle(color: Colors.white, fontSize: 17),
                           ),
                           Text(
-                            user.email,
+                            user!.email,
                             style: TextStyle(color: Colors.grey, fontSize: 12),
                           ),
                         ],
@@ -87,7 +107,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) =>
-                                        EditProfile(user: user)));
+                                        EditProfile(user: user!)));
                           },
                           icon: Icon(
                             Icons.edit_outlined,
@@ -265,7 +285,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               if (res == null || !res) {
                 return;
               }
-              addLog("Rating: ${rating}, ${feedback}", user.name, "feedback");
+              addLog("Rating: ${rating}, ${feedback}", user!.name, "feedback");
             },
             child: const Opacity(
               opacity: 1,
@@ -334,7 +354,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               if (res == null || !res) {
                 return;
               }
-              addLog(feedback, user.name, "bug/feature");
+              addLog(feedback, user!.name, "bug/feature");
             },
             child: const Opacity(
               opacity: 1,
@@ -404,7 +424,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               if (res == null || !res) {
                 return;
               }
-              addLog(feedback, user.name, "support");
+              addLog(feedback, user!.name, "support");
             },
             child: const Opacity(
               opacity: 1,

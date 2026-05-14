@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:splittr/utilities/trip_service.dart';
 import 'package:splittr/models/user.dart';
 import 'package:splittr/pages/homePage.dart';
+import 'package:splittr/utilities/boxes.dart';
 import 'package:splittr/utilities/constants.dart';
 import 'package:splittr/utilities/request.dart';
 
@@ -208,11 +210,25 @@ class _CompleteSignUpState extends State<CompleteSignUp> {
     if (data != null) {
       if (data['status'] == 200) {
         prefs.setBool('registered_now', false);
-        prefs.setString('user', jsonEncode(UserModel.fromJson(data['user'])));
-        Navigator.of(context).pushReplacement(MaterialPageRoute(
+        final user = UserModel.fromJson(data['user']);
+        await prefs.setString(
+          'user',
+          jsonEncode(data['user']),
+        );
+        await Boxes.getMe().put('me', user);
+        await TripService.fetchAndCacheAllTrips(
+          prefs,
+          context,
+        );
+        if (!mounted) return;
+
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
             builder: (builder) => HomePage(
-                  curridx: 0,
-                )));
+              curridx: 0,
+            ),
+          ),
+        );
         const snackBar = SnackBar(
           content: Text('Succcessfully Registered'),
         );

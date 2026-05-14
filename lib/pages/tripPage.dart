@@ -67,8 +67,9 @@ class _TripPageState extends State<TripPage> {
 
   void init() {
     var user = Boxes.getMe().get('me');
+    final cachedTrip = widget.trip;
     setState(() {
-      trip = Boxes.getTrips().get(widget.id);
+      trip = cachedTrip;
     });
     calculate(trip!, user!.id);
   }
@@ -111,11 +112,11 @@ class _TripPageState extends State<TripPage> {
       t_temp.add(Transaction(true, x.created, x, null));
       for (var y in x.paid_by) {
         if (y.user == currentTripUser) paid_by_me += y.amount;
-        tripUserNet[y.user] = tripUserNet[y.user]! + y.amount;
+        tripUserNet[y.user] = (tripUserNet[y.user] ?? 0) + y.amount;
       }
       for (var y in x.paid_for) {
         if (y.user == currentTripUser) paid_for_me += y.amount;
-        tripUserNet[y.user] = tripUserNet[y.user]! - y.amount;
+        tripUserNet[y.user] = (tripUserNet[y.user] ?? 0) - y.amount;
       }
     }
     setState(() {
@@ -127,8 +128,8 @@ class _TripPageState extends State<TripPage> {
       t_temp.add(Transaction(false, x.created, null, x));
       if (x.by == currentTripUser) paid_by_me += x.amount;
       if (x.to == currentTripUser) paid_for_me += x.amount;
-      tripUserNet[x.by] = tripUserNet[x.by]! + x.amount;
-      tripUserNet[x.to] = tripUserNet[x.to]! - x.amount;
+      tripUserNet[x.by] = (tripUserNet[x.by] ?? 0) + x.amount;
+      tripUserNet[x.to] = (tripUserNet[x.to] ?? 0) - x.amount;
     }
     t_temp.sort((a, b) => b.date.compareTo(a.date));
     if (paid_by_me.toStringAsFixed(2) == paid_for_me.toStringAsFixed(2)) {
@@ -477,6 +478,14 @@ class _TripPageState extends State<TripPage> {
                           ),
                         );
                       } else if (!transactions[idx].isExpense) {
+                        final byUser =
+                            tripUserMap[transactions[idx].payment!.by];
+
+                        final toUser =
+                            tripUserMap[transactions[idx].payment!.to];
+
+                        final byName = byUser?.name ?? 'Unknown';
+                        final toName = toUser?.name ?? 'Unknown';
                         return GestureDetector(
                           onTap: () async {
                             haptics();
@@ -533,7 +542,7 @@ class _TripPageState extends State<TripPage> {
                                   child: Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: Text(
-                                      "${tripUserMap[transactions[idx].payment!.by]!.name} paid ${tripUserMap[transactions[idx].payment!.to]!.name} ₹${transactions[idx].payment!.amount.toStringAsFixed(2)}",
+                                      "${byName} paid ${toName} ₹${transactions[idx].payment!.amount.toStringAsFixed(2)}",
                                       style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 12,

@@ -94,6 +94,25 @@ Future<void> main() async {
   await Hive.openBox<UserModel>('users');
   await Hive.openBox<UserModel>('me');
 
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.dumpErrorToConsole(details);
+  };
+
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return Material(
+      color: Colors.black,
+      child: Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Text(
+            details.exception.toString(),
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      ),
+    );
+  };
+
   runApp(MyApp(
     prefs: prefs,
   ));
@@ -144,7 +163,8 @@ class _MyAppState extends State<MyApp> {
       if (message.notification != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("${message.notification?.title}: ${message.notification?.body ?? ''}"),
+            content: Text(
+                "${message.notification?.title}: ${message.notification?.body ?? ''}"),
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 4),
             action: SnackBarAction(
@@ -167,13 +187,12 @@ class _MyAppState extends State<MyApp> {
     if (entityId != null && entityType != null) {
       // Use the global key to get the context safely
       final context = navigatorKey.currentContext;
-      
       if (context != null) {
         ActivityNavigator.navigate(context, entityId, entityType);
       } else {
         print("Error: Context is null, cannot navigate.");
-        // Note: If context is null here (rare but possible on cold starts), 
-        // you might need to save the route intent in SharedPreferences or a 
+        // Note: If context is null here (rare but possible on cold starts),
+        // you might need to save the route intent in SharedPreferences or a
         // Provider/Bloc and execute it immediately after the first screen builds.
       }
     }
