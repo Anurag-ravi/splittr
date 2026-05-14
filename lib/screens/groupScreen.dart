@@ -100,7 +100,7 @@ class _GroupScreenState extends State<GroupScreen> {
         List<ShortTripModel> trips = Boxes.getShortTrips().values.toList();
         List<TripModel> tripData = Boxes.getTrips().values.toList();
         List<Net> nets = List.generate(
-            trips.length, (index) => Net(message: "", color: Colors.white));
+            tripData.length, (index) => Net(message: "", color: Colors.white));
         var user = Boxes.getMe().get('me');
         try {
           for (int i = 0; i < tripData.length; i++) {
@@ -290,10 +290,21 @@ class _GroupScreenState extends State<GroupScreen> {
                             : GestureDetector(
                                 onTap: () async {
                                   haptics();
+                                  final fullTrip =
+                                      Boxes.getTrips().get(trips[index].id);
+                                  if (fullTrip == null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content:
+                                            Text('Trip data not available'),
+                                      ),
+                                    );
+                                    return;
+                                  }
                                   Navigator.of(context).push(MaterialPageRoute(
                                       builder: (builder) => TripPage(
                                             id: trips[index].id,
-                                            trip: tripData[index],
+                                            trip: fullTrip,
                                           )));
                                 },
                                 child: Padding(
