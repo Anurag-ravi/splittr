@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splittr/core/constants/app_constants.dart';
 import 'package:splittr/core/network/http_client.dart';
 import 'package:splittr/core/providers/shared_preferences_provider.dart';
+import 'package:splittr/core/providers/theme_provider.dart';
 import 'package:splittr/core/theme/app_theme.dart';
 import 'package:splittr/firebase_options.dart';
 import 'package:splittr/features/auth/presentation/screens/complete_signup_screen.dart';
@@ -203,7 +204,7 @@ class _SplittrAppState extends ConsumerState<SplittrApp> {
       title: 'Splittr',
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.light,
+      themeMode: ref.watch(themeModeProvider),
       debugShowCheckedModeBanner: false,
       home: _home,
       onGenerateRoute: (settings) {

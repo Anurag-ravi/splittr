@@ -17,34 +17,92 @@ class GroupsListNotifier extends AsyncNotifier<void> {
 
   Future<void> _fetch() async {
     state = const AsyncLoading();
-    final result = await ref.read(fetchAllTripsUseCaseProvider).call();
+
+    final result = await ref
+        .read(
+          fetchAllTripsUseCaseProvider,
+        )
+        .call();
+
     state = result.when(
-      success: (_) => const AsyncData(null),
-      onFailure: (f) => AsyncError(f.message, StackTrace.current),
+      success: (_) {
+        // =========================
+        // CLEAN INVALID SHORT TRIPS
+        // =========================
+
+        final validIds = HiveBoxes.trips.keys.map((e) => e.toString()).toSet();
+
+        final invalidTrips = HiveBoxes.shortTrips.values
+            .where(
+              (s) => !validIds.contains(s.id),
+            )
+            .toList();
+
+        for (final trip in invalidTrips) {
+          HiveBoxes.shortTrips.delete(trip.id);
+        }
+
+        return const AsyncData(null);
+      },
+      onFailure: (f) => AsyncError(
+        f.message,
+        StackTrace.current,
+      ),
     );
   }
 
   // ── Pure helpers (read Hive, no mutations) ────────────────────────────────
 
-  List<ShortTripModel> visibleTrips({required bool hideSettled}) {
+  List<ShortTripModel> visibleTrips({
+    required bool hideSettled,
+  }) {
     final user = ref.read(currentUserProvider);
+
     if (user == null) return [];
 
     final trips = HiveBoxes.trips.values.toList()
-      ..sort((a, b) => b.created.compareTo(a.created));
-    final tripMap = {for (final t in trips) t.id: t};
+      ..sort(
+        (a, b) => b.created.compareTo(a.created),
+      );
 
-    return (HiveBoxes.shortTrips.values.toList()
-          ..sort((a, b) =>
-              tripMap[b.id]!.created.compareTo(tripMap[a.id]!.created)))
-        .where((s) {
+    final tripMap = {
+      for (final t in trips) t.id: t,
+    };
+
+    // FILTER INVALID SHORT TRIPS FIRST
+
+    final validShortTrips = HiveBoxes.shortTrips.values
+        .where((s) => tripMap.containsKey(s.id))
+        .toList()
+      ..sort((a, b) {
+        final tripA = tripMap[a.id];
+        final tripB = tripMap[b.id];
+
+        if (tripA == null || tripB == null) {
+          return 0;
+        }
+
+        return tripB.created.compareTo(
+          tripA.created,
+        );
+      });
+
+    return validShortTrips.where((s) {
       final t = tripMap[s.id];
+
       if (t == null) return false;
+
       if (hideSettled) {
-        if (TripNetCalculator.calculate(trip: t, currentUserId: user.id).settled) {
+        final summary = TripNetCalculator.calculate(
+          trip: t,
+          currentUserId: user.id,
+        );
+
+        if (summary.settled) {
           return false;
         }
       }
+
       return true;
     }).toList();
   }

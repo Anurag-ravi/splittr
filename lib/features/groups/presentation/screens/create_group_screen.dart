@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:splittr/core/theme/app_colors.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:splittr/core/utils/haptics.dart';
 import 'package:splittr/features/groups/presentation/providers/groups_providers.dart';
 import 'package:splittr/features/groups/presentation/screens/home_screen.dart';
 import 'package:splittr/features/groups/presentation/states/groups_state.dart';
+import 'package:splittr/shared/widgets/neon_glow.dart';
 
 class CreateGroupScreen extends ConsumerStatefulWidget {
   const CreateGroupScreen({super.key});
@@ -15,6 +16,7 @@ class CreateGroupScreen extends ConsumerStatefulWidget {
 
 class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
   final _nameController = TextEditingController();
+
   bool _nameValid = true;
 
   @override
@@ -23,110 +25,276 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
     super.dispose();
   }
 
-  void _showSnack(String msg) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+  void _showSnack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
         content: Text(msg),
         duration: const Duration(seconds: 4),
-      ));
+      ),
+    );
+  }
 
   @override
   void initState() {
     super.initState();
-    ref.listenManual<AsyncValue<GroupMutationSuccess?>>(groupMutationProvider,
-        (_, next) {
-      final notifier = ref.read(groupMutationProvider.notifier);
-      next.whenOrNull(
-        error: (e, _) {
-          if (!mounted) return;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
+
+    ref.listenManual<AsyncValue<GroupMutationSuccess?>>(
+      groupMutationProvider,
+      (_, next) {
+        final notifier = ref.read(groupMutationProvider.notifier);
+
+        next.whenOrNull(
+          error: (e, _) {
             if (!mounted) return;
-            _showSnack(e.toString());
-          });
-          notifier.reset();
-        },
-        data: (result) {
-          if (result == null) return;
-          if (!mounted) return;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
+
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+
+              _showSnack(e.toString());
+            });
+
+            notifier.reset();
+          },
+          data: (result) {
+            if (result == null) return;
+
             if (!mounted) return;
-            Navigator.of(context).pushReplacement(MaterialPageRoute(
-                builder: (_) => const HomeScreen(initialIndex: 0)));
-            _showSnack(result.message);
-          });
-          notifier.reset();
-        },
-      );
-    });
+
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (_) => const HomeScreen(
+                    initialIndex: 0,
+                  ),
+                ),
+              );
+
+              _showSnack(result.message);
+            });
+
+            notifier.reset();
+          },
+        );
+      },
+    );
+  }
+
+  InputDecoration _inputDecoration(
+    BuildContext context,
+  ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return InputDecoration(
+      labelText: 'Group Name',
+      errorText: _nameValid ? null : 'Please enter a valid group name',
+      filled: true,
+      fillColor: colorScheme.surface,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 20,
+        vertical: 18,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: BorderSide(
+          color: theme.dividerTheme.color ?? Colors.transparent,
+        ),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: BorderSide(
+          color: theme.dividerTheme.color ?? Colors.transparent,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: BorderSide(
+          color: colorScheme.primary,
+          width: 1.5,
+        ),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: BorderSide(
+          color: colorScheme.error,
+        ),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: BorderSide(
+          color: colorScheme.error,
+          width: 1.5,
+        ),
+      ),
+      labelStyle: theme.textTheme.bodyLarge?.copyWith(
+        color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     final mutAsync = ref.watch(groupMutationProvider);
+
     final notifier = ref.read(groupMutationProvider.notifier);
+
     final loading = mutAsync.isLoading;
 
     final w = MediaQuery.of(context).size.width;
+
+    final h = MediaQuery.of(context).size.height;
+
     return Scaffold(
-      resizeToAvoidBottomInset: false,
-      backgroundColor: Colors.grey[900],
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        backgroundColor: Colors.grey[900],
-        title:
-            const Text('Create a group', style: TextStyle(color: Colors.white)),
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: colorScheme.onSurface,
+          ),
+          onPressed: () {
+            Haptics.medium();
+            Navigator.pop(context);
+          },
         ),
-        actions: [
-          loading
-              ? const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: CircularProgressIndicator(color: AppColors.primary),
-                )
-              : GestureDetector(
-                  onTap: () {
-                    Haptics.medium();
-                    FocusManager.instance.primaryFocus?.unfocus();
-                    final ok = _nameController.text.isNotEmpty;
-                    setState(() => _nameValid = ok);
-                    if (!ok) return;
-                    notifier.createGroup(_nameController.text);
-                  },
-                  child: const Text('Done',
-                      style: TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600)),
-                ),
-          const SizedBox(width: 5),
-        ],
+        title: Text(
+          'Create Group',
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 50),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: w * 0.05),
-              child: TextField(
-                cursorColor: AppColors.primary,
-                style: const TextStyle(color: Colors.white),
-                controller: _nameController,
-                onChanged: (_) => setState(() => _nameValid = true),
-                decoration: _nameValid
-                    ? InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(5),
-                          borderSide: const BorderSide(width: 1),
-                        ),
-                        labelText: 'Group Name',
-                        fillColor: Colors.grey[900],
-                        filled: true,
-                      )
-                    : const InputDecoration(
-                        errorText: 'Please enter a valid name'),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: w * 0.06,
+          ),
+          child: Column(
+            children: [
+              SizedBox(height: h * 0.05),
+
+              // =========================
+              // LOGO
+              // =========================
+
+              NeonGlow(
+                color: colorScheme.primary,
+                radius: w * 0.18,
+                spread: 22,
+                glowOpacity: 0.18,
+                child: Center(
+                  child: SvgPicture.asset(
+                    'assets/images/logo.svg',
+                    height: w * 0.16,
+                  ),
+                ),
               ),
-            ),
-          ],
+
+              SizedBox(height: h * 0.05),
+
+              // =========================
+              // TITLE
+              // =========================
+
+              Text(
+                'Start a New Group',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+
+              SizedBox(height: h * 0.015),
+
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: w * 0.08,
+                ),
+                child: Text(
+                  'Create a group to split expenses with friends, roommates or travel buddies.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    height: 1.6,
+                    color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                  ),
+                ),
+              ),
+
+              SizedBox(height: h * 0.06),
+
+              // =========================
+              // INPUT
+              // =========================
+
+              TextField(
+                controller: _nameController,
+                cursorColor: colorScheme.primary,
+                style: theme.textTheme.bodyLarge,
+                onChanged: (_) {
+                  setState(() {
+                    _nameValid = true;
+                  });
+                },
+                decoration: _inputDecoration(
+                  context,
+                ),
+              ),
+
+              SizedBox(height: h * 0.04),
+
+              // =========================
+              // CREATE BUTTON
+              // =========================
+
+              SizedBox(
+                width: double.infinity,
+                height: 58,
+                child: ElevatedButton(
+                  onPressed: loading
+                      ? null
+                      : () {
+                          Haptics.medium();
+
+                          FocusManager.instance.primaryFocus?.unfocus();
+
+                          final ok = _nameController.text.trim().isNotEmpty;
+
+                          setState(() {
+                            _nameValid = ok;
+                          });
+
+                          if (!ok) return;
+
+                          notifier.createGroup(
+                            _nameController.text.trim(),
+                          );
+                        },
+                  child: loading
+                      ? SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: colorScheme.onPrimary,
+                          ),
+                        )
+                      : Text(
+                          'Create Group',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: colorScheme.onPrimary,
+                          ),
+                        ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,18 +1,14 @@
+// group_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:splittr/core/constants/app_constants.dart';
-import 'package:splittr/core/providers/shared_preferences_provider.dart';
 import 'package:splittr/core/storage/hive_boxes.dart';
-import 'package:splittr/core/theme/app_colors.dart';
 import 'package:splittr/core/utils/haptics.dart';
 import 'package:splittr/core/widgets/app_loader.dart';
 import 'package:splittr/features/groups/presentation/providers/groups_providers.dart';
-import 'package:splittr/features/groups/presentation/screens/create_group_screen.dart';
-import 'package:splittr/features/groups/presentation/screens/join_group_screen.dart';
-import 'package:splittr/features/groups/presentation/widgets/group_card.dart';
-import 'package:splittr/features/trips/presentation/screens/trip_screen.dart';
 import 'package:splittr/features/trips/data/models/trip_model.dart';
+import 'package:splittr/features/trips/presentation/screens/trip_screen.dart';
 
 class GroupScreen extends ConsumerStatefulWidget {
   const GroupScreen({super.key});
@@ -23,167 +19,278 @@ class GroupScreen extends ConsumerStatefulWidget {
 
 class _GroupScreenState extends ConsumerState<GroupScreen> {
   @override
-  void initState() {
-    super.initState();
-    ref.listenManual<AsyncValue<void>>(groupsListProvider, (_, next) {
-      next.whenOrNull(
-        error: (e, _) {
-          if (!mounted) return;
-          final listNotifier = ref.read(groupsListProvider.notifier);
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(e.toString()),
-                action: SnackBarAction(
-                  label: 'Retry',
-                  onPressed: () {
-                    Haptics.medium();
-                    listNotifier.refresh();
-                  },
-                ),
-                duration: const Duration(seconds: 4),
-              ),
-            );
-          });
-        },
-      );
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final listAsync = ref.watch(groupsListProvider);
-    final listNotifier = ref.read(groupsListProvider.notifier);
-    final hideSettled = ref.watch(hideSettledProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-    final isLoading = listAsync.isLoading;
+    final listAsync = ref.watch(groupsListProvider);
+
+    final listNotifier = ref.read(groupsListProvider.notifier);
+
+    final hideSettled = ref.watch(hideSettledProvider);
 
     return ValueListenableBuilder<Box<TripModel>>(
       valueListenable: HiveBoxes.trips.listenable(),
       builder: (context, _, __) {
         final user = HiveBoxes.me.get('me');
-        if (user == null) return const AppLoader();
 
-        final visible = listNotifier.visibleTrips(hideSettled: hideSettled);
+        if (user == null) {
+          return const AppLoader();
+        }
+
+        final visible = listNotifier.visibleTrips(
+          hideSettled: hideSettled,
+        );
+
         final summaries = listNotifier.netSummaries();
 
         return RefreshIndicator(
-          onRefresh: () => listNotifier.refresh(),
-          child: visible.isEmpty
-              ? _emptyState(context, isLoading)
-              : ListView.builder(
-                  itemCount: visible.length + 1 + (isLoading ? 1 : 0),
-                  itemBuilder: (context, idx) {
-                    if (idx == 0) return _toggleRow(context, ref, hideSettled);
-                    if (isLoading && idx == 1) return const ApiLoader();
-                    final trip = visible[idx - 1 - (isLoading ? 1 : 0)];
-                    return GroupCard(
-                      trip: trip,
-                      summary: summaries[trip.id]!,
-                      onTap: () {
-                        Haptics.medium();
-                        final full = HiveBoxes.trips.get(trip.id);
-                        if (full == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Trip data not available'),
-                              duration: const Duration(seconds: 4),
-                            ),
-                          );
-                          return;
-                        }
-                        Navigator.of(context).push(MaterialPageRoute(
-                          builder: (_) => TripScreen(id: trip.id, trip: full),
-                        ));
-                      },
-                    );
-                  },
+          color: colorScheme.primary,
+          onRefresh: () async {
+            await listNotifier.refresh();
+          },
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  16,
+                  10,
+                  16,
+                  110,
                 ),
+                sliver: visible.isEmpty
+                    ? SliverToBoxAdapter(
+                        child: _emptyState(context),
+                      )
+                    : SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final trip = visible[index];
+
+                            final summary = summaries[trip.id]!;
+
+                            final amount = summary.amount.abs();
+
+                            final isOwed = summary.amount > 0;
+
+                            final isSettled = summary.amount == 0;
+
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 14),
+                              child: GestureDetector(
+                                onTap: () {
+                                  Haptics.medium();
+
+                                  final full = HiveBoxes.trips.get(trip.id);
+
+                                  if (full == null) return;
+
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => TripScreen(
+                                        id: trip.id,
+                                        trip: full,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  height: 110,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(28),
+
+                                    // GLASS SURFACE
+                                    color: colorScheme.surface.withOpacity(
+                                      theme.brightness == Brightness.dark
+                                          ? 0.88
+                                          : 0.96,
+                                    ),
+
+                                    border: Border.all(
+                                      color: colorScheme.primary.withOpacity(
+                                        theme.brightness == Brightness.dark
+                                            ? 0.12
+                                            : 0.08,
+                                      ),
+                                    ),
+
+                                    // NEON GLOW
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: colorScheme.primary.withOpacity(
+                                          theme.brightness == Brightness.dark
+                                              ? 0.10
+                                              : 0.04,
+                                        ),
+                                        blurRadius: 26,
+                                        spreadRadius: -4,
+                                        offset: const Offset(0, 10),
+                                      ),
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(
+                                          theme.brightness == Brightness.dark
+                                              ? 0.14
+                                              : 0.04,
+                                        ),
+                                        blurRadius: 22,
+                                        offset: const Offset(0, 12),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(10),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 88,
+                                          height: 88,
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(22),
+                                            gradient: LinearGradient(
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                              colors: [
+                                                colorScheme.primary
+                                                    .withOpacity(0.20),
+                                                colorScheme.primary
+                                                    .withOpacity(0.05),
+                                              ],
+                                            ),
+                                            border: Border.all(
+                                              color: colorScheme.primary
+                                                  .withOpacity(0.16),
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: colorScheme.primary
+                                                    .withOpacity(0.14),
+                                                blurRadius: 18,
+                                                spreadRadius: -2,
+                                              ),
+                                            ],
+                                          ),
+                                          child: Center(
+                                            child: Icon(
+                                              Icons.groups_rounded,
+                                              size: 42,
+                                              color: colorScheme.primary,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 18),
+                                        Expanded(
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                trip.name,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: theme
+                                                    .textTheme.titleLarge
+                                                    ?.copyWith(
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              if (isSettled)
+                                                Text(
+                                                  'You are all settled up',
+                                                  style: theme
+                                                      .textTheme.bodyMedium
+                                                      ?.copyWith(
+                                                    color: theme.textTheme
+                                                        .bodyMedium?.color
+                                                        ?.withOpacity(0.6),
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                )
+                                              else
+                                                Text(
+                                                  isOwed
+                                                      ? 'You are owed ₹${amount.toStringAsFixed(2)} overall'
+                                                      : 'You owe ₹${amount.toStringAsFixed(2)} overall',
+                                                  style: theme
+                                                      .textTheme.bodyLarge
+                                                      ?.copyWith(
+                                                    fontWeight: FontWeight.w700,
+                                                    color: isOwed
+                                                        ? colorScheme.primary
+                                                        : colorScheme.error,
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          childCount: visible.length,
+                        ),
+                      ),
+              ),
+            ],
+          ),
         );
       },
     );
   }
 
-  Widget _toggleRow(BuildContext context, WidgetRef ref, bool hideSettled) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Text('Hide Settled Up Groups',
-            style: TextStyle(color: Colors.grey[100])),
-        const SizedBox(width: 10),
-        SizedBox(
-          width: 40,
-          height: 30,
-          child: FittedBox(
-            fit: BoxFit.fill,
-            child: Switch(
-              value: hideSettled,
-              activeColor: AppColors.primary,
-              onChanged: (v) {
-                Haptics.medium();
-                ref.read(hideSettledProvider.notifier).state = v;
-                ref
-                    .read(sharedPreferencesProvider)
-                    .setBool(AppConstants.prefKeyHideSettledGroups, v);
-              },
+  Widget _emptyState(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 120),
+      child: Column(
+        children: [
+          Container(
+            width: 140,
+            height: 140,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  colorScheme.primary.withOpacity(0.16),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+            child: Icon(
+              Icons.groups_rounded,
+              size: 72,
+              color: colorScheme.primary,
             ),
           ),
-        ),
-        const SizedBox(width: 5),
-      ],
-    );
-  }
-
-  Widget _emptyState(BuildContext context, bool loading) {
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 50),
-      children: [
-        const SizedBox(height: 150),
-        if (loading) const ApiLoader(),
-        Center(
-          child: Text(
-            'You are not involved in any groups',
-            style: TextStyle(color: Colors.grey[100]),
+          const SizedBox(height: 28),
+          Text(
+            'No Groups Yet',
+            style: theme.textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
           ),
-        ),
-        const SizedBox(height: 10),
-        _actionButton('Create Group', AppColors.primary, () {
-          Haptics.medium();
-          Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const CreateGroupScreen()));
-        }),
-        const SizedBox(height: 10),
-        Center(child: Text('OR', style: TextStyle(color: Colors.grey[100]))),
-        const SizedBox(height: 10),
-        _actionButton('Join Group', AppColors.amber, () {
-          Haptics.medium();
-          Navigator.of(context)
-              .push(MaterialPageRoute(builder: (_) => const JoinGroupScreen()));
-        }),
-      ],
-    );
-  }
-
-  Widget _actionButton(String label, Color color, VoidCallback onTap) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 50),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(10),
+          const SizedBox(height: 14),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              'Create or join a group to start splitting expenses with friends.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                height: 1.6,
+                color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+              ),
+            ),
           ),
-          child: Center(
-            child: Text(label,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15)),
-          ),
-        ),
+        ],
       ),
     );
   }

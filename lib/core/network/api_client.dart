@@ -30,8 +30,6 @@ class ApiClient {
       final res = await http
           .get(Uri.parse('$baseUrl$path'), headers: _headers)
           .timeout(timeout);
-      print('headers: $_headers');
-      print('response: $res');
       return _parse(res);
     } on http.ClientException {
       throw const NetworkException();

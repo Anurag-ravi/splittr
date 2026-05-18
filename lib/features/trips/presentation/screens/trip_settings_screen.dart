@@ -1,14 +1,18 @@
+// trip_settings_screen.dart
+
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:splittr/core/network/http_client.dart';
 import 'package:splittr/core/theme/app_colors.dart';
 import 'package:splittr/core/utils/haptics.dart';
-import 'package:splittr/features/groups/presentation/screens/home_screen.dart';
-import 'package:splittr/core/storage/hive_boxes.dart';
-import 'package:splittr/features/trips/data/models/trip_member_model.dart';
 import 'package:splittr/features/trips/data/models/trip_model.dart';
+import 'package:splittr/features/trips/presentation/controllers/trip_controller.dart';
+import 'package:splittr/features/trips/presentation/providers/trip_providers.dart';
 
-class TripSettingsScreen extends StatefulWidget {
+class TripSettingsScreen extends ConsumerStatefulWidget {
   const TripSettingsScreen({
     super.key,
     required this.trip,
@@ -19,189 +23,563 @@ class TripSettingsScreen extends StatefulWidget {
 
   final TripModel trip;
   final bool free;
-  final bool deletable;
   final String currentUserID;
+  final bool deletable;
 
   @override
-  State<TripSettingsScreen> createState() => _TripSettingsScreenState();
+  ConsumerState<TripSettingsScreen> createState() => _TripSettingsScreenState();
 }
 
-class _TripSettingsScreenState extends State<TripSettingsScreen> {
+class _TripSettingsScreenState extends ConsumerState<TripSettingsScreen> {
   late String _name;
-  late TextEditingController _controller;
-  bool _loading = false;
 
   @override
   void initState() {
     super.initState();
     _name = widget.trip.name;
-    _controller = TextEditingController(text: _name);
   }
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
 
-  void _showSnack(String msg) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(msg),
-        duration: const Duration(seconds: 4),
-      ));
+    final colorScheme = theme.colorScheme;
 
-  void _setLoading(bool v) {
-    if (!mounted) return;
-    setState(() => _loading = v);
-  }
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // =====================================================
+            // HEADER
+            // =====================================================
 
-  Future<void> _showEditDialog() async {
-    await showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Edit trip name'),
-        content: TextField(controller: _controller),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              setState(() => _name = _controller.text);
-              await _editName();
-            },
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<bool> _confirmDialog(String title, String content) async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (_) => AlertDialog(
-            title: Text(title),
-            content: Text(content),
-            actions: [
-              TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancel')),
-              TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Confirm')),
-            ],
-          ),
-        ) ??
-        false;
-  }
-
-  Future<void> _editName() async {
-    _setLoading(true);
-    if (!mounted) return;
-    final data = await AppHttpClient.post(
-        context, '/trip/${widget.trip.id}/edit', {'name': _name});
-    _setLoading(false);
-    if (data == null) return;
-    _showSnack(data['message']?.toString() ?? '');
-    if (data['status'] == 200) {
-      await HiveBoxes.trips
-          .put(widget.trip.id, widget.trip.copyWith(name: _name));
-      if (mounted) setState(() {});
-    }
-  }
-
-  Future<void> _handleLeave() async {
-    if (!widget.free) return;
-    final confirmed = await _confirmDialog(
-        'Are you sure?', 'This will remove you from this group.');
-    if (!confirmed || !mounted) return;
-    _setLoading(true);
-    final data =
-        await AppHttpClient.get(context, '/trip/${widget.trip.id}/leave');
-    _setLoading(false);
-    if (!mounted) return;
-    if (data == null) return;
-    _showSnack(data['message']?.toString() ?? '');
-    if (data['status'] == 200) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen(initialIndex: 0)),
-      );
-    }
-  }
-
-  Future<void> _handleDelete() async {
-    if (widget.trip.createdBy != widget.currentUserID || !widget.deletable) {
-      return;
-    }
-    final confirmed = await _confirmDialog('Are you sure?',
-        'This will permanently delete this group and all its data.');
-    if (!confirmed || !mounted) return;
-    _setLoading(true);
-    final data = await AppHttpClient.delete(context, '/trip/${widget.trip.id}');
-    _setLoading(false);
-    if (!mounted) return;
-    if (data == null) return;
-    _showSnack(data['message']?.toString() ?? '');
-    if (data['status'] == 200) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen(initialIndex: 0)),
-      );
-    }
-  }
-
-  Widget _memberTile(TripMemberModel user) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        children: [
-          const SizedBox(width: 10),
-          ClipOval(
-            child: SizedBox(
-              width: 50,
-              height: 50,
-              child: Image.asset('assets/profile/${user.dp}.png'),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                14,
+                8,
+                14,
+                0,
+              ),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      Haptics.medium();
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: colorScheme.surface.withOpacity(0.82),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: colorScheme.primary.withOpacity(0.08),
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.close_rounded,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 18),
+                  Expanded(
+                    child: Text(
+                      'Group Settings',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 20),
-          Text(user.name,
-              style: const TextStyle(color: Colors.white, fontSize: 15)),
-        ],
+
+            const SizedBox(height: 22),
+
+            // =====================================================
+            // BODY
+            // =====================================================
+
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.only(
+                  bottom: 40,
+                ),
+                physics: const BouncingScrollPhysics(),
+                children: [
+                  // =====================================================
+                  // GROUP CARD
+                  // =====================================================
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(28),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(
+                          sigmaX: 20,
+                          sigmaY: 20,
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(28),
+                            border: Border.all(
+                              color: colorScheme.primary.withOpacity(0.08),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: colorScheme.primary.withOpacity(0.05),
+                                blurRadius: 26,
+                                spreadRadius: -10,
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 88,
+                                height: 88,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(22),
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      colorScheme.primary.withOpacity(0.20),
+                                      colorScheme.primary.withOpacity(0.05),
+                                    ],
+                                  ),
+                                  border: Border.all(
+                                    color:
+                                        colorScheme.primary.withOpacity(0.16),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color:
+                                          colorScheme.primary.withOpacity(0.14),
+                                      blurRadius: 18,
+                                      spreadRadius: -2,
+                                    ),
+                                  ],
+                                ),
+                                child: Center(
+                                  child: Icon(
+                                    Icons.groups_rounded,
+                                    size: 42,
+                                    color: colorScheme.primary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.headlineSmall
+                                          ?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${widget.trip.users.length} members',
+                                      style:
+                                          theme.textTheme.bodyMedium?.copyWith(
+                                        color: theme.textTheme.bodyMedium?.color
+                                            ?.withOpacity(0.62),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: _showEditDialog,
+                                child: Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color:
+                                        colorScheme.primary.withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
+                                  child: Icon(
+                                    Icons.edit_rounded,
+                                    color: colorScheme.primary,
+                                    size: 22,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  _optionTile(
+                    context,
+                    icon: Icons.group_add_rounded,
+                    title: 'Add people to group',
+                    onTap: () {
+                      Haptics.medium();
+                      Navigator.pushNamed(context, '/add-to-group',
+                          arguments: widget.trip);
+                    },
+                  ),
+
+                  _optionTile(
+                    context,
+                    icon: Icons.person_remove_rounded,
+                    title: 'Remove people from group',
+                    onTap: () {
+                      Haptics.medium();
+                      Navigator.pushNamed(context, '/remove-from-group',
+                          arguments: widget.trip);
+                    },
+                  ),
+
+                  _optionTile(
+                    context,
+                    icon: Icons.link_rounded,
+                    title: 'Invite via link',
+                    subtitle: 'Share invite code with friends',
+                    onTap: () async {
+                      Haptics.medium();
+                      SharePlus.instance.share(ShareParams(
+                        title: 'Invite to Group',
+                        text:
+                            'Use this code: ${widget.trip.code} to join my Splittr Group: ${widget.trip.name}',
+                      ));
+                    },
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                    ),
+                    child: Text(
+                      'Group Members',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // =====================================================
+                  // MEMBERS LIST
+                  // =====================================================
+
+                  ...widget.trip.users.map(
+                    (user) => _memberTile(
+                      context,
+                      user,
+                    ),
+                  ),
+
+                  const SizedBox(height: 26),
+
+                  // =====================================================
+                  // ADVANCED TITLE
+                  // =====================================================
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                    ),
+                    child: Text(
+                      'Advanced',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // =====================================================
+                  // LEAVE GROUP
+                  // =====================================================
+
+                  _dangerTile(
+                    context,
+                    icon: Icons.logout_rounded,
+                    title: 'Leave Group',
+                    subtitle: widget.free
+                        ? 'Leave this group permanently'
+                        : 'You cannot leave because you have outstanding balances',
+                    enabled: widget.free,
+                    onTap: () {},
+                  ),
+
+                  // =====================================================
+                  // DELETE GROUP
+                  // =====================================================
+
+                  _dangerTile(
+                    context,
+                    icon: Icons.delete_outline_rounded,
+                    title: 'Delete Group',
+                    subtitle: widget.deletable
+                        ? 'Delete this group permanently'
+                        : 'You cannot delete because balances still exist',
+                    enabled: widget.deletable,
+                    onTap: () {},
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _optionTile({
+  // =====================================================
+  // OPTION TILE
+  // =====================================================
+
+  Widget _optionTile(
+    BuildContext context, {
     required IconData icon,
     required String title,
     String? subtitle,
-    Color iconColor = Colors.white,
-    bool enabled = true,
     required VoidCallback onTap,
   }) {
+    final theme = Theme.of(context);
+
+    final colorScheme = theme.colorScheme;
+
     return GestureDetector(
-      onTap: enabled ? onTap : null,
-      child: Padding(
-        padding: const EdgeInsets.all(15),
-        child: Opacity(
-          opacity: enabled ? 1 : 0.2,
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(
+          left: 16,
+          right: 16,
+          bottom: 10,
+        ),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: colorScheme.surface.withOpacity(0.92),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: colorScheme.primary.withOpacity(0.08),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.primary.withOpacity(0.04),
+              blurRadius: 22,
+              spreadRadius: -10,
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 54,
+              height: 54,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                color: colorScheme.primary.withOpacity(0.10),
+              ),
+              child: Icon(
+                icon,
+                color: colorScheme.primary,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color:
+                            theme.textTheme.bodySmall?.color?.withOpacity(0.60),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: theme.textTheme.bodySmall?.color?.withOpacity(0.38),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // =====================================================
+  // MEMBER TILE
+  // =====================================================
+
+  Widget _memberTile(
+    BuildContext context,
+    dynamic user,
+  ) {
+    final theme = Theme.of(context);
+
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.only(
+        left: 16,
+        right: 16,
+        bottom: 10,
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: 12,
+      ),
+      decoration: BoxDecoration(
+        color: colorScheme.surface.withOpacity(0.92),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: colorScheme.primary.withOpacity(0.05),
+        ),
+      ),
+      child: Row(
+        children: [
+          ClipOval(
+            child: SizedBox(
+              width: 54,
+              height: 54,
+              child: Image.asset(
+                'assets/profile/${user.dp}.png',
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              user.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          if (widget.trip.createdBy == user.id)
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 6,
+              ),
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'Admin',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // =====================================================
+  // DANGER TILE
+  // =====================================================
+
+  Widget _dangerTile(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool enabled,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+
+    return Opacity(
+      opacity: enabled ? 1 : 0.42,
+      child: GestureDetector(
+        onTap: enabled ? onTap : null,
+        child: Container(
+          margin: const EdgeInsets.only(
+            left: 16,
+            right: 16,
+            bottom: 10,
+          ),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            color: Colors.red.withOpacity(0.06),
+            border: Border.all(
+              color: Colors.red.withOpacity(0.12),
+            ),
+          ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: iconColor, size: 25),
-              const SizedBox(width: 20),
+              Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  color: Colors.red.withOpacity(0.10),
+                ),
+                child: Icon(
+                  icon,
+                  color: Colors.redAccent,
+                ),
+              ),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(color: Colors.white)),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 4),
-                      Text(subtitle,
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 10)),
-                    ],
+                    Text(
+                      title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.redAccent,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.textTheme.bodyMedium?.color
+                            ?.withOpacity(0.60),
+                        height: 1.35,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -212,144 +590,76 @@ class _TripSettingsScreenState extends State<TripSettingsScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final w = MediaQuery.of(context).size.width;
-    return Stack(
-      children: [
-        Opacity(
-          opacity: _loading ? 0.5 : 1,
-          child: Scaffold(
-            backgroundColor: Colors.grey[900],
-            appBar: AppBar(
-              backgroundColor: Colors.transparent,
-              title: const Text('Group Settings',
-                  style: TextStyle(color: Colors.white)),
-              leading: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ),
-            body: ListView(
-              children: [
-                Container(
-                  height: 100,
-                  width: w,
-                  decoration: const BoxDecoration(
-                    border: Border.symmetric(
-                      horizontal: BorderSide(color: Colors.grey, width: 0.5),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Group Details',
-                            style:
-                                TextStyle(color: Colors.white, fontSize: 12)),
-                        const SizedBox(height: 5),
-                        Row(
-                          children: [
-                            Container(
-                              width: 75,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(5),
-                                image: const DecorationImage(
-                                  fit: BoxFit.cover,
-                                  image: AssetImage('assets/images/trip.png'),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(_name,
-                                  style: const TextStyle(
-                                      color: Colors.white, fontSize: 17)),
-                            ),
-                            IconButton(
-                              onPressed: _showEditDialog,
-                              icon: const Icon(Icons.edit_outlined,
-                                  color: Colors.white),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Padding(
-                  padding: EdgeInsets.all(8),
-                  child: Text('Group Members',
-                      style: TextStyle(color: Colors.white, fontSize: 12)),
-                ),
-                _optionTile(
-                  icon: Icons.group_add_outlined,
-                  title: 'Add people to group',
-                  onTap: () {
-                    Haptics.medium();
-                    // Navigates to old AddToGroup page (kept as-is)
-                    Navigator.pushNamed(context, '/add-to-group',
-                        arguments: widget.trip);
-                  },
-                ),
-                _optionTile(
-                  icon: Icons.group_remove_outlined,
-                  title: 'Remove people from group',
-                  onTap: () {
-                    Haptics.medium();
-                    Navigator.pushNamed(context, '/remove-from-group',
-                        arguments: widget.trip);
-                  },
-                ),
-                _optionTile(
-                  icon: Icons.link,
-                  title: 'Invite via link',
-                  onTap: () {
-                    Haptics.medium();
-                    SharePlus.instance.share(ShareParams(
-                      title: 'Invite to Group',
-                      text:
-                          'Use this code: ${widget.trip.code} to join my Splittr Group: ${widget.trip.name}',
-                    ));
-                  },
-                ),
-                ...widget.trip.users.where((u) => u.involved).map(_memberTile),
-                const Padding(
-                  padding: EdgeInsets.all(15),
-                  child: Text('Advanced settings',
-                      style: TextStyle(color: Colors.white, fontSize: 12)),
-                ),
-                _optionTile(
-                  icon: Icons.exit_to_app_outlined,
-                  title: 'Leave Group',
-                  enabled: widget.free,
-                  subtitle: widget.free
-                      ? null
-                      : "You can't leave this group because you have outstanding debts.",
-                  onTap: _handleLeave,
-                ),
-                _optionTile(
-                  icon: Icons.delete_outline,
-                  iconColor: Colors.red,
-                  title: 'Delete Group',
-                  enabled: widget.trip.createdBy == widget.currentUserID &&
-                      widget.deletable,
-                  subtitle: widget.trip.createdBy == widget.currentUserID
-                      ? "You can't delete this group because there are outstanding debts."
-                      : 'You are not the creator of this group.',
-                  onTap: _handleDelete,
-                ),
-              ],
+  // =====================================================
+  // EDIT DIALOG
+  // =====================================================
+
+  Future<void> _showEditDialog() async {
+    final controller = TextEditingController(
+      text: _name,
+    );
+
+    final theme = Theme.of(context);
+
+    final colorScheme = theme.colorScheme;
+
+    await showDialog(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          backgroundColor: colorScheme.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: const Text(
+            'Edit Group Name',
+          ),
+          content: TextField(
+            controller: controller,
+            decoration: const InputDecoration(
+              hintText: 'Group name',
             ),
           ),
-        ),
-        if (_loading)
-          const Center(
-              child: CircularProgressIndicator(color: AppColors.primary)),
-      ],
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text(
+                'Cancel',
+              ),
+            ),
+            FilledButton(
+              onPressed: () async {
+                final value = controller.text.trim();
+
+                if (value.isEmpty) return;
+
+                Haptics.medium();
+
+                await ref
+                    .read(
+                      tripProvider(widget.trip).notifier,
+                    )
+                    .updateTripName(
+                      value,
+                    );
+
+                if (!mounted) return;
+
+                setState(() {
+                  _name = value;
+                });
+
+                Navigator.pop(context);
+              },
+              child: const Text(
+                'Save',
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -52,6 +52,48 @@ class TripNotifier extends FamilyAsyncNotifier<TripScreenData, TripModel> {
     if (fresh != null) state = AsyncData(_computeData(fresh));
   }
 
+  Future<void> updateTripName(String name) async {
+    final current = state.value;
+
+    if (current == null) return;
+
+    final oldTrip = current.trip;
+
+    // optimistic update
+    final updatedTrip = oldTrip.copyWith(
+      name: name,
+    );
+
+    // instant UI update
+    state = AsyncData(
+      _computeData(updatedTrip),
+    );
+
+    // local cache update
+    await HiveBoxes.trips.put(
+      updatedTrip.id,
+      updatedTrip,
+    );
+
+    // api call
+    final result = await ref.read(tripRepositoryProvider).editTripName(
+          updatedTrip.id,
+          name,
+        );
+
+    // rollback on failure
+    if (result.isFailure) {
+      await HiveBoxes.trips.put(
+        oldTrip.id,
+        oldTrip,
+      );
+
+      state = AsyncData(
+        _computeData(oldTrip),
+      );
+    }
+  }
+
   // ── private ───────────────────────────────────────────────────────────────
 
   void _mutateTrip(TripModel Function(TripModel) update) {

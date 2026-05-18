@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:splittr/core/constants/app_constants.dart';
 import 'package:splittr/core/providers/shared_preferences_provider.dart';
-import 'package:splittr/core/theme/app_colors.dart';
 import 'package:splittr/core/theme/app_radius.dart';
 import 'package:splittr/features/auth/presentation/screens/login_screen.dart';
 import 'package:splittr/shared/widgets/neon_glow.dart';
@@ -75,8 +74,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    final isDark = theme.brightness == Brightness.dark;
-
     final w = MediaQuery.of(context).size.width;
     final h = MediaQuery.of(context).size.height;
 
@@ -102,7 +99,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
                   return Padding(
                     padding: EdgeInsets.symmetric(
-                      horizontal: w * 0.07,
+                      horizontal: w * 0.06,
                       vertical: h * 0.02,
                     ),
                     child: Column(
@@ -115,37 +112,44 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         Expanded(
                           child: Center(
                             child: NeonGlow(
+                              width: w * 0.95,
+                              height: w * 0.95,
                               color: colorScheme.primary,
-                              radius: w * 0.5,
-                              spread: 24,
-                              glowOpacity: 0.4,
+                              radius: w * 0.32,
+                              spread: 40,
+                              glowOpacity: 0.18,
                               child: Container(
-                                width: w * 0.9,
-                                // padding: EdgeInsets.all(w * 0.025),
+                                width: w * 0.92,
                                 decoration: BoxDecoration(
-                                  color: isDark
-                                      ? AppColors.surfaceDark
-                                      : AppColors.surfaceLight,
-                                  borderRadius: BorderRadius.circular(32),
+                                  color: colorScheme.surface,
+                                  borderRadius: BorderRadius.circular(
+                                    36,
+                                  ),
                                   border: Border.all(
-                                    color: isDark
-                                        ? AppColors.divider
-                                        : AppColors.dividerLight,
+                                    color: theme.dividerTheme.color ??
+                                        Colors.transparent,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: isDark
-                                          ? Colors.black.withOpacity(0.22)
-                                          : Colors.black.withOpacity(0.06),
+                                      color: Colors.black.withOpacity(
+                                        theme.brightness == Brightness.dark
+                                            ? 0.22
+                                            : 0.08,
+                                      ),
                                       blurRadius: 24,
-                                      offset: const Offset(0, 14),
+                                      offset: const Offset(
+                                        0,
+                                        14,
+                                      ),
                                     ),
                                   ],
                                 ),
                                 child: Hero(
                                   tag: page['image']!,
                                   child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(24),
+                                    borderRadius: BorderRadius.circular(
+                                      32,
+                                    ),
                                     child: Image.asset(
                                       page['image']!,
                                       fit: BoxFit.cover,
@@ -187,9 +191,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             page['subtitle']!,
                             textAlign: TextAlign.center,
                             style: theme.textTheme.bodyLarge?.copyWith(
-                              color: isDark
-                                  ? AppColors.textSecondary
-                                  : AppColors.textSecondaryLight,
+                              color: theme.textTheme.bodyMedium?.color
+                                  ?.withOpacity(
+                                0.7,
+                              ),
                               height: 1.6,
                               fontWeight: FontWeight.w500,
                             ),
@@ -226,14 +231,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     decoration: BoxDecoration(
                       color: active
                           ? colorScheme.primary
-                          : (isDark
-                              ? AppColors.divider
-                              : AppColors.dividerLight),
+                          : theme.dividerTheme.color ?? Colors.grey,
                       borderRadius: AppRadius.xlAll,
                       boxShadow: active
                           ? [
                               BoxShadow(
-                                color: colorScheme.primary.withOpacity(0.35),
+                                color: colorScheme.primary.withOpacity(
+                                  0.35,
+                                ),
                                 blurRadius: 10,
                               ),
                             ]
@@ -264,7 +269,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     backgroundColor: colorScheme.primary,
                     foregroundColor: colorScheme.onPrimary,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(
+                        20,
+                      ),
                     ),
                   ),
                   child: Text(
