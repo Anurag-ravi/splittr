@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:splittr/core/widgets/profile_image.dart';
 import 'package:splittr/features/expenses/data/models/comment_model.dart';
 import 'package:splittr/features/trips/data/models/trip_member_model.dart';
 import 'package:splittr/shared/services/comment_diff_service.dart';
@@ -29,10 +30,8 @@ class CommentTile extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: Image.asset(
-              'assets/profile/${comment.createdByDp}.png',
-              height: 32,
-              width: 32,
+            child: ProfileImage(
+              id: comment.createdByName,
             ),
           ),
           const SizedBox(width: 10),
@@ -80,8 +79,18 @@ class CommentTile extends StatelessWidget {
 
   static String _formatTime(DateTime dt) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     int hour = dt.hour;
     final ampm = hour >= 12 ? 'PM' : 'AM';

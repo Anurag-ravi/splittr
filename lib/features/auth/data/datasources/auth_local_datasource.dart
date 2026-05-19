@@ -35,9 +35,8 @@ class AuthLocalDatasource implements IAuthLocalDatasource {
 
   @override
   Future<void> saveUser(UserModel user) async {
-    await _prefs.setString(
-        AppConstants.prefKeyUser, jsonEncode(user.toJson()));
-    await HiveBoxes.me.put('me', user);
+    await _prefs.setString(AppConstants.prefKeyUser, jsonEncode(user.toJson()));
+    await HiveBoxes.me.put(AppConstants.hiveBoxMe, user);
   }
 
   @override

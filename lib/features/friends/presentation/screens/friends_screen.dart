@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:splittr/core/widgets/app_loader.dart';
+import 'package:splittr/core/widgets/profile_image.dart';
 import 'package:splittr/features/friends/domain/entities/friend_entity.dart';
 import 'package:splittr/features/friends/presentation/providers/friends_providers.dart';
 import 'package:splittr/shared/widgets/neon_glow.dart';
@@ -144,26 +145,10 @@ class _FriendTile extends StatelessWidget {
                 height: 66,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      colorScheme.primary.withOpacity(0.18),
-                      colorScheme.primary.withOpacity(0.04),
-                    ],
-                  ),
-                  border: Border.all(
-                    color: colorScheme.primary.withOpacity(0.14),
-                  ),
+                  color: Colors.transparent,
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(3),
-                  child: ClipOval(
-                    child: Image.asset(
-                      'assets/profile/${friend.dp}.png',
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+                child: ClipOval(
+                  child: ProfileImage(id: friend.name),
                 ),
               ),
               const SizedBox(width: 18),

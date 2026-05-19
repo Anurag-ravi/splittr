@@ -15,10 +15,11 @@ abstract final class ExcelExportService {
   static Future<SnackBar> export(
     TripModel trip,
     Map<String, TripMemberModel> tripUserMap,
+    BuildContext context,
   ) async {
     try {
       final rows = _buildRows(trip, tripUserMap);
-      final snackBar = await _saveAndReturn(trip.name, rows);
+      final snackBar = await _saveAndReturn(trip.name, rows, context);
       return snackBar;
     } catch (e) {
       return SnackBar(
@@ -140,6 +141,7 @@ abstract final class ExcelExportService {
   static Future<SnackBar> _saveAndReturn(
     String tripName,
     List<List<CellValue>> rows,
+    BuildContext context,
   ) async {
     final excel = Excel.createExcel();
     final sheet = excel['Sheet1'];
@@ -206,6 +208,7 @@ abstract final class ExcelExportService {
       content: Text('Downloaded splittr_$tripName.xlsx'),
       action: SnackBarAction(
         label: 'Open',
+        textColor: Theme.of(context).colorScheme.primary,
         onPressed: () async {
           await SharePlus.instance.share(
             ShareParams(

@@ -10,6 +10,7 @@ import 'package:splittr/core/providers/current_user_provider.dart';
 import 'package:splittr/core/providers/shared_preferences_provider.dart';
 import 'package:splittr/core/storage/hive_boxes.dart';
 import 'package:splittr/core/utils/haptics.dart';
+import 'package:splittr/core/widgets/profile_image.dart';
 import 'package:splittr/features/activity/presentation/screens/activity_screen.dart';
 import 'package:splittr/features/friends/presentation/screens/friends_screen.dart';
 import 'package:splittr/features/groups/presentation/providers/groups_providers.dart';
@@ -160,13 +161,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
+      extendBody: true,
       appBar: AppBar(
         elevation: 0,
         centerTitle: false,
         titleSpacing: 22,
         title: Text(
           _title,
-          style: theme.textTheme.headlineMedium?.copyWith(
+          style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -316,7 +318,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             _profileNavItem(
               context,
-              user?.dp,
+              user?.name,
             ),
           ],
         ),
@@ -393,21 +395,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   )
                 : AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: EdgeInsets.all(selected ? 2 : 0),
+                    padding: selected
+                        ? const EdgeInsets.all(0)
+                        : const EdgeInsets.all(2.5),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
+                      color: Colors.transparent,
                       border: selected
                           ? Border.all(
                               color: colorScheme.primary,
-                              width: 2,
+                              width: 2.5,
                             )
                           : null,
                     ),
-                    child: CircleAvatar(
-                      radius: 14,
-                      backgroundImage: AssetImage(
-                        'assets/profile/$dp.png',
-                      ),
+                    child: ProfileImage(
+                      id: dp,
+                      size: 25,
                     ),
                   ),
             const SizedBox(height: 6),

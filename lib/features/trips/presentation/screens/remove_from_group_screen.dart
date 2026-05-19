@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:splittr/core/network/http_client.dart';
 import 'package:splittr/core/storage/hive_boxes.dart';
 import 'package:splittr/core/utils/haptics.dart';
+import 'package:splittr/core/widgets/profile_image.dart';
 import 'package:splittr/features/trips/data/models/trip_member_model.dart';
 import 'package:splittr/features/trips/data/models/trip_model.dart';
 
@@ -254,9 +255,8 @@ class _RemoveFromGroupScreenState extends State<RemoveFromGroupScreen> {
                       child: SizedBox(
                         width: 46,
                         height: 46,
-                        child: Image.asset(
-                          'assets/profile/${_users[index].dp}.png',
-                          fit: BoxFit.cover,
+                        child: ProfileImage(
+                          id: _users[index].name,
                         ),
                       ),
                     ),

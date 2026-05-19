@@ -125,7 +125,7 @@ class _TripScreenState extends ConsumerState<TripScreen> {
 
         appBar: PreferredSize(
             preferredSize: const Size.fromHeight(
-              190,
+              110,
             ),
             child: SafeArea(
               child: Padding(
@@ -145,6 +145,15 @@ class _TripScreenState extends ConsumerState<TripScreen> {
                           icon: Icons.close_rounded,
                           onTap: () => Navigator.pop(
                             context,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          trip.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                         const Spacer(),
@@ -175,13 +184,6 @@ class _TripScreenState extends ConsumerState<TripScreen> {
                         ),
                       ],
                     ),
-                    const Spacer(),
-                    Text(
-                      trip.name,
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
                     const SizedBox(height: 14),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -206,16 +208,15 @@ class _TripScreenState extends ConsumerState<TripScreen> {
                       ),
                       child: Text(
                         summary.involvedText,
-                        maxLines: 2,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleMedium?.copyWith(
+                        style: theme.textTheme.titleSmall?.copyWith(
                           color: summary.textColor,
                           fontWeight: FontWeight.w700,
                           height: 1.25,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 26),
                   ],
                 ),
               ),
@@ -332,7 +333,7 @@ class _TripScreenState extends ConsumerState<TripScreen> {
                 16,
               ),
               child: SizedBox(
-                height: 52,
+                height: 40,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: [
@@ -419,9 +420,7 @@ class _TripScreenState extends ConsumerState<TripScreen> {
                         });
 
                         final snack = await ExcelExportService.export(
-                          trip,
-                          summary.tripUserMap,
-                        );
+                            trip, summary.tripUserMap, context);
 
                         setState(() {
                           _exporting = false;
@@ -511,7 +510,7 @@ class _TripScreenState extends ConsumerState<TripScreen> {
                   if (txn.isMonth) {
                     return Padding(
                       padding: const EdgeInsets.only(
-                        top: 14,
+                        top: 10,
                         bottom: 10,
                       ),
                       child: Text(
@@ -619,14 +618,14 @@ class _TripScreenState extends ConsumerState<TripScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 48,
-        height: 48,
+        width: 40,
+        height: 40,
         decoration: BoxDecoration(
           color: colorScheme.surface.withOpacity(
             0.78,
           ),
           borderRadius: BorderRadius.circular(
-            16,
+            12,
           ),
           border: Border.all(
             color: colorScheme.primary.withOpacity(
@@ -636,6 +635,7 @@ class _TripScreenState extends ConsumerState<TripScreen> {
         ),
         child: Icon(
           icon,
+          size: 20,
           color: colorScheme.onSurface,
         ),
       ),
@@ -661,12 +661,12 @@ class _TripScreenState extends ConsumerState<TripScreen> {
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(
-            horizontal: 18,
+            horizontal: 12,
           ),
           decoration: BoxDecoration(
             color: selected ? colorScheme.primary : colorScheme.surface,
             borderRadius: BorderRadius.circular(
-              18,
+              12,
             ),
             border: Border.all(
               color: selected
@@ -775,52 +775,52 @@ class _TripScreenState extends ConsumerState<TripScreen> {
           ],
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 35,
-              alignment: Alignment.centerLeft,
-              child: Column(
-                children: [
-                  Text(
-                    txn.date.day.toString(),
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  Text(
-                    _months[txn.date.month - 1],
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.textTheme.bodySmall?.color?.withOpacity(
-                        0.58,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
             const CategoryIcon(
               category: 'payment',
               entityType: 'payment',
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(
-                '$byName paid $toName',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  // height: 1.4,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 5),
+                  Text(
+                    '$byName paid $toName',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      // height: 1.4,
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(width: 12),
-            Text(
-              '₹${payment.amount.toStringAsFixed(2)}',
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: colorScheme.primary,
-                fontWeight: FontWeight.w700,
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const SizedBox(height: 7),
+                Text(
+                  txn.date.day.toString() + " " + _months[txn.date.month - 1],
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.textTheme.bodySmall?.color?.withOpacity(
+                      0.58,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  '₹${payment.amount.toStringAsFixed(2)}',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -948,28 +948,6 @@ class _TripScreenState extends ConsumerState<TripScreen> {
         ),
         child: Row(
           children: [
-            Container(
-              width: 35,
-              alignment: Alignment.centerLeft,
-              child: Column(
-                children: [
-                  Text(
-                    txn.date.day.toString(),
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  Text(
-                    _months[txn.date.month - 1],
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.textTheme.bodySmall?.color?.withOpacity(
-                        0.58,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
             CategoryIcon(
               category: expense.category,
               entityType: 'expense',
@@ -990,7 +968,7 @@ class _TripScreenState extends ConsumerState<TripScreen> {
                   const SizedBox(height: 8),
                   Text(
                     involved,
-                    style: theme.textTheme.titleSmall?.copyWith(
+                    style: theme.textTheme.bodySmall?.copyWith(
                       color: textColor,
                       fontWeight: FontWeight.w600,
                     ),
@@ -999,12 +977,27 @@ class _TripScreenState extends ConsumerState<TripScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            Text(
-              amount.isEmpty ? '-' : '₹$amount',
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: textColor,
-                fontWeight: FontWeight.w700,
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const SizedBox(height: 7),
+                Text(
+                  txn.date.day.toString() + " " + _months[txn.date.month - 1],
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.textTheme.bodySmall?.color?.withOpacity(
+                      0.58,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  amount.isEmpty ? '-' : '₹$amount',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: textColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:splittr/core/constants/app_constants.dart';
 import 'package:splittr/core/storage/hive_boxes.dart';
 import 'package:splittr/core/utils/haptics.dart';
 import 'package:splittr/core/widgets/app_loader.dart';
@@ -32,7 +33,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     return ValueListenableBuilder<Box<TripModel>>(
       valueListenable: HiveBoxes.trips.listenable(),
       builder: (context, _, __) {
-        final user = HiveBoxes.me.get('me');
+        final user = HiveBoxes.me.get(AppConstants.hiveBoxMe);
 
         if (user == null) {
           return const AppLoader();
@@ -192,9 +193,10 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                                 style: theme
-                                                    .textTheme.titleLarge
+                                                    .textTheme.titleMedium
                                                     ?.copyWith(
-                                                  fontWeight: FontWeight.w700,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 18,
                                                 ),
                                               ),
                                               const SizedBox(height: 10),
@@ -202,7 +204,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                                                 Text(
                                                   'You are all settled up',
                                                   style: theme
-                                                      .textTheme.bodyMedium
+                                                      .textTheme.bodySmall
                                                       ?.copyWith(
                                                     color: theme.textTheme
                                                         .bodyMedium?.color
@@ -216,7 +218,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                                                       ? 'You are owed ₹${amount.toStringAsFixed(2)} overall'
                                                       : 'You owe ₹${amount.toStringAsFixed(2)} overall',
                                                   style: theme
-                                                      .textTheme.bodyLarge
+                                                      .textTheme.bodySmall
                                                       ?.copyWith(
                                                     fontWeight: FontWeight.w700,
                                                     color: isOwed
@@ -224,6 +226,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                                                         : colorScheme.error,
                                                   ),
                                                 ),
+                                              const SizedBox(height: 20),
                                             ],
                                           ),
                                         ),

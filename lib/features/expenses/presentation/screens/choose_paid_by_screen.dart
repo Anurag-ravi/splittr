@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:splittr/core/theme/app_colors.dart';
 import 'package:splittr/core/utils/haptics.dart';
+import 'package:splittr/core/widgets/profile_image.dart';
 import 'package:splittr/features/expenses/data/models/expense_model.dart';
 import 'package:splittr/features/expenses/presentation/models/split_ui_models.dart';
 import 'package:splittr/features/trips/data/models/trip_member_model.dart';
@@ -151,10 +152,8 @@ class _ChoosePaidByScreenState extends State<ChoosePaidByScreen> {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(20),
-                  child: Image.asset(
-                    'assets/profile/${_users[index].dp}.png',
-                    height: 40,
-                    width: 40,
+                  child: ProfileImage(
+                    id: _users[index].name,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -199,8 +198,7 @@ class _ChoosePaidByScreenState extends State<ChoosePaidByScreen> {
                   height: 40,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(20),
-                    child:
-                        Image.asset('assets/profile/${_users[index].dp}.png'),
+                    child: ProfileImage(id: _users[index].name),
                   ),
                 ),
               ),

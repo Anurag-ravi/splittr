@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:splittr/core/utils/haptics.dart';
+import 'package:splittr/core/widgets/profile_image.dart';
 import 'package:splittr/features/auth/domain/entities/user_entity.dart';
 import 'package:splittr/features/groups/presentation/screens/home_screen.dart';
 import 'package:splittr/features/profile/presentation/providers/profile_providers.dart';
@@ -172,35 +173,17 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ),
                 child: Column(
                   children: [
-                    NeonGlow(
-                      color: colorScheme.primary,
-                      radius: 26,
-                      spread: -6,
-                      glowOpacity: 0.14,
-                      child: Container(
-                        width: 108,
-                        height: 108,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              colorScheme.primary.withOpacity(0.18),
-                              colorScheme.primary.withOpacity(0.04),
-                            ],
-                          ),
-                          border: Border.all(
-                            color: colorScheme.primary.withOpacity(0.14),
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: ClipOval(
-                            child: Image.asset(
-                              'assets/profile/${widget.user.dp}.png',
-                              fit: BoxFit.cover,
-                            ),
+                    Container(
+                      width: 108,
+                      height: 108,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: ClipOval(
+                          child: ProfileImage(
+                            id: widget.user.name,
                           ),
                         ),
                       ),

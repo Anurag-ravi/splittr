@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:splittr/core/constants/app_constants.dart';
 import 'package:splittr/core/storage/hive_boxes.dart';
 import 'package:splittr/core/utils/haptics.dart';
+import 'package:splittr/core/widgets/profile_image.dart';
 import 'package:splittr/features/expenses/presentation/controllers/comments_controller.dart';
 import 'package:splittr/features/expenses/presentation/controllers/expense_controller.dart';
 import 'package:splittr/features/expenses/presentation/providers/expense_providers.dart';
@@ -59,7 +61,7 @@ class _ExpenseScreenState extends ConsumerState<ExpenseScreen> {
   void initState() {
     super.initState();
 
-    _myUserId = HiveBoxes.me.get('me')?.id;
+    _myUserId = HiveBoxes.me.get(AppConstants.hiveBoxMe)?.id;
 
     _buildNets();
 
@@ -350,11 +352,8 @@ class _ExpenseScreenState extends ConsumerState<ExpenseScreen> {
                               children: [
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(25),
-                                  child: Image.asset(
-                                    'assets/profile/'
-                                    '${firstPayer?.dp ?? 'default'}.png',
-                                    height: 50,
-                                    width: 50,
+                                  child: ProfileImage(
+                                    id: firstPayer?.name ?? '1',
                                   ),
                                 ),
                                 const SizedBox(width: 10),

@@ -67,7 +67,7 @@ class AuthRepository {
 
   Future<void> saveUser(UserModel user) async {
     await _prefs.setString(AppConstants.prefKeyUser, jsonEncode(user.toJson()));
-    await HiveBoxes.me.put('me', user);
+    await HiveBoxes.me.put(AppConstants.hiveBoxMe, user);
   }
 
   Future<void> logout() async {
@@ -87,7 +87,7 @@ class AuthRepository {
     await FirebaseAuth.instance.signOut();
   }
 
-  UserModel? currentUser() => HiveBoxes.me.get('me');
+  UserModel? currentUser() => HiveBoxes.me.get(AppConstants.hiveBoxMe);
 
   bool get isLoggedIn => _prefs.getString(AppConstants.prefKeyToken) != null;
 

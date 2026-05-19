@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:splittr/core/theme/app_colors.dart';
 import 'package:splittr/core/utils/amount_formatter.dart';
+import 'package:splittr/core/widgets/profile_image.dart';
 import 'package:splittr/features/expenses/data/models/expense_model.dart';
 import 'package:splittr/features/expenses/presentation/models/split_ui_models.dart';
 import 'package:splittr/features/trips/data/models/trip_member_model.dart';
@@ -284,8 +285,7 @@ class _ChoosePaidForScreenState extends State<ChoosePaidForScreen>
                       height: 40,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(20),
-                        child:
-                            Image.asset('assets/profile/${_users[i].dp}.png'),
+                        child: ProfileImage(id: _users[i].name),
                       ),
                     ),
                   ),
@@ -360,7 +360,7 @@ class _ChoosePaidForScreenState extends State<ChoosePaidForScreen>
                     height: 40,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(20),
-                      child: Image.asset('assets/profile/${_users[i].dp}.png'),
+                      child: ProfileImage(id: _users[i].name),
                     ),
                   ),
                 ),
@@ -444,7 +444,7 @@ class _ChoosePaidForScreenState extends State<ChoosePaidForScreen>
                     height: 40,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(20),
-                      child: Image.asset('assets/profile/${_users[i].dp}.png'),
+                      child: ProfileImage(id: _users[i].name),
                     ),
                   ),
                 ),

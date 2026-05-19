@@ -7,6 +7,7 @@ import 'package:splittr/core/providers/current_user_provider.dart';
 import 'package:splittr/core/providers/theme_provider.dart';
 import 'package:splittr/core/theme/app_colors.dart';
 import 'package:splittr/core/utils/haptics.dart';
+import 'package:splittr/core/widgets/profile_image.dart';
 import 'package:splittr/features/auth/presentation/screens/login_screen.dart';
 import 'package:splittr/features/profile/presentation/controllers/profile_controller.dart';
 import 'package:splittr/features/profile/presentation/providers/profile_providers.dart';
@@ -72,35 +73,18 @@ class ProfileScreen extends ConsumerWidget {
               ),
               child: Row(
                 children: [
-                  NeonGlow(
-                    color: colorScheme.primary,
-                    radius: 22,
-                    spread: -6,
-                    glowOpacity: 0.14,
-                    child: Container(
-                      width: 82,
-                      height: 82,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            colorScheme.primary.withOpacity(0.18),
-                            colorScheme.primary.withOpacity(0.04),
-                          ],
-                        ),
-                        border: Border.all(
-                          color: colorScheme.primary.withOpacity(0.14),
-                        ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(4),
-                        child: ClipOval(
-                          child: Image.asset(
-                            'assets/profile/${user.dp}.png',
-                            fit: BoxFit.cover,
-                          ),
+                  Container(
+                    width: 82,
+                    height: 82,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.transparent,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: ClipOval(
+                        child: ProfileImage(
+                          id: user.name,
                         ),
                       ),
                     ),
@@ -110,57 +94,64 @@ class ProfileScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          user.name,
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              user.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => EditProfileScreen(
+                                      user: user,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: colorScheme.primary.withOpacity(0.10),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Icon(
+                                  Icons.edit_rounded,
+                                  color: colorScheme.primary,
+                                ),
+                              ),
+                            )
+                          ],
                         ),
                         const SizedBox(height: 6),
                         Text(
                           user.email,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.textTheme.bodyMedium?.color
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.textTheme.bodySmall?.color
                                 ?.withOpacity(0.68),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => EditProfileScreen(
-                            user: user,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary.withOpacity(0.10),
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Icon(
-                        Icons.edit_rounded,
-                        color: colorScheme.primary,
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 10),
           _sectionTitle(
             context,
             'Preferences',
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           _OptionTile(
             icon: Icons.palette_outlined,
             title: 'Theme',
@@ -174,12 +165,12 @@ class ProfileScreen extends ConsumerWidget {
               ref,
             ),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 10),
           _sectionTitle(
             context,
             'Feedback',
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           _OptionTile(
             icon: Icons.star_rounded,
             title: 'Rate us',
@@ -193,7 +184,7 @@ class ProfileScreen extends ConsumerWidget {
               showRating: true,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           _OptionTile(
             icon: Icons.bug_report_rounded,
             title: 'Bug / Feature Request',
@@ -206,7 +197,7 @@ class ProfileScreen extends ConsumerWidget {
               type: 'bug/feature',
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           _OptionTile(
             icon: Icons.support_agent_rounded,
             title: 'Support',

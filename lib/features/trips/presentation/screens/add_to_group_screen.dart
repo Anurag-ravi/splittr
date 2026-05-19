@@ -10,6 +10,7 @@ import 'package:splittr/core/network/http_client.dart';
 import 'package:splittr/core/storage/hive_boxes.dart';
 import 'package:splittr/core/theme/app_colors.dart';
 import 'package:splittr/core/utils/haptics.dart';
+import 'package:splittr/core/widgets/profile_image.dart';
 import 'package:splittr/features/auth/data/models/user_model.dart';
 import 'package:splittr/features/trips/data/models/trip_member_model.dart';
 import 'package:splittr/features/trips/data/models/trip_model.dart';
@@ -407,9 +408,8 @@ class _AddToGroupScreenState extends State<AddToGroupScreen> {
                       child: SizedBox(
                         width: 46,
                         height: 46,
-                        child: Image.asset(
-                          'assets/profile/${friend.dp}.png',
-                          fit: BoxFit.cover,
+                        child: ProfileImage(
+                          id: friend.name,
                         ),
                       ),
                     ),

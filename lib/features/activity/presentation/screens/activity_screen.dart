@@ -56,11 +56,7 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
         return colorScheme.error;
 
       default:
-        return Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.color
-                ?.withOpacity(0.6) ??
+        return Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6) ??
             Colors.grey;
     }
   }
@@ -251,7 +247,7 @@ class _ActivityTile extends StatelessWidget {
                   children: [
                     Text(
                       activity.title,
-                      style: theme.textTheme.titleMedium?.copyWith(
+                      style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: unread ? FontWeight.w700 : FontWeight.w600,
                         height: 1.45,
 
@@ -260,7 +256,7 @@ class _ActivityTile extends StatelessWidget {
 
                         color: unread
                             ? colorScheme.onSurface
-                            : theme.textTheme.bodyMedium?.color
+                            : theme.textTheme.titleSmall?.color
                                 ?.withOpacity(0.78),
                       ),
                     ),
@@ -268,7 +264,7 @@ class _ActivityTile extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text(
                         activity.subtitle!,
-                        style: theme.textTheme.bodyLarge?.copyWith(
+                        style: theme.textTheme.bodyMedium?.copyWith(
                           color: unread
                               ? subtitleColor
                               : subtitleColor.withOpacity(0.72),

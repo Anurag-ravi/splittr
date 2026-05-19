@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:splittr/core/theme/app_colors.dart';
 import 'package:splittr/core/utils/haptics.dart';
+import 'package:splittr/core/widgets/profile_image.dart';
 import 'package:splittr/features/trips/data/models/trip_model.dart';
 import 'package:splittr/features/trips/presentation/controllers/trip_controller.dart';
 import 'package:splittr/features/trips/presentation/providers/trip_providers.dart';
@@ -472,9 +473,8 @@ class _TripSettingsScreenState extends ConsumerState<TripSettingsScreen> {
             child: SizedBox(
               width: 54,
               height: 54,
-              child: Image.asset(
-                'assets/profile/${user.dp}.png',
-                fit: BoxFit.cover,
+              child: ProfileImage(
+                id: user.name,
               ),
             ),
           ),
