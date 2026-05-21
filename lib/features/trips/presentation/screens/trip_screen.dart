@@ -108,6 +108,10 @@ class _TripScreenState extends ConsumerState<TripScreen> {
     final trip = data.trip;
 
     final summary = data.summary;
+    var textColor = summary.textColor;
+    if (summary.free) {
+      textColor = Theme.of(context).colorScheme.onSurface;
+    }
 
     final transactions = _buildTransactions(trip);
 
@@ -143,20 +147,20 @@ class _TripScreenState extends ConsumerState<TripScreen> {
                         _topActionButton(
                           context,
                           icon: Icons.close_rounded,
-                          onTap: () => Navigator.pop(
-                            context,
+                          onTap: () => Navigator.pop(context),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Text(
+                            trip.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Text(
-                          trip.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const Spacer(),
+                        const SizedBox(width: 14),
                         _topActionButton(
                           context,
                           icon: Icons.settings_rounded,
@@ -194,14 +198,17 @@ class _TripScreenState extends ConsumerState<TripScreen> {
                         maxWidth: MediaQuery.of(context).size.width * 0.78,
                       ),
                       decoration: BoxDecoration(
-                        color: summary.textColor.withOpacity(
-                          0.10,
-                        ),
+                        color:
+                            summary.free && theme.brightness == Brightness.light
+                                ? null
+                                : textColor.withOpacity(
+                                    0.10,
+                                  ),
                         borderRadius: BorderRadius.circular(
                           20,
                         ),
                         border: Border.all(
-                          color: summary.textColor.withOpacity(
+                          color: textColor.withOpacity(
                             0.14,
                           ),
                         ),
@@ -211,7 +218,7 @@ class _TripScreenState extends ConsumerState<TripScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.titleSmall?.copyWith(
-                          color: summary.textColor,
+                          color: textColor,
                           fontWeight: FontWeight.w700,
                           height: 1.25,
                         ),

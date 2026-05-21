@@ -71,11 +71,12 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
 
                             final summary = summaries[trip.id]!;
 
-                            final amount = summary.amount.abs();
-
                             final isOwed = summary.amount > 0;
 
+                            final amount = summary.amount.abs();
+
                             final isSettled = summary.amount == 0;
+                            print('Group ${trip.name} summary: $summary');
 
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 14),
@@ -214,9 +215,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                                                 )
                                               else
                                                 Text(
-                                                  isOwed
-                                                      ? 'You are owed ₹${amount.toStringAsFixed(2)} overall'
-                                                      : 'You owe ₹${amount.toStringAsFixed(2)} overall',
+                                                  summary.message,
                                                   style: theme
                                                       .textTheme.bodySmall
                                                       ?.copyWith(

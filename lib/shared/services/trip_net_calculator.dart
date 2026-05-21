@@ -54,7 +54,7 @@ abstract final class TripNetCalculator {
     return TripNetSummary(
       message: 'You owe ₹${net.abs().toStringAsFixed(2)} overall',
       color: AppColors.amber,
-      amount: net.abs(),
+      amount: net,
       settled: false,
     );
   }
