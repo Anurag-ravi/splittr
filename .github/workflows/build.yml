@@ -44,8 +44,7 @@ jobs:
         run: |
           flutter build apk \
             --release \
-            --dart-define=TAG=v2.0.${{ github.run_number }} \
-            --dart-define GITHUB_TOKEN=${{ secrets.TOKEN }}
+            --dart-define=TAG=v2.0.${{ github.run_number }}
 
       - name: Create Release
         uses: ncipollo/release-action@v1

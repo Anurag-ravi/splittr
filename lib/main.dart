@@ -1,299 +1,230 @@
 import 'dart:convert';
 
-import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_contacts/flutter_contacts.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:splittr/firebase_options.dart';
-import 'package:splittr/pages/completeSignup.dart';
-import 'package:splittr/pages/homePage.dart';
-import 'package:splittr/pages/login.dart';
-import 'package:splittr/utilities/activity_navigator.dart';
-import 'package:splittr/utilities/constants.dart';
-import 'package:splittr/utilities/request.dart';
 
-// import all typeAdapter files
-import 'package:splittr/models/comment.dart';
-import 'package:splittr/models/expense.dart';
-import 'package:splittr/models/payment.dart';
-import 'package:splittr/models/trip.dart';
-import 'package:splittr/models/tripuser.dart';
-import 'package:splittr/models/user.dart';
+import 'package:splittr/core/constants/app_constants.dart';
+import 'package:splittr/core/network/http_client.dart';
+import 'package:splittr/core/providers/shared_preferences_provider.dart';
+import 'package:splittr/core/providers/theme_provider.dart';
+import 'package:splittr/core/theme/app_theme.dart';
+import 'package:splittr/firebase_options.dart';
+import 'package:splittr/features/auth/presentation/screens/complete_signup_screen.dart';
+import 'package:splittr/features/auth/presentation/screens/login_screen.dart';
+import 'package:splittr/features/auth/presentation/screens/onboarding_screen.dart';
+import 'package:splittr/features/groups/presentation/screens/home_screen.dart';
+import 'package:splittr/features/trips/presentation/screens/add_to_group_screen.dart';
+import 'package:splittr/features/trips/presentation/screens/remove_from_group_screen.dart';
+import 'package:splittr/features/auth/data/models/user_model.dart';
+import 'package:splittr/features/expenses/data/models/comment_model.dart';
+import 'package:splittr/features/expenses/data/models/expense_model.dart';
+import 'package:splittr/features/expenses/data/models/split_entry_model.dart';
+import 'package:splittr/features/payments/data/models/payment_model.dart';
+import 'package:splittr/features/trips/data/models/trip_member_model.dart';
+import 'package:splittr/features/trips/data/models/trip_model.dart';
+import 'package:splittr/shared/services/activity_navigator.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-// Background message handler must be a top-level function
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  print("Handling a background message: ${message.messageId}");
+  debugPrint('Background FCM message: ${message.messageId}');
 }
 
-Future<void> setupPushNotifications() async {
-  FirebaseMessaging messaging = FirebaseMessaging.instance;
-
-  NotificationSettings settings = await messaging.requestPermission();
-
+Future<void> _setupPushNotifications() async {
+  final messaging = FirebaseMessaging.instance;
+  final settings = await messaging.requestPermission();
   if (settings.authorizationStatus != AuthorizationStatus.authorized) return;
-  String? token = await messaging.getToken();
+
+  final token = await messaging.getToken();
   if (token != null) {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? storedToken = prefs.getString('fcm_token');
-    String? authToken = prefs.getString('token');
-    if (authToken != null) {
-      if (storedToken != null && storedToken != token) {
-        await updateFcmToken('remove', storedToken);
-      }
-      await updateFcmToken('add', token);
+    final prefs = await SharedPreferences.getInstance();
+    final stored = prefs.getString(AppConstants.prefKeyFcmToken);
+    if (stored != null && stored != token) {
+      await _updateFcmToken('remove', stored);
     }
-    await prefs.setString('fcm_token', token);
+    await _updateFcmToken('add', token);
+    await prefs.setString(AppConstants.prefKeyFcmToken, token);
   }
 
   messaging.onTokenRefresh.listen((newToken) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? storedToken = prefs.getString('fcm_token');
-    String? authToken = prefs.getString('token');
-    if (authToken != null) {
-      if (storedToken != null) {
-        await updateFcmToken('remove', storedToken);
-      }
-      await updateFcmToken('add', newToken);
-    }
-    await prefs.setString('fcm_token', newToken);
+    final prefs = await SharedPreferences.getInstance();
+    final stored = prefs.getString(AppConstants.prefKeyFcmToken);
+    if (stored != null) await _updateFcmToken('remove', stored);
+    await _updateFcmToken('add', newToken);
+    await prefs.setString(AppConstants.prefKeyFcmToken, newToken);
   });
 }
 
-late SharedPreferences prefs;
+Future<void> _updateFcmToken(String action, String fcmToken) async {
+  try {
+    await AppHttpClient.postNoContext(
+        '/auth/fcm-token', {'token': fcmToken, 'action': action});
+  } catch (_) {}
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  await setupPushNotifications();
+  await _setupPushNotifications();
 
-  prefs = await SharedPreferences.getInstance();
   await Hive.initFlutter();
-  // register all typeAdapters
   Hive.registerAdapter(CommentModelAdapter());
+  Hive.registerAdapter(SplitEntryModelAdapter());
   Hive.registerAdapter(ExpenseModelAdapter());
-  Hive.registerAdapter(splitTypeEnumAdapter());
-  Hive.registerAdapter(ByAdapter());
   Hive.registerAdapter(PaymentModelAdapter());
   Hive.registerAdapter(ShortTripModelAdapter());
+  Hive.registerAdapter(TripMemberModelAdapter());
   Hive.registerAdapter(TripModelAdapter());
-  Hive.registerAdapter(TripUserAdapter());
   Hive.registerAdapter(UserModelAdapter());
-  // open all boxes
-  await Hive.openBox<ExpenseModel>('expenses');
-  await Hive.openBox<PaymentModel>('payments');
-  await Hive.openBox<ShortTripModel>('shorttrips');
-  await Hive.openBox<TripModel>('trips');
-  await Hive.openBox<TripUser>('tripusers');
-  await Hive.openBox<UserModel>('users');
-  await Hive.openBox<UserModel>('me');
 
-  FlutterError.onError = (FlutterErrorDetails details) {
-    FlutterError.dumpErrorToConsole(details);
-  };
+  await Hive.openBox<ExpenseModel>(AppConstants.hiveBoxExpenses);
+  await Hive.openBox<PaymentModel>(AppConstants.hiveBoxPayments);
+  await Hive.openBox<ShortTripModel>(AppConstants.hiveBoxShortTrips);
+  await Hive.openBox<TripModel>(AppConstants.hiveBoxTrips);
+  await Hive.openBox<TripMemberModel>(AppConstants.hiveBoxTripUsers);
+  await Hive.openBox<UserModel>(AppConstants.hiveBoxUsers);
+  await Hive.openBox<UserModel>(AppConstants.hiveBoxMe);
 
-  ErrorWidget.builder = (FlutterErrorDetails details) {
-    return Material(
-      color: Colors.black,
-      child: Center(
-        child: Padding(
-          padding: EdgeInsets.all(20),
-          child: Text(
-            details.exception.toString(),
-            style: TextStyle(color: Colors.white),
+  FlutterError.onError = FlutterError.dumpErrorToConsole;
+
+  ErrorWidget.builder = (details) => Material(
+        color: Colors.black,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text(
+              details.exception.toString(),
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         ),
-      ),
-    );
-  };
+      );
 
-  runApp(MyApp(
-    prefs: prefs,
-  ));
+  final prefs = await SharedPreferences.getInstance();
+  // Ensure URL is always set
+  prefs.setString(AppConstants.prefKeyUrl, AppConstants.baseUrl);
+  if (!prefs.containsKey(AppConstants.prefKeyRegisteredNow)) {
+    prefs.setBool(AppConstants.prefKeyRegisteredNow, true);
+  }
+  prefs.setBool(AppConstants.prefKeyUpdate, true);
+  prefs.setBool(AppConstants.prefKeyFirstLoad, true);
+
+  runApp(
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+      ],
+      child: SplittrApp(prefs: prefs),
+    ),
+  );
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key, required this.prefs});
+class SplittrApp extends ConsumerStatefulWidget {
+  const SplittrApp({super.key, required this.prefs});
+
   final SharedPreferences prefs;
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  ConsumerState<SplittrApp> createState() => _SplittrAppState();
 }
 
-class _MyAppState extends State<MyApp> {
-  bool theme = false;
-  void updateTheme(bool val) {
-    setState(() {
-      theme = val;
-    });
-    prefs.setBool("theme", val);
-  }
-
+class _SplittrAppState extends ConsumerState<SplittrApp> {
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    theme = false;
-    FetchContacts();
-    widget.prefs.setBool("update", true);
-    widget.prefs.setBool("first_load", true);
-    _setupInteractedMessage();
+    _fetchContacts();
+    _setupFcmHandlers();
   }
 
-  // 3. Handle the interactions
-  Future<void> _setupInteractedMessage() async {
-    // State A: App is Terminated, user clicks notification to launch
-    RemoteMessage? initialMessage =
-        await FirebaseMessaging.instance.getInitialMessage();
+  Future<void> _setupFcmHandlers() async {
+    final initial = await FirebaseMessaging.instance.getInitialMessage();
+    final ctx = navigatorKey.currentContext;
+    if (initial != null && ctx != null) _handleMessageClick(initial);
 
-    if (initialMessage != null) {
-      _handleMessageClick(initialMessage);
-    }
-
-    // State B: App is in Background, user clicks notification to bring to foreground
     FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageClick);
-
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (message.notification != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                "${message.notification?.title}: ${message.notification?.body ?? ''}"),
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 4),
-            action: SnackBarAction(
-              label: 'View',
-              textColor: Colors.white,
-              onPressed: () => _handleMessageClick(message),
-            ),
-          ),
-        );
-      }
-    });
   }
 
   void _handleMessageClick(RemoteMessage message) {
-    // Extract your custom data payload
-    final data = message.data;
-    final String? entityId = data['entity_id'];
-    final String? entityType = data['entity_type'];
-
-    if (entityId != null && entityType != null) {
-      // Use the global key to get the context safely
-      final context = navigatorKey.currentContext;
-      if (context != null) {
-        ActivityNavigator.navigate(context, entityId, entityType);
-      } else {
-        print("Error: Context is null, cannot navigate.");
-        // Note: If context is null here (rare but possible on cold starts),
-        // you might need to save the route intent in SharedPreferences or a
-        // Provider/Bloc and execute it immediately after the first screen builds.
-      }
+    final entityId = message.data['entity_id'] as String?;
+    final entityType = message.data['entity_type'] as String?;
+    if (entityId == null || entityType == null) return;
+    final ctx = navigatorKey.currentContext;
+    if (ctx != null) {
+      ActivityNavigator.navigate(ctx, entityId, entityType);
     }
   }
 
-  void FetchContacts() async {
+  Future<void> _fetchContacts() async {
     if (!await Permission.storage.isGranted) {
       await Permission.storage.request();
-      if (await Permission.storage.isPermanentlyDenied) {
-        var snackBar = const SnackBar(
-          content: Text(
-              "Grant storage permission from settings to export excel files"),
-        );
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        await Future.delayed(const Duration(seconds: 2));
-        openAppSettings();
-      }
-      if (!await Permission.storage.isGranted) {
-        var snackBar = const SnackBar(
-          content:
-              Text("Without Storage permission, you can't export excel files"),
-        );
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      }
     }
     if (!await Permission.contacts.isGranted) {
       await Permission.contacts.request();
-      if (await Permission.contacts.isPermanentlyDenied) {
-        var snackBar = const SnackBar(
-          content:
-              Text("Grant contacts permission from settings to view friends"),
-        );
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        await Future.delayed(const Duration(seconds: 2));
-        openAppSettings();
-      }
-      if (!await Permission.contacts.isGranted) {
-        var snackBar = const SnackBar(
-          content: Text("Without contacts, you can't view friends"),
-        );
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        return;
+      if (!await Permission.contacts.isGranted) return;
+    }
+    final contacts =
+        await FlutterContacts.getAll(properties: {ContactProperty.phone});
+    final numbers = <String>[];
+    for (final c in contacts) {
+      for (final p in c.phones) {
+        String num = p.number.replaceAll(' ', '');
+        if (num.length > 10) num = num.substring(num.length - 10);
+        numbers.add(num);
       }
     }
-
-    List<Contact> ccc = await FlutterContacts.getAll(
-      properties: {ContactProperty.phone},
-    );
-
-    List<String> cc = [];
-
-    for (var contact in ccc) {
-      for (var phone in contact.phones) {
-        String num = phone.number.replaceAll(' ', '');
-
-        if (num.length > 10) {
-          num = num.substring(num.length - 10);
-        }
-
-        cc.add(num);
-      }
-    }
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString('numbers', jsonEncode(cc));
+    widget.prefs.setString(AppConstants.prefKeyNumbers, jsonEncode(numbers));
   }
 
-  // This widget is the root of your application.
+  Widget get _home {
+    final onboardingDone =
+        widget.prefs.getBool(AppConstants.prefKeyOnboardingDone) ?? false;
+    final token = widget.prefs.getString(AppConstants.prefKeyToken);
+    final registeredNow =
+        widget.prefs.getBool(AppConstants.prefKeyRegisteredNow) ?? true;
+    final email = widget.prefs.getString(AppConstants.prefKeyEmail) ?? '';
+
+    if (!onboardingDone) return const OnboardingScreen();
+    if (token == null) return const LoginScreen();
+    if (registeredNow) return CompleteSignUpScreen(email: email);
+    return const HomeScreen(initialIndex: 0);
+  }
+
   @override
   Widget build(BuildContext context) {
-    // widget.prefs.setString("url", "http://10.0.2.2:5000");
-    widget.prefs.setString("url", "https://splittr-backend.onrender.com");
-    if (!widget.prefs.containsKey("registered_now")) {
-      widget.prefs.setBool("registered_now", true);
-    }
-    String email = '';
-    if (widget.prefs.containsKey('email')) {
-      email = widget.prefs.getString('email')!;
-    }
     return MaterialApp(
       navigatorKey: navigatorKey,
       title: 'Splittr',
-      theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.brown),
-          useMaterial3: true,
-          textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme)),
-      darkTheme: ThemeData(
-          // brightness: Brightness.dark,
-          colorScheme: ColorScheme.fromSeed(seedColor: mainGreen),
-          useMaterial3: true,
-          textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme)),
-      themeMode: ThemeMode.dark,
-      home: widget.prefs.getString('token') != null
-          ? widget.prefs.getBool('registered_now')!
-              ? CompleteSignUp(
-                  email: email,
-                )
-              : const HomePage(
-                  curridx: 0,
-                )
-          : const LoginPage(),
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: ref.watch(themeModeProvider),
       debugShowCheckedModeBanner: false,
+      home: _home,
+      onGenerateRoute: (settings) {
+        switch (settings.name) {
+          case '/login':
+            return MaterialPageRoute(builder: (_) => const LoginScreen());
+          case '/add-to-group':
+            return MaterialPageRoute(
+              builder: (_) =>
+                  AddToGroupScreen(trip: settings.arguments as TripModel),
+            );
+          case '/remove-from-group':
+            return MaterialPageRoute(
+              builder: (_) =>
+                  RemoveFromGroupScreen(trip: settings.arguments as TripModel),
+            );
+          default:
+            return null;
+        }
+      },
     );
   }
 }
