@@ -90,9 +90,6 @@ flutter:
   assets:
     - assets/icons/
     - assets/images/
-    - assets/profile/
-    - assets/categories/
-    - assets/onboarding/
     - shorebird.yaml
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg

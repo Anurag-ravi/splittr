@@ -5,7 +5,6 @@ import 'package:splittr/core/widgets/app_loader.dart';
 import 'package:splittr/core/widgets/category_icon.dart';
 import 'package:splittr/features/activity/domain/entities/activity_entity.dart';
 import 'package:splittr/features/activity/presentation/providers/activity_providers.dart';
-import 'package:splittr/features/activity/presentation/widgets/activity_icon.dart';
 import 'package:splittr/shared/widgets/neon_glow.dart';
 
 class ActivityScreen extends ConsumerStatefulWidget {

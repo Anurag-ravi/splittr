@@ -1,12 +1,13 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:splittr/core/theme/app_colors.dart';
 import 'package:splittr/core/utils/haptics.dart';
 import 'package:splittr/core/widgets/profile_image.dart';
-import 'package:splittr/features/expenses/data/models/expense_model.dart';
 import 'package:splittr/features/expenses/presentation/models/split_ui_models.dart';
 import 'package:splittr/features/trips/data/models/trip_member_model.dart';
-import 'package:splittr/features/trips/data/models/trip_model.dart';
+import 'package:splittr/shared/widgets/neon_glow.dart';
 
 class ChoosePaidByScreen extends StatefulWidget {
   const ChoosePaidByScreen({
@@ -17,7 +18,9 @@ class ChoosePaidByScreen extends StatefulWidget {
   });
 
   final Map<String, TripMemberModel> tripUserMap;
+
   final List<By> paidBy;
+
   final double amount;
 
   @override
@@ -26,142 +29,649 @@ class ChoosePaidByScreen extends StatefulWidget {
 
 class _ChoosePaidByScreenState extends State<ChoosePaidByScreen> {
   late List<TripMemberModel> _users;
+
   late List<By> _multiplePaidBy;
+
   late List<TextEditingController> _controllers;
+
   bool _singlePaid = true;
+
   String _currentPaidUser = '';
+
   double _total = 0;
 
   @override
   void initState() {
     super.initState();
-    _users = widget.tripUserMap.values.toList();
+
+    _users = widget.tripUserMap.values.where((e) => e.involved).toList();
+
     _singlePaid = widget.paidBy.length == 1;
+
     _currentPaidUser = widget.paidBy[0].user;
 
     _multiplePaidBy = _users.map((e) {
       double amnt = 0;
+
       for (final b in widget.paidBy) {
         if (b.user == e.id && b.amount > 0) {
           amnt = b.amount;
+
           _total += amnt;
+
           break;
         }
       }
+
       return By(e.id, amnt, 0);
     }).toList();
 
     _controllers = _multiplePaidBy.map((b) {
       return TextEditingController(
-          text: b.amount > 0 ? b.amount.toString() : '');
+        text: b.amount > 0 ? b.amount.toString() : '',
+      );
     }).toList();
   }
 
   @override
   void dispose() {
-    for (final c in _controllers) c.dispose();
+    for (final c in _controllers) {
+      c.dispose();
+    }
+
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.grey[900],
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: const Text('Who paid?', style: TextStyle(color: Colors.white)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context, widget.paidBy),
-        ),
-        actions: [
-          if (!_singlePaid)
-            IconButton(
-              icon: const Icon(Icons.check, color: Colors.white),
-              onPressed: () {
-                if (widget.amount != _total) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text('Amounts do not add up to ${widget.amount}'),
-                    duration: const Duration(seconds: 4),
-                  ));
-                  return;
-                }
-                Navigator.pop(
-                  context,
-                  _multiplePaidBy.where((b) => b.amount > 0).toList(),
-                );
-              },
-            ),
-        ],
-      ),
-      resizeToAvoidBottomInset: false,
-      bottomNavigationBar: _singlePaid
-          ? const SizedBox.shrink()
-          : SizedBox(
-              height: 60,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // =====================
+            // HEADER
+            // =====================
+
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                10,
+                10,
+                10,
+                10,
+              ),
+              child: Row(
                 children: [
-                  Text(
-                    '₹${_total.toStringAsFixed(2)} of ₹${widget.amount.toStringAsFixed(2)}',
-                    style: const TextStyle(color: Colors.white, fontSize: 15),
+                  _topActionButton(
+                    context,
+                    icon: Icons.close_rounded,
+                    onTap: () {
+                      Navigator.pop(
+                        context,
+                        widget.paidBy,
+                      );
+                    },
                   ),
-                  Text(
-                    widget.amount - _total >= 0
-                        ? '₹${(widget.amount - _total).toStringAsFixed(2)} left'
-                        : '₹${(_total - widget.amount).toStringAsFixed(2)} over',
-                    style: TextStyle(
-                      color: widget.amount - _total >= 0
-                          ? Colors.white
-                          : Colors.redAccent,
-                      fontSize: 12,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Who Paid?',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 2,
+                        ),
+                        Text(
+                          _singlePaid
+                              ? 'Choose one payer'
+                              : 'Split payment among members',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color:
+                                theme.textTheme.bodyMedium?.color?.withOpacity(
+                              0.68,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (!_singlePaid)
+                    GestureDetector(
+                      onTap: () {
+                        if ((_total - widget.amount).abs() > 0.01) {
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Amounts do not add up to ₹${widget.amount.toStringAsFixed(2)}',
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+
+                          return;
+                        }
+
+                        Navigator.pop(
+                          context,
+                          _multiplePaidBy
+                              .where(
+                                (b) => b.amount > 0,
+                              )
+                              .toList(),
+                        );
+                      },
+                      child: NeonGlow(
+                        color: colorScheme.primary,
+                        radius: 18,
+                        spread: -2,
+                        glowOpacity: 0.16,
+                        child: Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                colorScheme.primary,
+                                colorScheme.primary.withOpacity(
+                                  0.88,
+                                ),
+                              ],
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.check_rounded,
+                            color: colorScheme.onPrimary,
+                            size: 26,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+
+            // =====================
+            // MODE TOGGLE
+            // =====================
+
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _modeButton(
+                      context,
+                      title: 'Single payer',
+                      selected: _singlePaid,
+                      onTap: () {
+                        Haptics.medium();
+
+                        setState(() {
+                          _singlePaid = true;
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _modeButton(
+                      context,
+                      title: 'Multiple payers',
+                      selected: !_singlePaid,
+                      onTap: () {
+                        Haptics.medium();
+
+                        setState(() {
+                          _singlePaid = false;
+                        });
+                      },
                     ),
                   ),
                 ],
               ),
             ),
-      body: _singlePaid ? _singleList() : _multiList(),
+
+            const SizedBox(height: 18),
+
+            // =====================
+            // BODY
+            // =====================
+
+            Expanded(
+              child: _singlePaid ? _singleList() : _multiList(),
+            ),
+
+            // =====================
+            // FOOTER
+            // =====================
+
+            if (!_singlePaid)
+              Container(
+                margin: const EdgeInsets.fromLTRB(
+                  20,
+                  0,
+                  20,
+                  20,
+                ),
+                padding: const EdgeInsets.all(
+                  18,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(
+                    24,
+                  ),
+                  color: colorScheme.surface.withOpacity(
+                    0.72,
+                  ),
+                  border: Border.all(
+                    color: colorScheme.primary.withOpacity(
+                      0.08,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Paid',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.textTheme.bodyMedium?.color
+                                  ?.withOpacity(
+                                0.66,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 4,
+                          ),
+                          Text(
+                            '₹${_total.toStringAsFixed(2)}',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: 1,
+                      height: 44,
+                      color: colorScheme.outline.withOpacity(
+                        0.12,
+                      ),
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            widget.amount - _total >= 0
+                                ? 'Remaining'
+                                : 'Exceeded',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.textTheme.bodyMedium?.color
+                                  ?.withOpacity(
+                                0.66,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 4,
+                          ),
+                          Text(
+                            '₹${(widget.amount - _total).abs().toStringAsFixed(2)}',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: widget.amount - _total >= 0
+                                  ? Colors.white
+                                  : colorScheme.error,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
+  // =====================
+  // SINGLE LIST
+  // =====================
+
   Widget _singleList() {
+    final theme = Theme.of(context);
+
+    final colorScheme = theme.colorScheme;
+
     return ListView.builder(
-      itemCount: _users.length + 1,
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(
+        10,
+        0,
+        10,
+        24,
+      ),
+      itemCount: _users.length,
       itemBuilder: (context, index) {
-        if (index == _users.length) {
-          return GestureDetector(
+        final user = _users[index];
+
+        final selected = _currentPaidUser == user.id;
+
+        return Padding(
+          padding: const EdgeInsets.only(
+            bottom: 10,
+          ),
+          child: GestureDetector(
             onTap: () {
               Haptics.medium();
-              setState(() => _singlePaid = false);
+
+              Navigator.pop(
+                context,
+                [
+                  By(
+                    user.id,
+                    widget.amount,
+                    0,
+                  ),
+                ],
+              );
             },
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-              child: Text('Multiple people',
-                  style: TextStyle(color: Colors.white)),
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(
+                  28,
+                ),
+                color: colorScheme.surface.withOpacity(
+                  theme.brightness == Brightness.dark ? 0.92 : 0.97,
+                ),
+                border: Border.all(
+                  color: selected
+                      ? colorScheme.primary.withOpacity(
+                          0.18,
+                        )
+                      : colorScheme.outline.withOpacity(
+                          0.08,
+                        ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  // PROFILE
+
+                  Container(
+                    width: 64,
+                    height: 64,
+                    child: ProfileImage(
+                      id: user.name,
+                    ),
+                  ),
+
+                  const SizedBox(
+                    width: 16,
+                  ),
+
+                  // TEXT
+
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user.name,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 4,
+                        ),
+                        Text(
+                          selected ? 'Currently selected' : 'Tap to select',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: selected
+                                ? colorScheme.primary
+                                : theme.textTheme.bodyMedium?.color
+                                    ?.withOpacity(
+                                    0.64,
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  AnimatedContainer(
+                    duration: const Duration(
+                      milliseconds: 220,
+                    ),
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color:
+                          selected ? colorScheme.primary : Colors.transparent,
+                      border: Border.all(
+                        color: selected
+                            ? colorScheme.primary
+                            : colorScheme.outline.withOpacity(
+                                0.22,
+                              ),
+                      ),
+                    ),
+                    child: selected
+                        ? Icon(
+                            Icons.check_rounded,
+                            color: colorScheme.onPrimary,
+                            size: 18,
+                          )
+                        : null,
+                  ),
+                ],
+              ),
             ),
-          );
-        }
-        return GestureDetector(
-          onTap: () {
-            Haptics.medium();
-            Navigator.pop(context, [By(_users[index].id, widget.amount, 0)]);
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+          ),
+        );
+      },
+    );
+  }
+
+  // =====================
+  // MULTI LIST
+  // =====================
+
+  Widget _multiList() {
+    final theme = Theme.of(context);
+
+    final colorScheme = theme.colorScheme;
+
+    return ListView.builder(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(
+        10,
+        0,
+        10,
+        24,
+      ),
+      itemCount: _users.length,
+      itemBuilder: (context, index) {
+        final user = _users[index];
+
+        return Padding(
+          padding: const EdgeInsets.only(
+            bottom: 10,
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(
+              10,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(
+                28,
+              ),
+              color: colorScheme.surface.withOpacity(
+                theme.brightness == Brightness.dark ? 0.92 : 0.97,
+              ),
+              border: Border.all(
+                color: colorScheme.primary.withOpacity(
+                  0.08,
+                ),
+              ),
+            ),
             child: Row(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
+                // PROFILE
+
+                Container(
+                  width: 64,
+                  height: 64,
                   child: ProfileImage(
-                    id: _users[index].name,
+                    id: user.name,
                   ),
                 ),
-                const SizedBox(width: 10),
-                Text(_users[index].name,
-                    style: const TextStyle(color: Colors.white)),
-                const Spacer(),
-                if (_currentPaidUser == _users[index].id)
-                  const Icon(Icons.check, color: Colors.white),
+
+                const SizedBox(
+                  width: 16,
+                ),
+
+                // NAME
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user.name,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 4,
+                      ),
+                      Text(
+                        'Enter contribution',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.textTheme.bodyMedium?.color?.withOpacity(
+                            0.64,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(
+                  width: 12,
+                ),
+
+                // INPUT
+
+                SizedBox(
+                  width: 110,
+                  child: Container(
+                    height: 58,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(
+                        18,
+                      ),
+                      color: colorScheme.surface.withOpacity(
+                        0.72,
+                      ),
+                      border: Border.all(
+                        color: colorScheme.primary.withOpacity(
+                          0.08,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          '₹',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 8,
+                        ),
+                        Expanded(
+                          child: TextField(
+                            controller: _controllers[index],
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(
+                                  r'^\d+\.?\d{0,2}',
+                                ),
+                              ),
+                            ],
+                            cursorColor: colorScheme.primary,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                            onChanged: (input) {
+                              setState(
+                                () {
+                                  _multiplePaidBy[index].amount =
+                                      input.isNotEmpty
+                                          ? double.parse(
+                                              input,
+                                            )
+                                          : 0;
+
+                                  _total = _multiplePaidBy.fold(
+                                    0,
+                                    (
+                                      s,
+                                      b,
+                                    ) =>
+                                        s + b.amount,
+                                  );
+                                },
+                              );
+                            },
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              hintText: '0',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -170,85 +680,103 @@ class _ChoosePaidByScreenState extends State<ChoosePaidByScreen> {
     );
   }
 
-  Widget _multiList() {
-    return ListView.builder(
-      itemCount: _users.length + 1,
-      itemBuilder: (context, index) {
-        if (index == _users.length) {
-          return GestureDetector(
-            onTap: () {
-              Haptics.medium();
-              setState(() => _singlePaid = true);
-            },
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-              child: Text('Single person paid',
-                  style: TextStyle(color: Colors.white)),
-            ),
-          );
-        }
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-          child: Row(
-            children: [
-              Expanded(
-                flex: 1,
-                child: SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: ProfileImage(id: _users[index].name),
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 6,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 10),
-                  child: Text(_users[index].name,
-                      style: const TextStyle(color: Colors.white)),
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: SizedBox(
-                  height: 30,
-                  child: TextField(
-                    controller: _controllers[index],
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(
-                          RegExp(r'^\d+\.?\d{0,2}')),
-                    ],
-                    cursorColor: AppColors.primary,
-                    style: const TextStyle(color: Colors.white),
-                    onChanged: (input) {
-                      setState(() {
-                        _multiplePaidBy[index].amount =
-                            input.isNotEmpty ? double.parse(input) : 0;
-                        _total =
-                            _multiplePaidBy.fold(0, (s, b) => s + b.amount);
-                      });
-                    },
-                    decoration: InputDecoration(
-                      border: const UnderlineInputBorder(
-                          borderSide: BorderSide(color: Colors.white)),
-                      focusedBorder: const UnderlineInputBorder(
-                          borderSide: BorderSide(color: AppColors.primary)),
-                      labelText: '0.00',
-                      floatingLabelBehavior: FloatingLabelBehavior.never,
-                      fillColor: Colors.grey[900],
-                      filled: true,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+  // =====================
+  // MODE BUTTON
+  // =====================
+
+  Widget _modeButton(
+    BuildContext context, {
+    required String title,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+
+    final colorScheme = theme.colorScheme;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(
+          milliseconds: 220,
+        ),
+        padding: const EdgeInsets.symmetric(
+          vertical: 14,
+        ),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(
+            18,
           ),
-        );
-      },
+          color: selected
+              ? colorScheme.primary.withOpacity(0.12)
+              : colorScheme.surface.withOpacity(0.72),
+          border: Border.all(
+            color: selected
+                ? colorScheme.primary.withOpacity(0.24)
+                : colorScheme.outline.withOpacity(0.08),
+          ),
+        ),
+        child: Center(
+          child: Text(
+            title,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: selected ? colorScheme.primary : null,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // =====================
+  // TOP ACTION BUTTON
+  // =====================
+
+  Widget _topActionButton(
+    BuildContext context, {
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+
+    final colorScheme = theme.colorScheme;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(
+          16,
+        ),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: 10,
+            sigmaY: 10,
+          ),
+          child: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: colorScheme.surface.withOpacity(
+                0.72,
+              ),
+              borderRadius: BorderRadius.circular(
+                16,
+              ),
+              border: Border.all(
+                color: colorScheme.primary.withOpacity(
+                  0.08,
+                ),
+              ),
+            ),
+            child: Icon(
+              icon,
+              color: colorScheme.onSurface,
+              size: 22,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

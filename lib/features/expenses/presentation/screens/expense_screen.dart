@@ -1,21 +1,26 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:splittr/core/constants/app_constants.dart';
 import 'package:splittr/core/storage/hive_boxes.dart';
+import 'package:splittr/core/theme/app_colors.dart';
 import 'package:splittr/core/utils/haptics.dart';
+import 'package:splittr/core/widgets/category_icon.dart';
 import 'package:splittr/core/widgets/profile_image.dart';
+import 'package:splittr/features/expenses/data/models/expense_model.dart';
 import 'package:splittr/features/expenses/presentation/controllers/comments_controller.dart';
 import 'package:splittr/features/expenses/presentation/controllers/expense_controller.dart';
 import 'package:splittr/features/expenses/presentation/providers/expense_providers.dart';
-import 'package:splittr/features/expenses/presentation/states/comments_state.dart';
 import 'package:splittr/features/expenses/presentation/states/expense_state.dart';
-import 'package:splittr/features/expenses/data/models/expense_model.dart';
-import 'package:splittr/features/payments/data/models/payment_model.dart';
 import 'package:splittr/features/trips/data/models/trip_member_model.dart';
 import 'package:splittr/features/trips/data/models/trip_model.dart';
 import 'package:splittr/shared/widgets/comment_tile.dart';
+import 'package:splittr/shared/widgets/neon_glow.dart';
 
-typedef AddExpenseBuilder = Widget Function(BuildContext context);
+typedef AddExpenseBuilder = Widget Function(
+  BuildContext context,
+);
 
 class ExpenseScreen extends ConsumerStatefulWidget {
   const ExpenseScreen({
@@ -27,8 +32,11 @@ class ExpenseScreen extends ConsumerStatefulWidget {
   });
 
   final ExpenseModel expense;
+
   final TripModel trip;
+
   final Map<String, TripMemberModel> tripUserMap;
+
   final AddExpenseBuilder addExpenseBuilder;
 
   @override
@@ -61,19 +69,23 @@ class _ExpenseScreenState extends ConsumerState<ExpenseScreen> {
   void initState() {
     super.initState();
 
-    _myUserId = HiveBoxes.me.get(AppConstants.hiveBoxMe)?.id;
+    _myUserId = HiveBoxes.me
+        .get(
+          AppConstants.hiveBoxMe,
+        )
+        ?.id;
 
     _buildNets();
 
-    // VERY IMPORTANT:
-    // clear previous expense action state
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(expenseNotifierProvider.notifier).reset();
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref
-          .read(commentsProvider(widget.expense.id).notifier)
+          .read(
+            commentsProvider(widget.expense.id).notifier,
+          )
           .refreshForExpense(widget.expense.id);
     });
 
@@ -90,7 +102,7 @@ class _ExpenseScreenState extends ConsumerState<ExpenseScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(e.toString()),
-                  duration: const Duration(seconds: 4),
+                  behavior: SnackBarBehavior.floating,
                 ),
               );
             });
@@ -104,7 +116,7 @@ class _ExpenseScreenState extends ConsumerState<ExpenseScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Expense deleted'),
-                      duration: Duration(seconds: 4),
+                      behavior: SnackBarBehavior.floating,
                     ),
                   );
 
@@ -139,11 +151,13 @@ class _ExpenseScreenState extends ConsumerState<ExpenseScreen> {
   @override
   void dispose() {
     _commentController.dispose();
+
     super.dispose();
   }
 
   void _buildNets() {
     final paid = <TripMemberModel, double>{};
+
     final owed = <TripMemberModel, double>{};
 
     for (final x in widget.expense.paidBy) {
@@ -163,12 +177,14 @@ class _ExpenseScreenState extends ConsumerState<ExpenseScreen> {
     }
 
     final t1 = <String>[];
+
     final t2 = <String>[];
 
     for (final entry in widget.tripUserMap.entries) {
       final tu = entry.value;
 
       final hasPaid = paid.containsKey(tu);
+
       final hasOwed = owed.containsKey(tu);
 
       if (!hasPaid && !hasOwed) continue;
@@ -204,7 +220,7 @@ class _ExpenseScreenState extends ConsumerState<ExpenseScreen> {
 
     if (h == 0) h = 12;
 
-    return 'Added on ${_months[d.month - 1]} ${d.day}, ${d.year} at '
+    return '${_months[d.month - 1]} ${d.day}, ${d.year} • '
         '${h.toString().padLeft(2, '0')}:'
         '${d.minute.toString().padLeft(2, '0')} '
         '$ampm';
@@ -212,13 +228,25 @@ class _ExpenseScreenState extends ConsumerState<ExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final commentsAsync = ref.watch(commentsProvider(widget.expense.id));
+    final theme = Theme.of(context);
 
-    final commentsCtrl = ref.read(commentsProvider(widget.expense.id).notifier);
+    final colorScheme = theme.colorScheme;
 
-    final expenseAsync = ref.watch(expenseNotifierProvider);
+    final commentsAsync = ref.watch(
+      commentsProvider(widget.expense.id),
+    );
 
-    final expenseCtrl = ref.read(expenseNotifierProvider.notifier);
+    final commentsCtrl = ref.read(
+      commentsProvider(widget.expense.id).notifier,
+    );
+
+    final expenseAsync = ref.watch(
+      expenseNotifierProvider,
+    );
+
+    final expenseCtrl = ref.read(
+      expenseNotifierProvider.notifier,
+    );
 
     final comments = commentsAsync.value ?? [];
 
@@ -228,252 +256,636 @@ class _ExpenseScreenState extends ConsumerState<ExpenseScreen> {
 
     final expense = widget.expense;
 
-    final totalRows = 3 + _nets.length + 1 + comments.length;
+    final totalPaid = expense.amount;
 
     return Stack(
       children: [
         Opacity(
           opacity: deleting ? 0.5 : 1,
           child: Scaffold(
-            backgroundColor: Colors.grey[900],
-            appBar: AppBar(
-              backgroundColor: Colors.pink[50],
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () {
-                  Navigator.pop(
-                    context,
-                    {
-                      'changed': false,
-                      'expense': expense,
-                    },
-                  );
-                },
-              ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () {
-                    Haptics.medium();
+            backgroundColor: theme.scaffoldBackgroundColor,
+            body: SafeArea(
+              child: Column(
+                children: [
+                  // =========================
+                  // HEADER
+                  // =========================
 
-                    _confirmDelete(context, expenseCtrl);
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined),
-                  onPressed: () async {
-                    Haptics.medium();
-
-                    final res = await Navigator.push<Map<String, dynamic>>(
-                      context,
-                      MaterialPageRoute(
-                        builder: (ctx) => widget.addExpenseBuilder(ctx),
-                      ),
-                    );
-
-                    if (res != null && res['changed'] == true && mounted) {
-                      setState(() {});
-                    }
-                  },
-                ),
-              ],
-            ),
-            body: Column(
-              children: [
-                Expanded(
-                  child: RefreshIndicator(
-                    onRefresh: () => commentsCtrl.refreshForExpense(expense.id),
-                    child: ListView.builder(
-                      itemCount: totalRows,
-                      itemBuilder: (_, i) {
-                        if (i == 0) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 20,
-                              horizontal: 50,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      18,
+                      12,
+                      18,
+                      12,
+                    ),
+                    child: Row(
+                      children: [
+                        _topActionButton(
+                          context,
+                          icon: Icons.arrow_back_rounded,
+                          onTap: () {
+                            Navigator.pop(
+                              context,
+                              {
+                                'changed': false,
+                                'expense': expense,
+                              },
+                            );
+                          },
+                        ),
+                        const SizedBox(
+                          width: 16,
+                        ),
+                        Expanded(
+                          child: Text(
+                            'Expense',
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
                             ),
-                            child: Row(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: Image.asset(
-                                    'assets/categories/${expense.category}.png',
-                                    height: 45,
-                                    width: 45,
-                                  ),
+                          ),
+                        ),
+                        _topActionButton(
+                          context,
+                          icon: Icons.delete_outline_rounded,
+                          iconColor: colorScheme.error,
+                          onTap: () {
+                            Haptics.medium();
+
+                            _confirmDelete(
+                              context,
+                              expenseCtrl,
+                            );
+                          },
+                        ),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        _topActionButton(
+                          context,
+                          icon: Icons.edit_outlined,
+                          onTap: () async {
+                            Haptics.medium();
+
+                            final res =
+                                await Navigator.push<Map<String, dynamic>>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (ctx) => widget.addExpenseBuilder(
+                                  ctx,
                                 ),
-                                const SizedBox(width: 20),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                              ),
+                            );
+
+                            if (res != null &&
+                                res['changed'] == true &&
+                                mounted) {
+                              setState(() {});
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  Expanded(
+                    child: RefreshIndicator(
+                      color: colorScheme.primary,
+                      onRefresh: () => commentsCtrl.refreshForExpense(
+                        expense.id,
+                      ),
+                      child: ListView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.fromLTRB(
+                          10,
+                          8,
+                          10,
+                          120,
+                        ),
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(28),
+                              color: colorScheme.surface.withOpacity(
+                                theme.brightness == Brightness.dark
+                                    ? 0.92
+                                    : 0.97,
+                              ),
+                              border: Border.all(
+                                color: colorScheme.primary.withOpacity(
+                                  0.10,
+                                ),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: colorScheme.primary.withOpacity(
+                                    0.08,
+                                  ),
+                                  blurRadius: 28,
+                                  spreadRadius: -8,
+                                  offset: const Offset(0, 14),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // =========================
+                                // TOP ROW
+                                // =========================
+
+                                Row(
                                   children: [
-                                    Text(
-                                      expense.name,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 20,
-                                        overflow: TextOverflow.ellipsis,
+                                    // CATEGORY
+
+                                    Container(
+                                      width: 60,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(
+                                          20,
+                                        ),
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [
+                                            colorScheme.primary.withOpacity(
+                                              0.18,
+                                            ),
+                                            colorScheme.primary.withOpacity(
+                                              0.05,
+                                            ),
+                                          ],
+                                        ),
+                                        border: Border.all(
+                                          color:
+                                              colorScheme.primary.withOpacity(
+                                            0.10,
+                                          ),
+                                        ),
+                                      ),
+                                      child: CategoryIcon(
+                                        category: expense.category,
+                                        entityType: 'expense',
+                                        size: 60,
                                       ),
                                     ),
-                                    Text(
-                                      '₹ ${expense.amount.toStringAsFixed(2)}',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 15,
+
+                                    const SizedBox(width: 10),
+
+                                    // TITLE
+
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            expense.name,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: theme.textTheme.titleLarge
+                                                ?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.end,
+                                            children: [
+                                              Text(
+                                                _dateStr(),
+                                                style: theme.textTheme.bodySmall
+                                                    ?.copyWith(
+                                                  color: theme.textTheme
+                                                      .bodyMedium?.color
+                                                      ?.withOpacity(
+                                                    0.66,
+                                                  ),
+                                                ),
+                                              ),
+                                              Text(
+                                                '₹${expense.amount.toStringAsFixed(2)}',
+                                                style: theme
+                                                    .textTheme.titleMedium
+                                                    ?.copyWith(
+                                                  color: colorScheme.primary,
+                                                  fontWeight: FontWeight.w800,
+                                                ),
+                                              )
+                                            ],
+                                          ),
+                                        ],
                                       ),
+                                    ),
+                                  ],
+                                ),
+
+                                const SizedBox(height: 10),
+
+                                Text(
+                                  'Split details',
+                                  style: theme.textTheme.titleMedium,
+                                ),
+
+                                const SizedBox(height: 10),
+
+                                // =========================
+                                // SPLIT DETAILS
+                                // =========================
+
+                                Column(
+                                  children: [
+                                    ..._nets.asMap().entries.map(
+                                      (entry) {
+                                        final i = entry.key;
+
+                                        final text = entry.value;
+
+                                        // FIND USER
+
+                                        final matchingUser = widget
+                                            .tripUserMap.values
+                                            .firstWhere(
+                                          (u) => text.startsWith(
+                                            u.name.trim(),
+                                          ),
+                                        );
+
+                                        final isPaid = text.contains(
+                                          'paid',
+                                        );
+
+                                        return Padding(
+                                          padding: EdgeInsets.only(
+                                            bottom:
+                                                i == _nets.length - 1 ? 0 : 10,
+                                          ),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(10),
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                22,
+                                              ),
+                                              color: colorScheme.surface
+                                                  .withOpacity(
+                                                0.68,
+                                              ),
+                                              border: Border.all(
+                                                color: (isPaid
+                                                        ? colorScheme.primary
+                                                        : AppColors.amber)
+                                                    .withOpacity(
+                                                  0.08,
+                                                ),
+                                              ),
+                                            ),
+                                            child: Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                // PROFILE
+
+                                                Container(
+                                                  width: 54,
+                                                  height: 54,
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                      18,
+                                                    ),
+                                                  ),
+                                                  child: ProfileImage(
+                                                    id: matchingUser.name,
+                                                  ),
+                                                ),
+
+                                                const SizedBox(
+                                                  width: 14,
+                                                ),
+
+                                                // TEXT
+
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        matchingUser.name,
+                                                        style: theme.textTheme
+                                                            .titleSmall
+                                                            ?.copyWith(
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 4,
+                                                      ),
+                                                      Text(
+                                                        text.replaceFirst(
+                                                          '${matchingUser.name.trim()} ',
+                                                          '',
+                                                        ),
+                                                        style: theme.textTheme
+                                                            .bodyMedium
+                                                            ?.copyWith(
+                                                          height: 1.5,
+                                                          color: theme.textTheme
+                                                              .bodyMedium?.color
+                                                              ?.withOpacity(
+                                                            0.72,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
                                   ],
                                 ),
                               ],
                             ),
-                          );
-                        }
+                          ),
 
-                        if (i == 1) {
-                          return Padding(
-                            padding: const EdgeInsets.only(left: 50),
-                            child: Text(
-                              _dateStr(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                overflow: TextOverflow.ellipsis,
+                          const SizedBox(height: 24),
+
+// =========================
+// ACTIVITY
+// =========================
+
+                          Row(
+                            children: [
+                              Text(
+                                'Activity',
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  color: theme.textTheme.bodyMedium?.color
+                                      ?.withOpacity(
+                                    0.68,
+                                  ),
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Divider(
+                                  color: colorScheme.outline.withOpacity(
+                                    0.16,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 16),
+
+// =========================
+// EMPTY COMMENTS
+// =========================
+
+                          if (comments.isEmpty)
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(
+                                  24,
+                                ),
+                                color: colorScheme.surface.withOpacity(0.72),
+                                border: Border.all(
+                                  color: colorScheme.primary.withOpacity(0.06),
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.chat_bubble_outline_rounded,
+                                    size: 32,
+                                    color: colorScheme.primary.withOpacity(0.7),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    'No activity yet',
+                                    style:
+                                        theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'Start the conversation by adding a comment.',
+                                    textAlign: TextAlign.center,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.textTheme.bodyMedium?.color
+                                          ?.withOpacity(
+                                        0.68,
+                                      ),
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          );
-                        }
 
-                        if (i == 2) {
-                          final firstPayer =
-                              widget.tripUserMap[expense.paidBy[0].user];
-
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 20, left: 15),
-                            child: Row(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(25),
-                                  child: ProfileImage(
-                                    id: firstPayer?.name ?? '1',
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Text(
-                                  expense.paidBy.length == 1
-                                      ? '${firstPayer?.name ?? ''} paid ₹${expense.amount}'
-                                      : '${expense.paidBy.length} people paid ₹${expense.amount.toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    overflow: TextOverflow.ellipsis,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-
-                        if (i < 3 + _nets.length) {
-                          return Padding(
-                            padding: const EdgeInsets.only(left: 75, top: 10),
-                            child: Text(
-                              _nets[i - 3],
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                overflow: TextOverflow.ellipsis,
+                          ...comments.map(
+                            (comment) => Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: 10,
+                              ),
+                              child: CommentTile(
+                                comment: comment,
+                                tripUserMap: widget.tripUserMap,
+                                myUserId: _myUserId,
+                                onDelete: () {
+                                  commentsCtrl.deleteFromExpense(
+                                    comment.id,
+                                    expense.id,
+                                  );
+                                },
                               ),
                             ),
-                          );
-                        }
+                          ),
 
-                        if (i == 3 + _nets.length) {
-                          return Padding(
-                            padding: const EdgeInsets.fromLTRB(15, 20, 15, 8),
-                            child: Row(
-                              children: [
-                                const Text(
-                                  'Activity',
-                                  style: TextStyle(
-                                    color: Colors.white54,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Divider(
-                                    color: Colors.white24,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-
-                        final comment = comments[i - 3 - _nets.length - 1];
-
-                        return CommentTile(
-                          comment: comment,
-                          tripUserMap: widget.tripUserMap,
-                          myUserId: _myUserId,
-                          onDelete: () {
-                            commentsCtrl.deleteFromExpense(
-                              comment.id,
-                              expense.id,
-                            );
-                          },
-                        );
-                      },
+// =========================
+// END REPLACEMENT
+// =========================
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                _commentInput(
-                  context,
-                  commentsCtrl,
-                  expense,
-                  sendingComment,
-                ),
-              ],
+
+                  _commentInput(
+                    context,
+                    commentsCtrl,
+                    expense,
+                    sendingComment,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
         if (deleting)
-          const Center(
-            child: CircularProgressIndicator(),
+          Center(
+            child: CircularProgressIndicator(
+              color: colorScheme.primary,
+            ),
           ),
       ],
     );
   }
 
+  // =========================
+  // DELETE
+  // =========================
+
   Future<void> _confirmDelete(
     BuildContext context,
     ExpenseNotifier ctrl,
   ) async {
+    final theme = Theme.of(context);
+
+    final colorScheme = theme.colorScheme;
+
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Are you sure?'),
-        content: const Text(
-          'This will permanently delete this expense.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+      builder: (_) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(
+              30,
+            ),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(
+                sigmaX: 12,
+                sigmaY: 12,
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(
+                  24,
+                ),
+                decoration: BoxDecoration(
+                  color: colorScheme.surface.withOpacity(
+                    0.96,
+                  ),
+                  borderRadius: BorderRadius.circular(
+                    30,
+                  ),
+                  border: Border.all(
+                    color: colorScheme.error.withOpacity(
+                      0.10,
+                    ),
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 74,
+                      height: 74,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: colorScheme.error.withOpacity(
+                          0.10,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.delete_outline_rounded,
+                        size: 36,
+                        color: colorScheme.error,
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    Text(
+                      'Delete expense?',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    Text(
+                      'This action cannot be undone.',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.textTheme.bodyMedium?.color?.withOpacity(
+                          0.68,
+                        ),
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 26,
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              Navigator.pop(
+                                context,
+                                false,
+                              );
+                            },
+                            child: const Text(
+                              'Cancel',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 12,
+                        ),
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: colorScheme.error,
+                              foregroundColor: colorScheme.onError,
+                            ),
+                            onPressed: () {
+                              Navigator.pop(
+                                context,
+                                true,
+                              );
+                            },
+                            child: const Text(
+                              'Delete',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+        );
+      },
     );
 
     if (confirmed == true && mounted) {
-      ctrl.delete(widget.expense.id);
+      ctrl.delete(
+        widget.expense.id,
+      );
     }
   }
+
+  // =========================
+  // COMMENT INPUT
+  // =========================
 
   Widget _commentInput(
     BuildContext context,
@@ -481,58 +893,121 @@ class _ExpenseScreenState extends ConsumerState<ExpenseScreen> {
     ExpenseModel expense,
     bool sending,
   ) {
+    final theme = Theme.of(context);
+
+    final colorScheme = theme.colorScheme;
+
     return Container(
-      color: Colors.grey[850],
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 8,
+      padding: const EdgeInsets.fromLTRB(
+        16,
+        14,
+        16,
+        20,
+      ),
+      decoration: BoxDecoration(
+        color: colorScheme.surface.withOpacity(0.94),
+        border: Border(
+          top: BorderSide(
+            color: colorScheme.primary.withOpacity(0.08),
+          ),
+        ),
       ),
       child: Row(
         children: [
           Expanded(
-            child: TextField(
-              controller: _commentController,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-              ),
-              decoration: InputDecoration(
-                hintText: 'Add a comment...',
-                hintStyle: const TextStyle(color: Colors.white38),
-                filled: true,
-                fillColor: Colors.grey[800],
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(
+                  22,
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide.none,
+                color: colorScheme.surface.withOpacity(
+                  0.72,
+                ),
+                border: Border.all(
+                  color: colorScheme.primary.withOpacity(
+                    0.06,
+                  ),
                 ),
               ),
-              onSubmitted: (_) => _post(ctrl, expense),
+              child: TextField(
+                controller: _commentController,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Add a comment...',
+                  hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.textTheme.bodyMedium?.color?.withOpacity(
+                      0.42,
+                    ),
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                ),
+                onSubmitted: (_) => _post(
+                  ctrl,
+                  expense,
+                ),
+              ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(
+            width: 12,
+          ),
           sending
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
+              ? SizedBox(
+                  width: 26,
+                  height: 26,
                   child: CircularProgressIndicator(
-                    strokeWidth: 2,
+                    strokeWidth: 2.2,
+                    color: colorScheme.primary,
                   ),
                 )
-              : IconButton(
-                  icon: const Icon(
-                    Icons.send,
-                    color: Colors.pinkAccent,
+              : GestureDetector(
+                  onTap: () => _post(
+                    ctrl,
+                    expense,
                   ),
-                  onPressed: () => _post(ctrl, expense),
+                  child: NeonGlow(
+                    color: colorScheme.primary,
+                    radius: 18,
+                    spread: -2,
+                    glowOpacity: 0.16,
+                    child: Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            colorScheme.primary,
+                            colorScheme.primary.withOpacity(
+                              0.88,
+                            ),
+                          ],
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.send_rounded,
+                        color: colorScheme.onPrimary,
+                        size: 22,
+                      ),
+                    ),
+                  ),
                 ),
         ],
       ),
     );
   }
+
+  // =========================
+  // POST
+  // =========================
 
   void _post(
     CommentsNotifier ctrl,
@@ -549,6 +1024,184 @@ class _ExpenseScreenState extends ConsumerState<ExpenseScreen> {
       expenseId: expense.id,
       tripId: expense.trip,
       expenseName: expense.name,
+    );
+  }
+
+  // =========================
+  // SECTION TITLE
+  // =========================
+
+  Widget _sectionTitle(
+    BuildContext context,
+    String title,
+  ) {
+    final theme = Theme.of(context);
+
+    return Text(
+      title,
+      style: theme.textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w700,
+      ),
+    );
+  }
+
+  // =========================
+  // PERSON CARD
+  // =========================
+
+  Widget _personAmountCard(
+    BuildContext context, {
+    required String name,
+    required double amount,
+    required String subtitle,
+    required String profileId,
+    required Color color,
+  }) {
+    final theme = Theme.of(context);
+
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(
+          24,
+        ),
+        color: colorScheme.surface.withOpacity(0.72),
+        border: Border.all(
+          color: color.withOpacity(
+            0.08,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 62,
+            height: 62,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(
+                22,
+              ),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  color.withOpacity(
+                    0.18,
+                  ),
+                  color.withOpacity(
+                    0.05,
+                  ),
+                ],
+              ),
+              border: Border.all(
+                color: color.withOpacity(
+                  0.10,
+                ),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(
+                7,
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(
+                  18,
+                ),
+                child: ProfileImage(
+                  id: profileId,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(
+                  height: 4,
+                ),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.textTheme.bodyMedium?.color?.withOpacity(
+                      0.66,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            '₹${amount.toStringAsFixed(2)}',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // =========================
+  // TOP ACTION BUTTON
+  // =========================
+
+  Widget _topActionButton(
+    BuildContext context, {
+    required IconData icon,
+    required VoidCallback onTap,
+    Color? iconColor,
+  }) {
+    final theme = Theme.of(context);
+
+    final colorScheme = theme.colorScheme;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(
+          16,
+        ),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: 10,
+            sigmaY: 10,
+          ),
+          child: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: colorScheme.surface.withOpacity(
+                0.72,
+              ),
+              borderRadius: BorderRadius.circular(
+                16,
+              ),
+              border: Border.all(
+                color: colorScheme.primary.withOpacity(
+                  0.08,
+                ),
+              ),
+            ),
+            child: Icon(
+              icon,
+              size: 22,
+              color: iconColor ?? colorScheme.onSurface,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

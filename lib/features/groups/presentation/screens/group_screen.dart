@@ -76,7 +76,6 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                             final amount = summary.amount.abs();
 
                             final isSettled = summary.amount == 0;
-                            print('Group ${trip.name} summary: $summary');
 
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 14),

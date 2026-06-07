@@ -239,6 +239,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                       spread: -10,
                       glowOpacity: 0.16,
                       child: Container(
+                        width: MediaQuery.of(context).size.width * 0.9,
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(
