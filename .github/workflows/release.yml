@@ -1,0 +1,90 @@
+name: Build & Release Flutter
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build and Release new apk
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "zulu"
+          java-version: "17"
+          cache: "gradle"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Read Version
+        id: version
+        shell: bash
+        run: |
+          BUILD_NAME="${{ github.event.release.tag_name }}"
+          BUILD_NAME="${BUILD_NAME#v}"
+          BUILD_NUMBER="${{ github.run_number }}"
+
+          echo "Build Name : $BUILD_NAME"
+          echo "Build Code : $BUILD_NUMBER"
+
+          echo "build_name=$BUILD_NAME" >> $GITHUB_OUTPUT
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/key.jks
+
+      - name: Create key.properties
+        run: |
+          echo "storeFile=key.jks" > android/key.properties
+          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
+
+      - name: Build APK
+        run: |
+          flutter build apk \
+            --release \
+            --build-name="${{ steps.version.outputs.build_name }}" \
+            --build-number="${{ steps.version.outputs.build_number }}" \
+            --dart-define=TAG=v${{ steps.version.outputs.build_name }}
+
+      - name: Build AAB
+        run: |
+          flutter build appbundle \
+            --release \
+            --build-name="${{ steps.version.outputs.build_name }}" \
+            --build-number="${{ steps.version.outputs.build_number }}" \
+            --dart-define=TAG=v${{ steps.version.outputs.build_name }}
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
+
+      - name: Upload to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+          packageName: com.hustlerdev.splittr
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          tracks: alpha
+          status: completed
+          releaseName: v${{ steps.version.outputs.build_name }}

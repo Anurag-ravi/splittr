@@ -42,8 +42,8 @@ class CommentTile extends StatelessWidget {
                 if (!isSystem)
                   Text(
                     comment.createdByName,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
                     ),
@@ -51,7 +51,7 @@ class CommentTile extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   comment.body,
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13),
                 ),
                 if (isSystem && comment.diff != null)
                   CommentDiffService.buildDiffWidget(
@@ -62,7 +62,7 @@ class CommentTile extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   _formatTime(comment.createdAt),
-                  style: const TextStyle(color: Colors.white38, fontSize: 10),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withAlpha(97), fontSize: 10),
                 ),
               ],
             ),
@@ -70,7 +70,7 @@ class CommentTile extends StatelessWidget {
           if (canDelete)
             GestureDetector(
               onTap: onDelete,
-              child: const Icon(Icons.close, color: Colors.white38, size: 16),
+              child: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface.withAlpha(97), size: 16),
             ),
         ],
       ),
