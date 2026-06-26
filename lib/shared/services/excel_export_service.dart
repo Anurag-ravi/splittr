@@ -195,13 +195,13 @@ abstract final class ExcelExportService {
       return SnackBar(content: Text('Downloaded splittr_$tripName.xlsx'));
     }
 
-    Directory? dir = Directory('/storage/emulated/0/Download');
-    if (!await dir.exists()) dir = await getExternalStorageDirectory();
+    final dir = await getExternalStorageDirectory();
     if (dir == null) {
       return const SnackBar(content: Text('Could not get downloads directory'));
     }
 
-    final file = await File('${dir.path}/splittr_$tripName.xlsx')
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final file = await File('${dir.path}/splittr_${tripName}_$timestamp.xlsx')
         .writeAsBytes(fileBytes!);
 
     return SnackBar(
