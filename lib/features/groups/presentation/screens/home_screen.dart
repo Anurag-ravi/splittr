@@ -20,6 +20,7 @@ import 'package:splittr/features/groups/presentation/screens/group_screen.dart';
 import 'package:splittr/features/groups/presentation/screens/join_group_screen.dart';
 import 'package:splittr/features/profile/presentation/screens/profile_screen.dart';
 import 'package:splittr/shared/widgets/neon_glow.dart';
+import 'package:splittr/shared/services/in_app_update_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -49,6 +50,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
 
     _currentIndex = widget.initialIndex;
+    InAppUpdateService.checkForUpdate();
   }
 
   void _changeTab(int index) {
