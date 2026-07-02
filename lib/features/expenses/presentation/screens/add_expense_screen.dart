@@ -18,6 +18,7 @@ import 'package:splittr/features/expenses/presentation/screens/choose_paid_for_s
 import 'package:splittr/features/expenses/presentation/states/expense_state.dart';
 import 'package:splittr/features/trips/data/models/trip_member_model.dart';
 import 'package:splittr/features/trips/data/models/trip_model.dart';
+import 'package:splittr/core/storage/hive_boxes.dart';
 import 'package:splittr/shared/widgets/neon_glow.dart';
 
 class AddExpenseScreen extends ConsumerStatefulWidget {
@@ -53,6 +54,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   ];
 
   String _category = 'general';
+
+  TripModel get _initialTrip => widget.trip;
+  late TripModel _selectedTrip = _initialTrip;
 
   final _nameController = TextEditingController();
 
@@ -152,7 +156,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
     final userMap = <String, TripMemberModel>{};
 
-    for (final tu in widget.trip.users) {
+    for (final tu in _selectedTrip.users) {
       if (!tu.involved) continue;
 
       if (tu.user == _user.id) {
@@ -208,12 +212,15 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       });
     } else {
       setState(() {
+        _nameController.clear();
+        _amountController.clear();
+        _amount = '0.00';
+        _category = 'general';
+        _splitType = splitTypeEnum.equal;
+        _selectedDate = DateTime.now();
         _paidBy = tempBy;
-
         _paidFor = tempFor;
-
         _tripUserMap = userMap;
-
         _loading = false;
       });
     }
@@ -434,7 +441,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                                   _adjustEqualPreview();
 
                                   notifier.save(
-                                    trip: widget.trip,
+                                    trip: _selectedTrip,
                                     name: _nameController.text,
                                     amount: double.parse(
                                       _amount,
@@ -520,31 +527,85 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                               const SizedBox(
                                 width: 10,
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 10,
-                                ),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(
-                                    18,
+                              if (widget.updating)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 10,
                                   ),
-                                  color: colorScheme.surface.withOpacity(
-                                    0.72,
-                                  ),
-                                  border: Border.all(
-                                    color: colorScheme.primary.withOpacity(
-                                      0.08,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(
+                                      18,
+                                    ),
+                                    color: colorScheme.surface.withOpacity(
+                                      0.72,
+                                    ),
+                                    border: Border.all(
+                                      color: colorScheme.primary.withOpacity(
+                                        0.08,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                child: Text(
-                                  widget.trip.name,
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
+                                  child: Text(
+                                    _selectedTrip.name,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                )
+                              else
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(
+                                      18,
+                                    ),
+                                    color: colorScheme.surface.withOpacity(
+                                      0.72,
+                                    ),
+                                    border: Border.all(
+                                      color: colorScheme.primary.withOpacity(
+                                        0.08,
+                                      ),
+                                    ),
+                                  ),
+                                  child: DropdownButton<String>(
+                                    value: _selectedTrip.id,
+                                    underline: const SizedBox.shrink(),
+                                    dropdownColor: colorScheme.surface,
+                                    borderRadius: BorderRadius.circular(14),
+                                    icon: Icon(
+                                      Icons.keyboard_arrow_down_rounded,
+                                      color: colorScheme.primary,
+                                      size: 20,
+                                    ),
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    items: HiveBoxes.trips.values
+                                        .map(
+                                          (trip) => DropdownMenuItem<String>(
+                                            value: trip.id,
+                                            child: Text(trip.name),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: (tripId) {
+                                      if (tripId == null ||
+                                          tripId == _selectedTrip.id) return;
+                                      final newTrip = HiveBoxes.trips.values
+                                          .firstWhere((t) => t.id == tripId);
+                                      setState(() {
+                                        _selectedTrip = newTrip;
+                                        _loading = true;
+                                      });
+                                      _init();
+                                    },
                                   ),
                                 ),
-                              ),
                             ],
                           ),
 

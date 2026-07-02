@@ -29,6 +29,9 @@ import 'package:splittr/features/expenses/data/models/split_entry_model.dart';
 import 'package:splittr/features/payments/data/models/payment_model.dart';
 import 'package:splittr/features/trips/data/models/trip_member_model.dart';
 import 'package:splittr/features/trips/data/models/trip_model.dart';
+import 'package:splittr/core/services/home_widget_service.dart';
+import 'package:splittr/core/storage/hive_boxes.dart';
+import 'package:splittr/features/expenses/presentation/screens/add_expense_screen.dart';
 import 'package:splittr/shared/services/activity_navigator.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -142,6 +145,24 @@ class _SplittrAppState extends ConsumerState<SplittrApp> {
     super.initState();
     _fetchContacts();
     _setupFcmHandlers();
+    _setupHomeWidget();
+  }
+
+  void _setupHomeWidget() {
+    HomeWidgetService.initialize(
+      onDeepLink: (uri) {
+        if (uri != 'splittr://add-expense') return;
+        final ctx = navigatorKey.currentContext;
+        if (ctx == null) return;
+        final trips = HiveBoxes.trips.values.toList();
+        if (trips.isEmpty) return;
+        Navigator.of(ctx).push(
+          MaterialPageRoute(
+            builder: (_) => AddExpenseScreen(trip: trips.first),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _setupFcmHandlers() async {
