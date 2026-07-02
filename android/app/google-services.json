@@ -82,6 +82,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "617220506462-32ba9jhm2vh7jti3b8jssrpfrg1l2pqu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hustlerdev.splittr",
+            "certificate_hash": "5b9fd60b912e5e9984e36f922cb4026851ff2bea"
+          }
+        },
+        {
           "client_id": "617220506462-8gdae5kfepjen7a39hvsi87kf5e144sk.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
