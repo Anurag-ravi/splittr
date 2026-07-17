@@ -13,6 +13,7 @@ import 'package:splittr/core/storage/hive_boxes.dart';
 import 'package:splittr/core/utils/haptics.dart';
 import 'package:splittr/core/widgets/profile_image.dart';
 import 'package:splittr/features/activity/presentation/screens/activity_screen.dart';
+import 'package:splittr/features/expenses/presentation/screens/add_expense_screen.dart';
 import 'package:splittr/features/friends/presentation/screens/friends_screen.dart';
 import 'package:splittr/features/groups/presentation/providers/groups_providers.dart';
 import 'package:splittr/features/groups/presentation/screens/create_group_screen.dart';
@@ -208,10 +209,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: GestureDetector(
                 onTap: () {
                   Haptics.medium();
+                  final trips = HiveBoxes.trips.values.toList();
+                  if(trips.isEmpty) {
+                    Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const CreateGroupScreen(),
+                    ),
+                  );
+                  return;
+                  }
 
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => const CreateGroupScreen(),
+                      builder: (_) => AddExpenseScreen(trip: trips.first),
                     ),
                   );
                 },
@@ -232,7 +242,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             _navItem(
               context,
-              icon: Icons.show_chart_rounded,
+              icon: Icons.notifications_outlined,
               label: 'Activity',
               index: 2,
             ),
